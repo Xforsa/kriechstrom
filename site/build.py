@@ -5,11 +5,14 @@
   index.html, ru.html, style.css     the landing pages (EN, RU)
   manual/en.html, manual/ru.html     the manual, the sound list filled in from the firmware's own tables
   shots/*.png                        the screens the pages use, from tests/ui_render (build/ui_new/LARGE_STROM)
+  audio/*.m4a                        the sound demos the pages use, from tools/krst_demos.sh (build/demos)
   webapp/installer, webapp/editor    web/make_site.py
   firmware/kriechstrom-VER.fwsc      the package
   src/kriechstrom-VER-src.tar.gz     the source of this build (GPL-3.0)
 
   python3 site/build.py build/kriechstrom-0.1.fwsc 0.1 [OUT]
+
+The pages, the sound list and the counts come from the tree as it is: build the site from the release's commit.
 """
 import re
 import shutil
@@ -21,6 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
 SHOTS = ROOT / "build" / "ui_new" / "LARGE_STROM"
+DEMOS = ROOT / "build" / "demos"
 
 ENGINES = [  # (name shown, source, table, engine number in ENGINES[])
     ("ANALOG", "firmware/engines/src/eng_analog.c", "ANALOG_PRESETS", 0),
@@ -112,6 +116,7 @@ def main(pkg, version, out):
     tb = source_tarball(out / "src", version)
     size = f"{tb.stat().st_size / 1e6:.1f} MB"
     used = set()
+    sounds = set()
     total = 0
     for rel in ("index.html", "ru.html", "style.css", "manual/en.html", "manual/ru.html"):
         s = (SITE / rel).read_text(encoding="utf-8")
@@ -119,15 +124,17 @@ def main(pkg, version, out):
             lst, total = sound_list("ru" if rel.endswith("ru.html") else "en")
             s = s.replace("<!--SOUNDS-->", lst)
         used |= set(re.findall(r'shots/([a-z0-9_]+\.png)', s))
+        sounds |= set(re.findall(r'audio/([a-z0-9_]+\.m4a)', s))
         (out / rel).parent.mkdir(parents=True, exist_ok=True)
         (out / rel).write_text(s, encoding="utf-8")
     if not total:
         total = sound_list("en")[1]
+    nglch = next(len(preset_names(src, table)) for name, src, table, idx in ENGINES if name == "GLCH")
     for rel in ("index.html", "ru.html", "manual/en.html", "manual/ru.html"):
         p = out / rel
         s = p.read_text(encoding="utf-8")
         s = (s.replace("@FWSC@", fwsc).replace("@SRC@", tb.name).replace("@SRCSIZE@", size)
-             .replace("@VERSION@", version).replace("@NSOUNDS@", str(total)))
+             .replace("@VERSION@", version).replace("@NSOUNDS@", str(total)).replace("@NGLCH@", str(nglch)))
         p.write_text(s, encoding="utf-8")
     shutil.copytree(SITE / "art", out / "art", ignore=shutil.ignore_patterns("splash_preview.png"))   # (tools/krst_art.py)
     (out / "shots").mkdir()
@@ -135,7 +142,13 @@ def main(pkg, version, out):
         if not (SHOTS / n).exists():
             raise SystemExit(f"shots/{n}: not rendered (run tests/run_tests.sh first)")
         shutil.copy(SHOTS / n, out / "shots" / n)
-    print(f"site: {out} ({fwsc}, {len(used)} screens, {total} sounds, source {size})")
+    if sounds:
+        (out / "audio").mkdir()
+    for n in sorted(sounds):
+        if not (DEMOS / n).exists():
+            raise SystemExit(f"audio/{n}: not rendered (run tools/krst_demos.sh first)")
+        shutil.copy(DEMOS / n, out / "audio" / n)
+    print(f"site: {out} ({fwsc}, {len(used)} screens, {len(sounds)} demos, {total} sounds, source {size})")
 
 
 if __name__ == "__main__":

@@ -5,6 +5,13 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 
 ## [Unreleased]
 
+### Added
+- INFECT: a pedal (INSERT INFCT) through which one track drives another: GATE, DUCK, CRUSH, FOLD or RING by the
+  source track's sound, which drives even at LEVEL 0
+- GLCH HOWL and MIC, a feedback family: no oscillator, a loop that feeds itself (GAIN CHAOS BITE BLOOM); eight sounds
+- RESONATE (FX > RESONATE): four strings on the master tuned to a chord (AMT, KEY, CHORD), rung by the mix
+- sound demos on the site under DAMAGE, WALL, INFECT, HOWL and RESONATE (tools/krst_demos.sh)
+
 ### Changed
 - the installer returns to the official firmware from V16 as well as V15 (newer FM-1s ship with V16)
 - the installer and the editor find an FM-1 whose MIDI port macOS still calls Clipper or SLOOP; the installer says it is
