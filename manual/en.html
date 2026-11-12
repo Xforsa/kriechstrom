@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KRIECHSTROM manual</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="../index.html">KRIECH<b>STROM</b></a>
+  <nav><a href="../index.html">Home</a><a href="../webapp/installer/">Install</a><a href="../webapp/editor/">Editor</a><a href="ru.html">По-русски</a></nav>
+</header>
+<main>
+<img class="band" style="margin-top:0" src="../art/band.jpg" alt="" width="1600" height="360">
+<h1>MANUAL <span class="red">/</span> <span class="red">0.1</span></h1>
+<p class="lead">Firmware for the M-VAVE FM-1. A dark industrial and EBM machine: four tracks, a sequencer with locks,
+drums that hit, sounds that break when you want them to.</p>
+
+<div class="note">KRIECHSTROM is built on <b>Felucca 1.8.2</b> by Leo Kuroshita (Hügelton Instruments), GPL-3.0. The
+GLCH engine, the DESTROY kit, the MUFF / BASS / SMASH pedals and the ROLL and GATE effects come from
+<b>Glitchbox</b> by erikdevos. Glitchbox itself runs only on the older FM-1 flash chip; KRIECHSTROM brings its best parts to the newer
+units. Everything Felucca does still works: this manual covers what you need to play, and what KRIECHSTROM added.</div>
+
+<h2 id="cheat">Cheat sheet</h2>
+<p>Everything that is not written on the panel, on one screen.</p>
+<div class="tw"><table>
+<tr><th>Do</th><th>What happens</th></tr>
+<tr><td>Any button</td><td>tap = its pages, again = next page; hold = its layer; double-tap = the layer stays open</td></tr>
+<tr><td>ALGORITHM / PRESETS / SELECT</td><td>track / sound / tempo, on every page</td></tr>
+<tr><td><kbd>SAVE</kbd> hold</td><td>undo (hold again: redo)</td></tr>
+<tr><td><kbd>HOME</kbd> hold</td><td>the menu</td></tr>
+<tr><td>Stop, <kbd>SAVE</kbd>, K1, <kbd>OCT+</kbd>, <kbd>OCT+</kbd></td><td>save the sound to a user slot</td></tr>
+<tr><td><kbd>REC</kbd></td><td>arm the track: stopped on STEP the keys write steps, playing they record live</td></tr>
+<tr><td>STEP: hold a step + knob</td><td>a lock: that value on that step only</td></tr>
+<tr><td>STEP: hold a step + <kbd>EDIT</kbd></td><td>clear the step's locks</td></tr>
+<tr><td>Drum grid</td><td>black keys pick the lane, white keys are steps 1-16</td></tr>
+<tr><td><kbd>SEQ</kbd> hold + F5 / G5</td><td>DICE (a new part) / MOOD (the next mood)</td></tr>
+<tr><td><kbd>SEQ</kbd> hold + K1-K4</td><td>LEN, DIV, SWING, GATE</td></tr>
+<tr><td><kbd>SEQ</kbd> hold + <kbd>OCT−</kbd></td><td>the track back as before the layer</td></tr>
+<tr><td><kbd>EDIT</kbd> hold + white key</td><td>the engine</td></tr>
+<tr><td><kbd>EDIT</kbd> hold + E5 / F5 / G5</td><td>INIT / CLEAN / OOPS (happy accident)</td></tr>
+<tr><td><kbd>FX</kbd> hold + white key</td><td>an effect on, tap again: off</td></tr>
+<tr><td><kbd>FX</kbd> hold + <kbd>OCT−</kbd></td><td>every effect off</td></tr>
+<tr><td><kbd>FX</kbd> hold + black key</td><td>mute a track</td></tr>
+<tr><td><kbd>FX</kbd> hold + SELECT</td><td>WALL, quiet to wall</td></tr>
+<tr><td><kbd>FX</kbd> hold, key held + PRESETS</td><td>put another effect on that key (EDIT: its default)</td></tr>
+<tr><td><kbd>GLO</kbd> hold</td><td>F#3-C#4 mute, F3-B3 solo, C4 unmute all, D4 MIDI LEARN, E4 FILL, F4 TAP, K1-K4 levels</td></tr>
+<tr><td><kbd>GLO</kbd> hold + SELECT</td><td>tempo (when SELECT does something else)</td></tr>
+<tr><td><kbd>SCL</kbd> hold + key</td><td>the root note</td></tr>
+<tr><td><kbd>LFO</kbd> hold + knob</td><td>MOMENTARY: let go, the value jumps back (<kbd>OCT+</kbd> keeps it)</td></tr>
+<tr><td>FX &gt; DAMAGE, K1-K4</td><td>DMG (wear), CHAR (tape to digital), WALL (quiet to wall), HISS (tape noise)</td></tr>
+<tr><td>MIDI CC85 / CC86</td><td>WALL / DAMAGE</td></tr>
+</table></div>
+
+<ul class="toc">
+  <li><a href="#cheat">Cheat sheet</a></li>
+  <li><a href="#install">Install</a></li>
+  <li><a href="#panel">The panel</a></li>
+  <li><a href="#first">First five minutes</a></li>
+  <li><a href="#sounds">Changing sounds</a></li>
+  <li><a href="#glch">GLCH: the signature engine</a></li>
+  <li><a href="#oops">HAPPY ACCIDENT (OOPS)</a></li>
+  <li><a href="#seq">The sequencer</a></li>
+  <li><a href="#drums">Drums</a></li>
+  <li><a href="#tools">SEQ TOOLS</a></li>
+  <li><a href="#dice">DICE and moods</a></li>
+  <li><a href="#perform">Live: the FX layer</a></li>
+  <li><a href="#glo">Mutes, solos, fills, songs</a></li>
+  <li><a href="#fx">Effects: what is what</a></li>
+  <li><a href="#damage">DAMAGE and WALL</a></li>
+  <li><a href="#save">Saving and undo</a></li>
+  <li><a href="#midi">MIDI and USB audio</a></li>
+  <li><a href="#menu">Menu and screen</a></li>
+  <li><a href="#list">All sounds</a></li>
+  <li><a href="#credits">Credits and source</a></li>
+</ul>
+
+<h2 id="install">Install</h2>
+<ol>
+  <li>Connect the FM-1 by USB. Use Chrome or Edge on a computer (the installer needs Web MIDI).</li>
+  <li>Open the <a href="../webapp/installer/">installer</a>, press Connect, then Install. Do not unplug until it says done.</li>
+  <li>The FM-1 restarts with the KRIECHSTROM splash. On the computer it shows up as <b>KRIECHSTROM</b> (MIDI and audio).</li>
+</ol>
+<p>Tested on the FM-1 with the new flash chip. Your Felucca projects load as they are. To go back
+to the official firmware, the installer has a Restore option.</p>
+<figure><img src="../shots/splash.png" alt="splash screen"><figcaption>Power-on.</figcaption></figure>
+
+<h2 id="panel">The panel</h2>
+<p>Every button has two jobs: <b>tap</b> it for its pages (tap again for the next page), <b>hold</b> it for its
+layer, a map of what the keys do right now. Double-tap a layer button to keep the layer open without holding.
+On pages and dialogs <kbd>OCT+</kbd> does it and <kbd>OCT−</kbd> goes back.</p>
+<div class="tw"><table>
+<tr><th>Button</th><th>Tap</th><th>Hold</th></tr>
+<tr><td><kbd>HOME</kbd></td><td>HOME, MIXER, CLOCK</td><td>the menu</td></tr>
+<tr><td><kbd>SEQ</kbd></td><td>STEP (piano roll or drum grid), DETAIL, AUTOMATION</td><td>SEQ TOOLS (with DICE)</td></tr>
+<tr><td><kbd>GLO</kbd></td><td>SONG</td><td>mutes, solos, FILL, TAP tempo, MIDI LEARN, levels</td></tr>
+<tr><td><kbd>SAVE</kbd></td><td>USER, PRESETS, PHRASES, PROJECT, TOOLS</td><td>UNDO</td></tr>
+<tr><td><kbd>LFO</kbd></td><td>LFO, LFO 2, LFO DEST, MOD</td><td>with a knob: MOMENTARY (springs back)</td></tr>
+<tr><td><kbd>EDIT</kbd></td><td>EDIT 1, EDIT 2, VOICE pages (engine pages too)</td><td>engines on the keys, INIT, CLEAN, OOPS</td></tr>
+<tr><td><kbd>FX</kbd></td><td>SENDS, SLICER, PEDAL, PEDAL MIX, DELAY, REVERB, CHORUS, DAMAGE</td><td>the live effects on the keys</td></tr>
+<tr><td><kbd>SCL</kbd></td><td>SCL, CHORD</td><td>any key sets the root</td></tr>
+<tr><td><kbd>ENV</kbd>, <kbd>ARP</kbd></td><td>their pages</td><td></td></tr>
+<tr><td><kbd>REC</kbd></td><td>arms the track for recording</td><td>CLEAR, CLICK, COUNT-IN, click level</td></tr>
+<tr><td><kbd>PLAY</kbd></td><td>start / stop</td><td></td></tr>
+</table></div>
+<div class="tw"><table>
+<tr><th>Knob</th><th>Does</th></tr>
+<tr><td>ALGORITHM</td><td>picks the track, 1 to 4, on every page</td></tr>
+<tr><td>PRESETS</td><td>changes the track's sound on every page that is not a list</td></tr>
+<tr><td>SELECT</td><td>tempo</td></tr>
+<tr><td>K1 K2 K3 K4</td><td>the four cards at the top of the screen</td></tr>
+<tr><td>MASTER</td><td>volume</td></tr>
+</table></div>
+<p>The footer always says what the buttons do on the screen you are on. With HELP on (the default) a short hint shows
+for two seconds whenever a page or layer opens.</p>
+<figure><img src="../shots/home.png" alt="home screen"><figcaption>HOME: the four cards are K1-K4, the header shows track, pattern slot, play state and tempo.</figcaption></figure>
+
+<h2 id="first">First five minutes</h2>
+<ol>
+  <li>Press <kbd>PLAY</kbd>. A beat and a bass start.</li>
+  <li>Turn <b>ALGORITHM</b> to pick a track. The number in the top left corner is the track.</li>
+  <li>Turn <b>PRESETS</b>: the sound of that track changes while it plays. The pattern stays.</li>
+  <li>Play the keys: they play the selected track.</li>
+  <li>Hold <kbd>SEQ</kbd> and press <kbd>F5</kbd> (DICE): the track gets a new pattern in the current mood. Press again for another.</li>
+  <li>Hold <kbd>FX</kbd> and tap a white key: repeat, filter, tape stop and more go on. Tap it again: off. <kbd>OCT−</kbd> with FX held: all off.</li>
+  <li>Didn't like it? Hold <kbd>SAVE</kbd>: undo.</li>
+</ol>
+
+<h2 id="sounds">Changing sounds</h2>
+<h3>PRESETS</h3>
+<p>Turn PRESETS anywhere. Tap <kbd>SAVE</kbd> twice for the PRESETS list: K2 picks the engine, K3 marks a favourite,
+K4 shows one category only (BASS, LEAD, PAD, PLUCK, KEYS, DRUM, FX).</p>
+<figure><img src="../shots/presets.png" alt="presets list"><figcaption>SAVE &gt; PRESETS.</figcaption></figure>
+<h3>Engines</h3>
+<p>Hold <kbd>EDIT</kbd>: the white keys are the engines. Press one and the track switches to it with its first sound.</p>
+<figure><img src="../shots/layer_edit_active.png" alt="EDIT layer"><figcaption>EDIT held. E5 INIT, F5 CLEAN (the bare engine), G5 OOPS.</figcaption></figure>
+<div class="tw"><table>
+<tr><th>Engine</th><th>What it is good for</th></tr>
+<tr><td>ANALOG</td><td>subtractive: basses, sequences, leads</td></tr>
+<tr><td>FM6</td><td>six-operator FM: broken pianos, bells, metal</td></tr>
+<tr><td>PHASE</td><td>phase distortion: pads, cold leads, screams</td></tr>
+<tr><td>LOFI</td><td>wavetable chip sounds</td></tr>
+<tr><td>SAMPLE</td><td>the piano and other samples</td></tr>
+<tr><td>VOICE</td><td>formants, choirs, whispers</td></tr>
+<tr><td>TRIO</td><td>three oscillators, fat basses</td></tr>
+<tr><td>GLCH</td><td>from Glitchbox: clip, fold, screaming filter, crush, micro-stutter. The dirtiest engine here</td></tr>
+<tr><td>GRAIN</td><td>granular clouds</td></tr>
+<tr><td>PHYS</td><td>plucked and struck strings, metal</td></tr>
+<tr><td>NOISE</td><td>noise sources: static, wind, alarms, rumble</td></tr>
+<tr><td>SLICE</td><td>a sliced break</td></tr>
+<tr><td>DRUM</td><td>the drum machine, eight lanes</td></tr>
+</table></div>
+<h3>Editing</h3>
+<p>Tap <kbd>EDIT</kbd>: EDIT 1 and EDIT 2 are the engine's eight parameters on K1-K4. Tap again for VOICE (poly / mono,
+glide), and the engine's own pages. <kbd>ENV</kbd> is the envelope, <kbd>LFO</kbd> the LFOs and the mod matrix.</p>
+<figure><img src="../shots/edit_analog.png" alt="EDIT page"><figcaption>EDIT on ANALOG.</figcaption></figure>
+<p>Hold <kbd>LFO</kbd> and turn a knob for a MOMENTARY move: let go of LFO and the value jumps back.</p>
+
+<h2 id="glch">GLCH: the signature engine</h2>
+<p>GLCH is the heart of KRIECHSTROM: an oscillator (15 waves: SAW, SQR, DUAL, RING, NOIS, FAT, FM, FMX, FUZZ, REES,
+808, GRIT, GROW, SYNC, SUPR) into a screaming filter, a clipper and folder, a bit crusher and a micro-stutter that
+chops the note into pieces. Most of its 48 sounds come with a PEDAL already set (MUFF, BASS, SMASH, FUZZ, FOLD,
+CRUSH), so they are loud and broken from the first note.</p>
+<div class="tw"><table>
+<tr><th>Knob</th><th>EDIT 1</th><th>EDIT 2</th></tr>
+<tr><td>K1</td><td>WAVE</td><td>CRSH: bit crush</td></tr>
+<tr><td>K2</td><td>CUT: filter cutoff</td><td>GLCH: how often the stutter cuts in</td></tr>
+<tr><td>K3</td><td>RES: resonance, up to a scream</td><td>SIZE: the stutter's slice length</td></tr>
+<tr><td>K4</td><td>DRV: drive into the clipper</td><td>PJMP: pitch jumps between slices</td></tr>
+</table></div>
+<p>Try: a GLCH bass on track 1 (BLOODLINE, SICK ENGINE, WARHEAD), DICE in GRIND, then OOPS a few times while it plays.</p>
+
+<h2 id="oops">HAPPY ACCIDENT (OOPS)</h2>
+<p>Hold <kbd>EDIT</kbd> and press <kbd>G5</kbd>. Two or three of the sound's parameters jump somewhere else, sometimes an
+effect send too. The screen says what moved, for example <code>OOPS: CUT RES DLY</code>. Press again for more. Kept
+something good? Save it (SAVE &gt; USER). Went too far? Hold <kbd>SAVE</kbd>: the sound comes back as it was before the
+first OOPS.</p>
+<p>It never touches the level, the pattern, the engine or the kit, so the track keeps playing as part of the song.</p>
+
+<h2 id="seq">The sequencer</h2>
+<p>Each track has its own pattern, up to 64 steps. Tap <kbd>SEQ</kbd> for STEP. On a synth track STEP is a piano roll.</p>
+<figure><img src="../shots/roll_playing.png" alt="piano roll"><figcaption>SEQ &gt; STEP on a synth track while playing.</figcaption></figure>
+<h3>Writing notes: step by step</h3>
+<ol>
+  <li>Stop. Go to SEQ &gt; STEP. Press <kbd>REC</kbd> to arm the track.</li>
+  <li>Play a key (or a chord: hold the keys together). The note goes to the step under the cursor and the cursor moves on.</li>
+  <li>K1 moves the cursor (STEP), K2 changes the note, K3 the length (hold over several steps = a tie), K4 the flags:
+  ACCENT and SLIDE.</li>
+  <li>Press <kbd>REC</kbd> again to disarm.</li>
+</ol>
+<h3>Writing notes: live</h3>
+<p>Press <kbd>PLAY</kbd>, then <kbd>REC</kbd>, and play. The loop records what you play, overdubbing every pass. Your timing
+is kept as a NUDGE; QUANTIZE on the SCL page decides if it is played as you played it or on the grid. Hold
+<kbd>REC</kbd> for the click and a count-in.</p>
+<h3>Locks: one step, its own value</h3>
+<p>On STEP hold a step (its key) and turn any knob: that value is set for that step only. A dot marks steps with
+locks. Hold the step and press <kbd>EDIT</kbd> to clear its locks.</p>
+<figure><img src="../shots/roll_locks.png" alt="locks"><figcaption>Steps with locks.</figcaption></figure>
+<h3>DETAIL and AUTOMATION</h3>
+<p>Tap <kbd>SEQ</kbd> again for DETAIL: the cursor step's CHANCE (also conditions like 1:2, 3:4 and FILL), RATCHET
+(2-4 hits in a step), NUDGE and VELOCITY. PRESETS moves the cursor here. Once more for AUTOMATION: a list of
+everything that happens on the steps, locks and recorded knob moves, which you can edit or delete one by one.</p>
+<div class="shots">
+<figure><img src="../shots/detail.png" alt="DETAIL"><figcaption>DETAIL.</figcaption></figure>
+<figure><img src="../shots/automation.png" alt="AUTOMATION"><figcaption>AUTOMATION.</figcaption></figure>
+</div>
+<h3>Length, speed, swing</h3>
+<p>Hold <kbd>SEQ</kbd>: K1 LEN (1-64 steps), K2 DIV (4 bars to 1/32), K3 SWING, K4 GATE. Odd lengths on different
+tracks drift against each other: 16 on the drums, 14 on the bass, 7 on a line.</p>
+
+<h2 id="drums">Drums</h2>
+<p>On a DRUM track STEP is a grid: <b>white keys are steps 1-16</b>, <b>black keys pick the lane</b> (kick, snare, clap,
+closed hat, open hat, tom, rim, bell). Pick a lane with a black key, then press white keys to set or clear its hits.
+K1 moves along the steps (pages of 16), K2 picks the lane, K3 the hit, K4 the accent.</p>
+<figure><img src="../shots/drum.png" alt="drum grid"><figcaption>The drum grid. The lit keys are the hits of the selected lane.</figcaption></figure>
+<p>Locks work here too: hold a step key and turn a knob. Hold <kbd>EDIT</kbd> on a drum track: the black keys mute lanes.
+The kits: DRUM KIT, DEEP KIT, TIGHT KIT, PERC KIT, DESTROY (from Glitchbox, with the SMASH pedal), and the KRIECHSTROM kits
+FACTORY, STOMP, GATED, BUNKER, TOMB, RIOT, METAL SHOP, DRY BONES. Change the kit with PRESETS like any sound.</p>
+
+<h2 id="tools">SEQ TOOLS</h2>
+<p>Hold <kbd>SEQ</kbd> on any page. The white keys become tools for the selected track. Each tool is one undo
+(<kbd>SAVE</kbd> held), and <kbd>OCT−</kbd> puts the track back as it was when you opened the layer.</p>
+<div class="shots">
+<figure><img src="../shots/layer_seq_tools.png" alt="SEQ TOOLS"><figcaption>SEQ held, synth track.</figcaption></figure>
+<figure><img src="../shots/layer_seq_tools_drum.png" alt="SEQ TOOLS drums"><figcaption>SEQ held, drum track: the lane tools (G4-C5) act on the lane picked with the black keys.</figcaption></figure>
+</div>
+<div class="tw"><table>
+<tr><th>Key</th><th>Tool</th></tr>
+<tr><td>F3</td><td>CLEAR the pattern</td></tr>
+<tr><td>G3</td><td>REVERSE</td></tr>
+<tr><td>A3, B3</td><td>SHIFT one step left / right</td></tr>
+<tr><td>C4</td><td>RANDOM: a new beat, or new notes in the scale on the same rhythm</td></tr>
+<tr><td>D4</td><td>COOK: changes the pattern a little each press</td></tr>
+<tr><td>E4</td><td>BEAT (drums): a new beat</td></tr>
+<tr><td>F4</td><td>EUCLID: hits spread evenly (K1 hits, K2 steps, K3 rotate; OCT+ applies)</td></tr>
+<tr><td>G4 A4 B4 C5</td><td>drums: CLEAR, REVERSE, FILL, RANDOM of the selected lane</td></tr>
+<tr><td>D5</td><td>DOUBLE: the pattern twice as long, copied</td></tr>
+<tr><td>E5</td><td>HALF: only its first half</td></tr>
+<tr><td>F5</td><td><b>DICE</b>: a whole new part in the current mood</td></tr>
+<tr><td>G5</td><td><b>MOOD</b>: the next mood (its name is on the key's cell)</td></tr>
+</table></div>
+
+<h2 id="dice">DICE and moods</h2>
+<p>DICE writes a part that fits the track: on a drum track a beat, on track 1 a bass line, on track 2 stabs and
+chords, on tracks 3 and 4 a high line, riser or drone. Notes are in the track's scale and root (hold <kbd>SCL</kbd> and
+press a key to change the root). Every press is different. MOOD picks what kind of part:</p>
+<div class="tw"><table>
+<tr><th>Mood</th><th>Feel</th></tr>
+<tr><td>MACHINE</td><td>the sequencer: sixteenths on the root, four on the floor, hats on the offbeat</td></tr>
+<tr><td>GRIND</td><td>heavy and late: the bass slides down into the flat second, low held chords</td></tr>
+<tr><td>MARCH 7/8</td><td>14 steps, pounding: the march that limps</td></tr>
+<tr><td>GLITCH</td><td>broken: hits and bleeps anywhere, holes in the beat</td></tr>
+<tr><td>SPIRAL</td><td>lines that keep falling: the floor gives way, toms rolling</td></tr>
+<tr><td>GHOST</td><td>almost empty: a held root, a lonely piano arpeggio, one bell</td></tr>
+<tr><td>SURGE</td><td>everything at once: offbeat bass, open hats, claps, risers</td></tr>
+<tr><td>HUSH</td><td>quiet: eighths on the bass, a held chord, a drone on top</td></tr>
+</table></div>
+<p>The mood is not saved: the FM-1 starts with MACHINE.</p>
+
+<h2 id="perform">Live: the FX layer</h2>
+<p>Hold <kbd>FX</kbd> and tap a white key: its effect goes on for the whole mix and its cell lights. Tap it again: off.
+<kbd>OCT−</kbd> with FX held turns every effect off. Black keys mute tracks. K1-K4 are macros: FILTER, CRUSH, THROW,
+DEPTH. Turn <b>SELECT</b> with FX held for WALL (see DAMAGE). If you would rather have an effect only while a key is
+held, set MENU &gt; CONTROL &gt; FX LATCH to OFF.</p>
+<figure><img src="../shots/perform_held.png" alt="FX layer"><figcaption>FX held.</figcaption></figure>
+<div class="tw"><table>
+<tr><th>Key</th><th>Effect</th><th>Key</th><th>Effect</th></tr>
+<tr><td>F3</td><td>repeat 1/8</td><td>G4</td><td>octave up (shimmer)</td></tr>
+<tr><td>G3</td><td>repeat 1/16</td><td>A4</td><td>octave down</td></tr>
+<tr><td>A3</td><td>repeat 1/32</td><td>B4</td><td>FLANGER</td></tr>
+<tr><td>B3</td><td>reverse</td><td>C5</td><td>PHASER</td></tr>
+<tr><td>C4</td><td>low-pass sweep</td><td>D5</td><td>REV THROW: every reverb send full</td></tr>
+<tr><td>D4</td><td>high-pass sweep</td><td>E5</td><td>ECHO THROW: every delay send full</td></tr>
+<tr><td>E4</td><td>TAPE STOP</td><td>F5</td><td>ROLL (from Glitchbox): a roll that speeds up</td></tr>
+<tr><td>F4</td><td>FREEZE</td><td>G5</td><td>GATE 1/32 (from Glitchbox)</td></tr>
+</table></div>
+<p>Any key can hold any effect: hold the key in the layer and turn PRESETS. CRUSH SWEEP and RANDOM are there too.</p>
+
+<h2 id="glo">Mutes, solos, fills, songs</h2>
+<p>Hold <kbd>GLO</kbd>: black keys F#3-C#4 mute tracks 1-4, white keys F3-B3 solo while held, C4 unmutes all,
+D4 MIDI LEARN, E4 FILL while held (steps with the FILL condition play), F4 TAP tempo. K1-K4 are the track levels.</p>
+<figure><img src="../shots/layer_glo_active.png" alt="GLO layer"><figcaption>GLO held.</figcaption></figure>
+<p>Tap <kbd>GLO</kbd> for SONG: up to 16 sections, each plays the project slots A-D on every track, with repeats.</p>
+
+<h2 id="fx">Effects: what is what</h2>
+<p>Tap <kbd>FX</kbd> again and again: the pages go round. The big line under the knobs says what the page does.
+Every value that turns an effect off reads <b>OFF</b> at zero.</p>
+<div class="tw"><table>
+<tr><th>Page</th><th>What it is</th><th>Off</th></tr>
+<tr><td>SENDS</td><td>how much of <b>this track</b> goes into distortion, chorus, delay and reverb (K1-K4)</td><td>a knob at OFF</td></tr>
+<tr><td>SLICER</td><td>chops this track in time: GATE or STUTTER, in time with the tempo</td><td>K1 OFF</td></tr>
+<tr><td>PEDAL</td><td>one effect only on this track, like a pedal in front of an amp: SOFT, HARD, FOLD, FUZZ, CRUSH,
+PHASR, FLANG, CHOR, MUFF (fuzz pedal), BASS (bass amp drive), SMASH (squashed to bits), DAMG (wear, see below)</td><td>K1 OFF</td></tr>
+<tr><td>PEDAL MIX</td><td>how much of the pedal you hear, dry to wet</td><td>OFF</td></tr>
+<tr><td>DELAY</td><td>one delay shared by all tracks: TIME, FEEDBACK, COLOUR, MIX</td><td>MIX OFF (all tracks), or a track's DLY send</td></tr>
+<tr><td>REVERB</td><td>one reverb for all tracks: ROOM, SPRING, HALL, size, damping</td><td>a track's REV send</td></tr>
+<tr><td>CHORUS</td><td>one chorus for all tracks</td><td>a track's CHO send</td></tr>
+<tr><td>DAMAGE</td><td>the whole mix wearing out, and WALL</td><td>DMG OFF, WALL OFF</td></tr>
+</table></div>
+<p>Delay, reverb and chorus are shared: a track gets them through its SENDS. That is why the delay "does not turn off"
+when you change the sound: the preset's sound has its own DLY send. Set DELAY &gt; MIX to OFF to silence the delay for
+everyone, or SENDS &gt; DLY to OFF for one track.</p>
+<div class="shots">
+<figure><img src="../shots/fx.png" alt="SENDS"><figcaption>SENDS: this track into the effects.</figcaption></figure>
+<figure><img src="../shots/dly.png" alt="DELAY"><figcaption>DELAY: shared, MIX 0 = off.</figcaption></figure>
+</div>
+
+<h2 id="damage">DAMAGE and WALL</h2>
+<p>The last FX page, four separate things:</p>
+<ul>
+<li><b>DMG</b> (K1) wears out the whole mix: heavy drive, then, as <b>CHAR</b> (K2) goes from tape to digital, a
+darker tone, the pitch wobbling and dips like a stretched tape, or lost bits, a dropped sample rate and hard cuts.</li>
+<li><b>WALL</b> (K3) is one knob from quiet to wall, with no wear in it: it pushes every track's distortion and effect
+sends up, squeezes the mix hard and adds it under itself (the whole thing gets thick and huge), and from 80 % on it
+plays the FILL steps. Turn it while playing: hold <kbd>FX</kbd> and turn <b>SELECT</b>.</li>
+<li><b>HISS</b> (K4) is a tape's noise floor, on its own: it hisses while the tape runs, that is while PLAY plays, and when stopped while you play and for a second after. Stopped and silent: none. OFF: never.</li>
+</ul>
+<p>From a controller: CC85 is WALL, CC86 DMG. The pedal <b>DAMG</b> does the same wear on one track (AMT, CHAR, LEVEL).</p>
+<div class="shots">
+<figure><img src="../shots/damage.png" alt="DAMAGE"><figcaption>FX &gt; DAMAGE.</figcaption></figure>
+<figure><img src="../shots/insert_damg.png" alt="DAMG pedal"><figcaption>PEDAL DAMG on one track.</figcaption></figure>
+</div>
+
+<h2 id="save">Saving and undo</h2>
+<ul>
+  <li><b>Undo:</b> hold <kbd>SAVE</kbd>. Works for sound loads, tools, DICE, OOPS, clearing.</li>
+  <li><b>A sound:</b> stop, tap <kbd>SAVE</kbd> (USER), pick a slot with K1, <kbd>OCT+</kbd>, name it with the keys, <kbd>OCT+</kbd>. 32 slots.</li>
+  <li><b>The music:</b> SAVE &gt; PROJECT: four projects, K4 saves, K3 loads, K2 erases.</li>
+  <li><b>Patterns:</b> SAVE &gt; PHRASES loads ready-made patterns into the track.</li>
+  <li><b>Autosave:</b> turn the FM-1 off and on and the music is as you left it (MENU &gt; RESTORE LAST).</li>
+</ul>
+<figure><img src="../shots/project.png" alt="PROJECT"><figcaption>SAVE &gt; PROJECT.</figcaption></figure>
+
+<h2 id="midi">MIDI and USB audio</h2>
+<ul>
+  <li>USB and TRS MIDI in: channels 1-4 play tracks 1-4 (MENU &gt; MIDI &gt; MIDI IN for other channels).</li>
+  <li>The keys send MIDI out on the track's channel. Clock from internal, USB or TRS.</li>
+  <li>CCs: 5 glide, 7 level, 10 pan, 71 resonance, 74 brightness, 72/73/75 release/attack/decay, 91/93/94 reverb, chorus, delay. GLCH: 74 cutoff, 71 resonance.</li>
+  <li>MIDI LEARN: hold GLO, press D4, move a knob and a CC on your controller.</li>
+  <li>USB audio: the FM-1 is a stereo audio input called KRIECHSTROM. Record it in any DAW, no driver.
+  KRIECHSTROM ships with the USB serial console off, so macOS 13-15 sees the audio input right away.</li>
+</ul>
+
+<h2 id="menu">Menu and screen</h2>
+<p>Hold <kbd>HOME</kbd> for the menu. ALGORITHM moves between the tabs, PRESETS through the rows, any knob changes the
+value, HOME closes it. KRIECHSTROM starts with the STROM palette (black and red), LARGE on (big values) and HELP on.
+For other colours: DISPLAY &gt; COLOR.</p>
+<figure><img src="../shots/menu.png" alt="menu"><figcaption>The menu.</figcaption></figure>
+
+<h2 id="list">All sounds</h2>
+<p>171 sounds. In brackets: the category for LIST on SAVE &gt; PRESETS (K4).</p>
+<h3>ANALOG · 24</h3>
+<p>SAW LEAD <small>(lead)</small>, SOFT PAD <small>(pad)</small>, SQR BASS <small>(bass)</small>, PWM STR <small>(pad)</small>, ACID <small>(bass)</small>, SINE KEY <small>(keys)</small>, RAVE <small>(lead)</small>, SUB BASS <small>(bass)</small>, PLUCK <small>(pluck)</small>, BRASS <small>(lead)</small>, WIND <small>(lead)</small>, STRINGS <small>(pad)</small>, RUST SAW <small>(bass)</small>, PISTON <small>(bass)</small>, COLD SQUARE <small>(bass)</small>, BLACK PULSE <small>(bass)</small>, IRON LUNG <small>(bass)</small>, SUB FLOOR <small>(bass)</small>, HAMMER <small>(bass)</small>, SEQUENCE <small>(bass)</small>, SPINE <small>(bass)</small>, SLOW BURN <small>(bass)</small>, HOLLOW <small>(pad)</small>, GUTTER <small>(bass)</small></p>
+<h3>FM6 · 20</h3>
+<p>TINE EP <small>(keys)</small>, BELL <small>(pluck)</small>, FM BASS <small>(bass)</small>, BRASS <small>(lead)</small>, PAD <small>(pad)</small>, MARIMBA <small>(pluck)</small>, ORGAN <small>(keys)</small>, PLUCK <small>(pluck)</small>, BROKEN PIANO <small>(keys)</small>, GLASS BELL <small>(pluck)</small>, CHAPEL <small>(keys)</small>, WIRE HARP <small>(pluck)</small>, MERCY <small>(keys)</small>, SHARDS <small>(pluck)</small>, GRAVE BELL <small>(pluck)</small>, RUSTED EP <small>(keys)</small>, TOY PIANO <small>(keys)</small>, MOURNING <small>(pad)</small>, FERRIC <small>(bass)</small>, NEEDLE <small>(pluck)</small></p>
+<h3>PHASE · 16</h3>
+<p>BRASS <small>(lead)</small>, ORGAN <small>(keys)</small>, STRING <small>(pad)</small>, RESO <small>(lead)</small>, BELL <small>(pluck)</small>, WIRE <small>(pluck)</small>, SICK PAD <small>(pad)</small>, ICE <small>(pad)</small>, STATIC ANGEL <small>(pad)</small>, COMA <small>(pad)</small>, VAULT <small>(pad)</small>, LAST LIGHT <small>(pad)</small>, HYMN <small>(pad)</small>, SCREAM LEAD <small>(lead)</small>, RAZOR <small>(lead)</small>, SIREN <small>(pad)</small></p>
+<h3>LOFI · 5</h3>
+<p>PULSE LD <small>(lead)</small>, WAVE BASS <small>(bass)</small>, ARP 8BIT <small>(lead)</small>, WAVE LEAD <small>(lead)</small>, STEP LEAD <small>(lead)</small></p>
+<h3>SAMPLE · 3</h3>
+<p>PIANO <small>(keys)</small>, FLUTE <small>(lead)</small>, SAX <small>(lead)</small></p>
+<h3>VOICE · 4</h3>
+<p>CHOIR AAH <small>(pad)</small>, VOX LEAD <small>(lead)</small>, WOW BASS <small>(bass)</small>, WHISPER <small>(fx)</small></p>
+<h3>TRIO · 5</h3>
+<p>FAT BASS <small>(bass)</small>, ARP LEAD <small>(lead)</small>, SYNC LEAD <small>(lead)</small>, RING BELL <small>(pluck)</small>, CHIP CHOIR <small>(pad)</small></p>
+<h3>GLCH · 48</h3>
+<p>DESTROYER <small>(lead)</small>, FUZZ BASS <small>(bass)</small>, BROKEN <small>(fx)</small>, SCREAM <small>(lead)</small>, NOIZ HIT <small>(fx)</small>, HUM <small>(bass)</small>, NASTY FM <small>(lead)</small>, CRUSH LEAD <small>(lead)</small>, SQR FUZZ <small>(bass)</small>, FM BASS <small>(bass)</small>, MELTDOWN <small>(lead)</small>, RUST SAW <small>(bass)</small>, REESE <small>(bass)</small>, 808 DIST <small>(bass)</small>, GRIT BASS <small>(bass)</small>, GROWL <small>(bass)</small>, ACID FUZZ <small>(bass)</small>, OCTA SMASH <small>(bass)</small>, GRINDER <small>(bass)</small>, FILTH <small>(bass)</small>, SCAR TISSUE <small>(lead)</small>, DEAD WIRE <small>(lead)</small>, BITROT <small>(bass)</small>, BREAKER <small>(bass)</small>, FAULT LINE <small>(lead)</small>, FUZZ GUT <small>(bass)</small>, VOLTAGE <small>(lead)</small>, NERVE <small>(pluck)</small>, WIRE BRUSH <small>(fx)</small>, SPLINTER <small>(fx)</small>, BLOODLINE <small>(bass)</small>, SICK ENGINE <small>(bass)</small>, RUST BELT <small>(bass)</small>, CONCRETE <small>(bass)</small>, STATIC LEAD <small>(lead)</small>, HOWLER <small>(lead)</small>, BURN UNIT <small>(lead)</small>, CAUTERIZE <small>(pluck)</small>, STUTTER BASS <small>(bass)</small>, FRACTAL <small>(fx)</small>, HUSHED FUZZ <small>(pad)</small>, WARHEAD <small>(bass)</small>, SCREWDRIVER <small>(lead)</small>, CORRODED PAD <small>(pad)</small>, TERMINAL HUM <small>(pad)</small>, BROKEN RADIO <small>(fx)</small>, SPIKE <small>(pluck)</small>, MACHINE GUN <small>(fx)</small></p>
+<h3>GRAIN · 4</h3>
+<p>CLOUD PAD <small>(pad)</small>, GLITCH <small>(fx)</small>, FROZEN <small>(pad)</small>, SHIMMER <small>(pad)</small></p>
+<h3>PHYS · 9</h3>
+<p>BELL TREE <small>(pluck)</small>, MARIMBA <small>(pluck)</small>, PLUCK <small>(pluck)</small>, BOWED METAL <small>(pad)</small>, KALIMBA <small>(pluck)</small>, HAND DRUM <small>(drum)</small>, TOMS <small>(drum)</small>, DRONE STRING <small>(pad)</small>, HARP <small>(pluck)</small></p>
+<h3>DRUM · 13</h3>
+<p>DRUM KIT <small>(drum)</small>, DEEP KIT <small>(drum)</small>, TIGHT KIT <small>(drum)</small>, PERC KIT <small>(drum)</small>, DESTROY <small>(drum)</small>, FACTORY <small>(drum)</small>, STOMP <small>(drum)</small>, GATED <small>(drum)</small>, BUNKER <small>(drum)</small>, TOMB <small>(drum)</small>, RIOT <small>(drum)</small>, METAL SHOP <small>(drum)</small>, DRY BONES <small>(drum)</small></p>
+<h3>NOISE · 18</h3>
+<p>WIND <small>(fx)</small>, RAIN <small>(fx)</small>, ARCADE <small>(fx)</small>, METAL <small>(fx)</small>, STATIC <small>(fx)</small>, TV DEATH <small>(fx)</small>, CRACKLE <small>(fx)</small>, FEEDBACK <small>(fx)</small>, VACUUM <small>(fx)</small>, RISER <small>(fx)</small>, GEIGER <small>(fx)</small>, RADIO GHOST <small>(fx)</small>, GENERATOR <small>(fx)</small>, RUST WIND <small>(fx)</small>, EARTHQUAKE <small>(fx)</small>, DEAD AIR <small>(fx)</small>, ALARM <small>(fx)</small>, SHOCK <small>(fx)</small></p>
+<h3>SLICE · 2</h3>
+<p>CHOP <small>(drum)</small>, STUTTER <small>(drum)</small></p>
+
+<h2 id="credits">Credits and source</h2>
+<p>KRIECHSTROM is free software under the GNU GPL 3.0. It is a fork of <b>Felucca</b> by Leo Kuroshita, Hügelton
+Instruments (GPL-3.0, its engines MIT). Parts of <b>Glitchbox</b> by erikdevos: the GLCH engine, the DESTROY kit, the
+MUFF / BASS / SMASH inserts, ROLL and GATE. Ideas from <b>DIRGE</b> by sinscum. The source of this exact build is on
+the <a href="../index.html#source">home page</a>.</p>
+</main>
+<footer>KRIECHSTROM 0.1 · on Felucca 1.8.2 · GPL-3.0</footer>
+</body>
+</html>

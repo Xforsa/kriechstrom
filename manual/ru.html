@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KRIECHSTROM: мануал</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="../ru.html">KRIECH<b>STROM</b></a>
+  <nav><a href="../ru.html">Главная</a><a href="../webapp/installer/">Установка</a><a href="../webapp/editor/">Редактор</a><a href="en.html">English</a></nav>
+</header>
+<main>
+<img class="band" style="margin-top:0" src="../art/band.jpg" alt="" width="1600" height="360">
+<h1>МАНУАЛ <span class="red">/</span> <span class="red">0.1</span></h1>
+<p class="lead">Прошивка для M-VAVE FM-1. Мрачная индастриал и EBM машина: четыре дорожки, секвенсор с локами,
+драмы, которые бьют, и звуки, которые ломаются, когда тебе это нужно.</p>
+
+<div class="note">KRIECHSTROM сделан на основе <b>Felucca 1.8.2</b> (Leo Kuroshita, Hügelton Instruments, GPL-3.0).
+Движок GLCH, кит DESTROY, педали MUFF / BASS / SMASH и эффекты ROLL и GATE взяты из <b>Glitchbox</b> (erikdevos). Сам Glitchbox работает только на старом чипе памяти FM-1, KRIECHSTROM переносит его лучшее на новые
+экземпляры. Всё, что умеет Felucca,
+работает и здесь. Этот мануал про то, что нужно для игры, и про то, что добавил KRIECHSTROM.</div>
+
+<h2 id="cheat">Шпаргалка</h2>
+<p>Всё, чего нет на панели, на одном экране.</p>
+<div class="tw"><table>
+<tr><th>Что сделать</th><th>Что будет</th></tr>
+<tr><td>Любая кнопка</td><td>нажать = её страницы, ещё раз = следующая; держать = её слой; двойное нажатие = слой остаётся открытым</td></tr>
+<tr><td>ALGORITHM / PRESETS / SELECT</td><td>дорожка / звук / темп, на любой странице</td></tr>
+<tr><td><kbd>SAVE</kbd> держать</td><td>отмена (ещё раз: вернуть)</td></tr>
+<tr><td><kbd>HOME</kbd> держать</td><td>меню</td></tr>
+<tr><td>Стоп, <kbd>SAVE</kbd>, K1, <kbd>OCT+</kbd>, <kbd>OCT+</kbd></td><td>сохранить звук в пользовательский слот</td></tr>
+<tr><td><kbd>REC</kbd></td><td>запись на дорожку: в стопе на STEP клавиши пишут шаги, на ходу пишут вживую</td></tr>
+<tr><td>STEP: держать шаг + ручка</td><td>лок: значение только на этом шаге</td></tr>
+<tr><td>STEP: держать шаг + <kbd>EDIT</kbd></td><td>снять локи шага</td></tr>
+<tr><td>Драм-сетка</td><td>чёрные выбирают линию, белые это шаги 1-16</td></tr>
+<tr><td><kbd>SEQ</kbd> держать + F5 / G5</td><td>DICE (новая партия) / MOOD (следующее настроение)</td></tr>
+<tr><td><kbd>SEQ</kbd> держать + K1-K4</td><td>LEN, DIV, SWING, GATE</td></tr>
+<tr><td><kbd>SEQ</kbd> держать + <kbd>OCT−</kbd></td><td>дорожка как была до слоя</td></tr>
+<tr><td><kbd>EDIT</kbd> держать + белая</td><td>движок</td></tr>
+<tr><td><kbd>EDIT</kbd> держать + E5 / F5 / G5</td><td>INIT / CLEAN / OOPS (счастливая случайность)</td></tr>
+<tr><td><kbd>FX</kbd> держать + белая</td><td>эффект включить, ещё раз: выключить</td></tr>
+<tr><td><kbd>FX</kbd> держать + <kbd>OCT−</kbd></td><td>выключить все эффекты</td></tr>
+<tr><td><kbd>FX</kbd> держать + чёрная</td><td>мьют дорожки</td></tr>
+<tr><td><kbd>FX</kbd> держать + SELECT</td><td>СТЕНА, от тишины до стены</td></tr>
+<tr><td><kbd>FX</kbd> держать, держать клавишу + PRESETS</td><td>другой эффект на эту клавишу (EDIT: вернуть)</td></tr>
+<tr><td><kbd>GLO</kbd> держать</td><td>F#3-C#4 мьют, F3-B3 соло, C4 снять мьюты, D4 MIDI LEARN, E4 FILL, F4 TAP, K1-K4 громкости</td></tr>
+<tr><td><kbd>GLO</kbd> держать + SELECT</td><td>темп (если SELECT занят другим)</td></tr>
+<tr><td><kbd>SCL</kbd> держать + клавиша</td><td>тоника</td></tr>
+<tr><td><kbd>LFO</kbd> держать + ручка</td><td>MOMENTARY: отпустил, значение вернулось (<kbd>OCT+</kbd> оставит)</td></tr>
+<tr><td>FX &gt; DAMAGE, K1-K4</td><td>DMG (износ), CHAR (плёнка или цифра), WALL (от тишины до стены), HISS (шум плёнки)</td></tr>
+<tr><td>MIDI CC85 / CC86</td><td>СТЕНА / DAMAGE</td></tr>
+</table></div>
+
+<ul class="toc">
+  <li><a href="#cheat">Шпаргалка</a></li>
+  <li><a href="#install">Установка</a></li>
+  <li><a href="#panel">Панель</a></li>
+  <li><a href="#first">Первые пять минут</a></li>
+  <li><a href="#sounds">Как менять звуки</a></li>
+  <li><a href="#glch">GLCH: главный движок</a></li>
+  <li><a href="#oops">HAPPY ACCIDENT (OOPS)</a></li>
+  <li><a href="#seq">Секвенсор</a></li>
+  <li><a href="#drums">Драмы</a></li>
+  <li><a href="#tools">SEQ TOOLS</a></li>
+  <li><a href="#dice">DICE и настроения</a></li>
+  <li><a href="#perform">Живые эффекты</a></li>
+  <li><a href="#glo">Мьюты, соло, филлы, песни</a></li>
+  <li><a href="#fx">Эффекты: что есть что</a></li>
+  <li><a href="#damage">DAMAGE и СТЕНА</a></li>
+  <li><a href="#save">Сохранение и отмена</a></li>
+  <li><a href="#midi">MIDI и USB-аудио</a></li>
+  <li><a href="#menu">Меню и экран</a></li>
+  <li><a href="#list">Все звуки</a></li>
+  <li><a href="#credits">Авторы и исходники</a></li>
+</ul>
+
+<h2 id="install">Установка</h2>
+<ol>
+  <li>Подключи FM-1 по USB. Нужен Chrome или Edge на компьютере (установщику нужен Web MIDI).</li>
+  <li>Открой <a href="../webapp/installer/">установщик</a>, нажми Connect, потом Install. Не выдёргивай кабель, пока не напишет, что готово.</li>
+  <li>FM-1 перезагрузится с заставкой KRIECHSTROM. На компьютере устройство называется <b>KRIECHSTROM</b> (и MIDI, и аудио).</li>
+</ol>
+<p>Проверено на FM-1 с новым чипом памяти. Проекты из Felucca открываются как есть. Вернуть официальную прошивку
+можно в том же установщике.</p>
+<figure><img src="../shots/splash.png" alt="заставка"><figcaption>Включение.</figcaption></figure>
+
+<h2 id="panel">Панель</h2>
+<p>У каждой кнопки две роли: <b>нажать</b> = её страницы (ещё раз = следующая страница), <b>держать</b> = её слой,
+карта того, что сейчас делают клавиши. Двойное нажатие оставляет слой открытым без удержания.
+На страницах и в диалогах <kbd>OCT+</kbd> выполняет, <kbd>OCT−</kbd> назад.</p>
+<div class="tw"><table>
+<tr><th>Кнопка</th><th>Нажать</th><th>Держать</th></tr>
+<tr><td><kbd>HOME</kbd></td><td>HOME, MIXER, CLOCK</td><td>меню</td></tr>
+<tr><td><kbd>SEQ</kbd></td><td>STEP (пиано-ролл или драм-сетка), DETAIL, AUTOMATION</td><td>SEQ TOOLS (там же DICE)</td></tr>
+<tr><td><kbd>GLO</kbd></td><td>SONG</td><td>мьюты, соло, FILL, TAP темпа, MIDI LEARN, громкости</td></tr>
+<tr><td><kbd>SAVE</kbd></td><td>USER, PRESETS, PHRASES, PROJECT, TOOLS</td><td>отмена (UNDO)</td></tr>
+<tr><td><kbd>LFO</kbd></td><td>LFO, LFO 2, LFO DEST, MOD</td><td>с ручкой: MOMENTARY (значение возвращается)</td></tr>
+<tr><td><kbd>EDIT</kbd></td><td>EDIT 1, EDIT 2, страницы VOICE и страницы движка</td><td>движки на клавишах, INIT, CLEAN, OOPS</td></tr>
+<tr><td><kbd>FX</kbd></td><td>SENDS, SLICER, PEDAL, PEDAL MIX, DELAY, REVERB, CHORUS, DAMAGE</td><td>живые эффекты на клавишах</td></tr>
+<tr><td><kbd>SCL</kbd></td><td>SCL (лад), CHORD (аккорды)</td><td>любая клавиша ставит тонику</td></tr>
+<tr><td><kbd>ENV</kbd>, <kbd>ARP</kbd></td><td>огибающая, арпеджиатор</td><td></td></tr>
+<tr><td><kbd>REC</kbd></td><td>включает запись на дорожку</td><td>CLEAR, CLICK, COUNT-IN, громкость клика</td></tr>
+<tr><td><kbd>PLAY</kbd></td><td>старт / стоп</td><td></td></tr>
+</table></div>
+<div class="tw"><table>
+<tr><th>Ручка</th><th>Что делает</th></tr>
+<tr><td>ALGORITHM</td><td>выбор дорожки 1-4, на любой странице</td></tr>
+<tr><td>PRESETS</td><td>меняет звук дорожки на любой странице, кроме списков</td></tr>
+<tr><td>SELECT</td><td>темп</td></tr>
+<tr><td>K1 K2 K3 K4</td><td>четыре карточки вверху экрана</td></tr>
+<tr><td>MASTER</td><td>громкость</td></tr>
+</table></div>
+<p>Нижняя строка экрана всегда подсказывает, что делают кнопки на этой странице. HELP включён: при открытии страницы
+или слоя на две секунды появляется короткая подсказка.</p>
+<figure><img src="../shots/home.png" alt="экран HOME"><figcaption>HOME: четыре карточки это K1-K4, в шапке дорожка, слот паттерна, транспорт и темп.</figcaption></figure>
+
+<h2 id="first">Первые пять минут</h2>
+<ol>
+  <li>Нажми <kbd>PLAY</kbd>. Пойдёт бит и бас.</li>
+  <li>Крути <b>ALGORITHM</b>: выбираешь дорожку. Номер дорожки в левом верхнем углу.</li>
+  <li>Крути <b>PRESETS</b>: звук этой дорожки меняется прямо на ходу. Паттерн остаётся.</li>
+  <li>Играй на клавишах: они играют выбранной дорожкой.</li>
+  <li>Держи <kbd>SEQ</kbd> и нажми <kbd>F5</kbd> (DICE): у дорожки новая партия в текущем настроении. Ещё раз = другая.</li>
+  <li>Держи <kbd>FX</kbd> и нажми белую клавишу: включится повтор, фильтр, остановка ленты и прочее. Ещё раз: выключится. <kbd>OCT−</kbd> при зажатом FX выключает всё.</li>
+  <li>Не понравилось? Держи <kbd>SAVE</kbd>: отмена.</li>
+</ol>
+
+<h2 id="sounds">Как менять звуки</h2>
+<h3>PRESETS</h3>
+<p>Крути PRESETS где угодно. Два нажатия <kbd>SAVE</kbd> открывают список PRESETS: K2 выбирает движок, K3 добавляет
+в избранное, K4 показывает одну категорию (BASS, LEAD, PAD, PLUCK, KEYS, DRUM, FX).</p>
+<figure><img src="../shots/presets.png" alt="список звуков"><figcaption>SAVE &gt; PRESETS.</figcaption></figure>
+<h3>Движки</h3>
+<p>Держи <kbd>EDIT</kbd>: белые клавиши это движки. Нажал, и дорожка переключилась на этот движок с его первым звуком.</p>
+<figure><img src="../shots/layer_edit_active.png" alt="слой EDIT"><figcaption>EDIT зажат. E5 INIT, F5 CLEAN (голый движок), G5 OOPS.</figcaption></figure>
+<div class="tw"><table>
+<tr><th>Движок</th><th>Для чего</th></tr>
+<tr><td>ANALOG</td><td>субтрактивный: басы, секвенции, лиды</td></tr>
+<tr><td>FM6</td><td>шестиоператорный FM: расстроенные пианино, колокола, металл</td></tr>
+<tr><td>PHASE</td><td>фазовые искажения: пэды, холодные лиды, крики</td></tr>
+<tr><td>LOFI</td><td>чиповые волновые таблицы</td></tr>
+<tr><td>SAMPLE</td><td>пианино и другие сэмплы</td></tr>
+<tr><td>VOICE</td><td>форманты: хоры, шёпот</td></tr>
+<tr><td>TRIO</td><td>три осциллятора, жирные басы</td></tr>
+<tr><td>GLCH</td><td>из Glitchbox: клип, фолдер, кричащий фильтр, кранч, микрозаикание. Самый грязный движок</td></tr>
+<tr><td>GRAIN</td><td>гранулярные облака</td></tr>
+<tr><td>PHYS</td><td>щипковые и ударные струны, металл</td></tr>
+<tr><td>NOISE</td><td>шумы: помехи, ветер, сирены, гул</td></tr>
+<tr><td>SLICE</td><td>нарезанный брейк</td></tr>
+<tr><td>DRUM</td><td>драм-машина, восемь линий</td></tr>
+</table></div>
+<h3>Редактирование</h3>
+<p>Нажми <kbd>EDIT</kbd>: на EDIT 1 и EDIT 2 восемь параметров движка на K1-K4. Дальше VOICE (поли / моно, глайд)
+и страницы самого движка. <kbd>ENV</kbd> огибающая, <kbd>LFO</kbd> LFO и матрица модуляции.</p>
+<figure><img src="../shots/edit_analog.png" alt="страница EDIT"><figcaption>EDIT на ANALOG.</figcaption></figure>
+<p>Держи <kbd>LFO</kbd> и крути ручку: это MOMENTARY, отпустил LFO, значение вернулось.</p>
+
+<h2 id="glch">GLCH: главный движок</h2>
+<p>GLCH это сердце KRIECHSTROM: осциллятор (15 волн: SAW, SQR, DUAL, RING, NOIS, FAT, FM, FMX, FUZZ, REES, 808, GRIT,
+GROW, SYNC, SUPR) в кричащий фильтр, клиппер и фолдер, битовый кранч и микрозаикание, которое рубит ноту на куски.
+У большинства из 48 звуков уже стоит PEDAL (MUFF, BASS, SMASH, FUZZ, FOLD, CRUSH), поэтому они громкие и сломанные
+с первой ноты.</p>
+<div class="tw"><table>
+<tr><th>Ручка</th><th>EDIT 1</th><th>EDIT 2</th></tr>
+<tr><td>K1</td><td>WAVE: волна</td><td>CRSH: битовый кранч</td></tr>
+<tr><td>K2</td><td>CUT: срез фильтра</td><td>GLCH: как часто влезает заикание</td></tr>
+<tr><td>K3</td><td>RES: резонанс, до визга</td><td>SIZE: длина кусочка заикания</td></tr>
+<tr><td>K4</td><td>DRV: перегруз в клиппер</td><td>PJMP: скачки высоты между кусочками</td></tr>
+</table></div>
+<p>Попробуй: бас GLCH на дорожке 1 (BLOODLINE, SICK ENGINE, WARHEAD), DICE в настроении GRIND, потом несколько раз OOPS прямо на ходу.</p>
+
+<h2 id="oops">HAPPY ACCIDENT (OOPS)</h2>
+<p>Держи <kbd>EDIT</kbd> и нажми <kbd>G5</kbd>. Два-три параметра звука прыгают куда-то в сторону, иногда ещё и посыл
+в эффект. На экране написано, что поменялось, например <code>OOPS: CUT RES DLY</code>. Нажми ещё, будет ещё. Поймал
+что-то хорошее? Сохрани (SAVE &gt; USER). Улетело не туда? Держи <kbd>SAVE</kbd>: звук вернётся таким, каким был до
+первого OOPS.</p>
+<p>Громкость, паттерн, движок и кит OOPS не трогает, так что дорожка продолжает играть в общей картине.</p>
+
+<h2 id="seq">Секвенсор</h2>
+<p>У каждой дорожки свой паттерн до 64 шагов. Нажми <kbd>SEQ</kbd>: страница STEP. На синт-дорожке это пиано-ролл.</p>
+<figure><img src="../shots/roll_playing.png" alt="пиано-ролл"><figcaption>SEQ &gt; STEP на синт-дорожке во время игры.</figcaption></figure>
+<h3>Ноты по шагам</h3>
+<ol>
+  <li>Останови. Открой SEQ &gt; STEP. Нажми <kbd>REC</kbd>, дорожка готова к записи.</li>
+  <li>Нажми клавишу (или аккорд: зажми клавиши вместе). Нота встаёт в шаг под курсором, курсор идёт дальше.</li>
+  <li>K1 двигает курсор (STEP), K2 меняет ноту, K3 длину (через несколько шагов = залиговано), K4 флаги:
+  ACCENT и SLIDE.</li>
+  <li>Ещё раз <kbd>REC</kbd>, чтобы выйти из записи.</li>
+</ol>
+<h3>Ноты вживую</h3>
+<p>Нажми <kbd>PLAY</kbd>, потом <kbd>REC</kbd> и играй. Петля пишет всё, что ты играешь, с наложением на каждом круге.
+Твой тайминг сохраняется как NUDGE, а QUANTIZE на странице SCL решает, играть так, как ты сыграл, или по сетке.
+Держи <kbd>REC</kbd>: клик и отсчёт перед записью.</p>
+<h3>Локи: своё значение на одном шаге</h3>
+<p>На STEP держи шаг (его клавишу) и крути любую ручку: это значение будет только на этом шаге. Шаги с локами
+помечены точкой. Держи шаг и нажми <kbd>EDIT</kbd>, чтобы снять его локи.</p>
+<figure><img src="../shots/roll_locks.png" alt="локи"><figcaption>Шаги с локами.</figcaption></figure>
+<h3>DETAIL и AUTOMATION</h3>
+<p>Ещё раз <kbd>SEQ</kbd>: DETAIL, у шага под курсором CHANCE (и условия 1:2, 3:4, FILL), RATCHET (2-4 удара в шаге),
+NUDGE и VELOCITY. Курсор тут двигает PRESETS. Ещё раз: AUTOMATION, список всего, что происходит на шагах, локи и
+записанные движения ручек. Каждую запись можно поменять или удалить.</p>
+<div class="shots">
+<figure><img src="../shots/detail.png" alt="DETAIL"><figcaption>DETAIL.</figcaption></figure>
+<figure><img src="../shots/automation.png" alt="AUTOMATION"><figcaption>AUTOMATION.</figcaption></figure>
+</div>
+<h3>Длина, скорость, свинг</h3>
+<p>Держи <kbd>SEQ</kbd>: K1 LEN (1-64 шага), K2 DIV (от 4 тактов до 1/32), K3 SWING, K4 GATE. Разная длина на дорожках
+даёт полиметрию: 16 на драмах, 14 на басу, 7 на линии, и они плывут друг относительно друга.</p>
+
+<h2 id="drums">Драмы</h2>
+<p>На драм-дорожке STEP это сетка: <b>белые клавиши = шаги 1-16</b>, <b>чёрные = выбор линии</b> (бочка, снейр, клэп,
+закрытый хэт, открытый хэт, том, рим, колокол). Выбрал линию чёрной клавишей, белыми ставишь и снимаешь удары.
+K1 идёт по шагам (страницы по 16), K2 линия, K3 удар, K4 акцент.</p>
+<figure><img src="../shots/drum.png" alt="драм-сетка"><figcaption>Драм-сетка. Горят удары выбранной линии.</figcaption></figure>
+<p>Локи тоже работают: держи клавишу шага и крути ручку. Держи <kbd>EDIT</kbd> на драм-дорожке: чёрные клавиши мьютят
+линии. Киты: DRUM KIT, DEEP KIT, TIGHT KIT, PERC KIT, DESTROY (из Glitchbox, с педалью SMASH) и киты KRIECHSTROM:
+FACTORY, STOMP, GATED, BUNKER, TOMB, RIOT, METAL SHOP, DRY BONES. Кит меняется ручкой PRESETS, как любой звук.</p>
+
+<h2 id="tools">SEQ TOOLS</h2>
+<p>Держи <kbd>SEQ</kbd> на любой странице. Белые клавиши превращаются в инструменты для выбранной дорожки. Каждый
+инструмент отменяется одним <kbd>SAVE</kbd> (удержанием), а <kbd>OCT−</kbd> возвращает дорожку к тому, что было
+при открытии слоя.</p>
+<div class="shots">
+<figure><img src="../shots/layer_seq_tools.png" alt="SEQ TOOLS"><figcaption>SEQ зажат, синт-дорожка.</figcaption></figure>
+<figure><img src="../shots/layer_seq_tools_drum.png" alt="SEQ TOOLS драмы"><figcaption>SEQ зажат, драм-дорожка: инструменты линии (G4-C5) работают с линией, выбранной чёрной клавишей.</figcaption></figure>
+</div>
+<div class="tw"><table>
+<tr><th>Клавиша</th><th>Инструмент</th></tr>
+<tr><td>F3</td><td>CLEAR: очистить паттерн</td></tr>
+<tr><td>G3</td><td>REVERSE: задом наперёд</td></tr>
+<tr><td>A3, B3</td><td>SHIFT: сдвиг на шаг влево / вправо</td></tr>
+<tr><td>C4</td><td>RANDOM: новый бит или новые ноты в ладу на том же ритме</td></tr>
+<tr><td>D4</td><td>COOK: чуть-чуть меняет паттерн с каждым нажатием</td></tr>
+<tr><td>E4</td><td>BEAT (драмы): новый бит</td></tr>
+<tr><td>F4</td><td>EUCLID: удары равномерно (K1 удары, K2 шаги, K3 сдвиг; OCT+ применить)</td></tr>
+<tr><td>G4 A4 B4 C5</td><td>драмы: CLEAR, REVERSE, FILL, RANDOM выбранной линии</td></tr>
+<tr><td>D5</td><td>DOUBLE: паттерн вдвое длиннее, копией</td></tr>
+<tr><td>E5</td><td>HALF: только первая половина</td></tr>
+<tr><td>F5</td><td><b>DICE</b>: целая новая партия в текущем настроении</td></tr>
+<tr><td>G5</td><td><b>MOOD</b>: следующее настроение (его имя написано на клетке)</td></tr>
+</table></div>
+
+<h2 id="dice">DICE и настроения</h2>
+<p>DICE пишет партию под дорожку: на драмах бит, на дорожке 1 бас, на дорожке 2 стабы и аккорды, на 3 и 4 верхнюю
+линию, райзер или дрон. Ноты в ладу и от тоники дорожки (держи <kbd>SCL</kbd> и нажми клавишу, чтобы сменить тонику).
+Каждое нажатие даёт новое. MOOD выбирает характер:</p>
+<div class="tw"><table>
+<tr><th>Настроение</th><th>Характер</th></tr>
+<tr><td>MACHINE</td><td>секвенсор: шестнадцатые на тонике, бочка в пол, хэты на слабые</td></tr>
+<tr><td>GRIND</td><td>тяжело и с оттяжкой: бас сползает на малую секунду, низкие тянутые аккорды</td></tr>
+<tr><td>MARCH 7/8</td><td>14 шагов, долбит: хромающий марш</td></tr>
+<tr><td>GLITCH</td><td>сломано: удары и писки где попало, дыры в бите</td></tr>
+<tr><td>SPIRAL</td><td>линии, которые всё падают: пол уходит из-под ног, катятся томы</td></tr>
+<tr><td>GHOST</td><td>почти пусто: тянется тоника, одинокое пианино арпеджио, один колокол</td></tr>
+<tr><td>SURGE</td><td>всё сразу: бас на слабые доли, открытые хэты, клэпы, райзеры</td></tr>
+<tr><td>HUSH</td><td>тихо: восьмые на басу, тянутый аккорд, дрон сверху</td></tr>
+</table></div>
+<p>Настроение не сохраняется: FM-1 включается с MACHINE.</p>
+
+<h2 id="perform">Живые эффекты</h2>
+<p>Держи <kbd>FX</kbd> и нажми белую клавишу: эффект включится на весь микс, его клетка загорится. Нажми ещё раз:
+выключится. <kbd>OCT−</kbd> при зажатом FX выключает все эффекты. Чёрные клавиши мьютят дорожки. K1-K4 это
+макросы: FILTER, CRUSH, THROW, DEPTH. Покрути <b>SELECT</b> при зажатом FX: это СТЕНА (см. DAMAGE). Если хочешь, чтобы
+эффект звучал только пока держишь клавишу, поставь MENU &gt; CONTROL &gt; FX LATCH в OFF.</p>
+<figure><img src="../shots/perform_held.png" alt="слой FX"><figcaption>FX зажат.</figcaption></figure>
+<div class="tw"><table>
+<tr><th>Клавиша</th><th>Эффект</th><th>Клавиша</th><th>Эффект</th></tr>
+<tr><td>F3</td><td>повтор 1/8</td><td>G4</td><td>октава вверх (шиммер)</td></tr>
+<tr><td>G3</td><td>повтор 1/16</td><td>A4</td><td>октава вниз</td></tr>
+<tr><td>A3</td><td>повтор 1/32</td><td>B4</td><td>FLANGER</td></tr>
+<tr><td>B3</td><td>реверс</td><td>C5</td><td>PHASER</td></tr>
+<tr><td>C4</td><td>свип ФНЧ</td><td>D5</td><td>REV THROW: все посылы в ревер на максимум</td></tr>
+<tr><td>D4</td><td>свип ФВЧ</td><td>E5</td><td>ECHO THROW: все посылы в дилей на максимум</td></tr>
+<tr><td>E4</td><td>TAPE STOP</td><td>F5</td><td>ROLL (из Glitchbox): дробь с ускорением</td></tr>
+<tr><td>F4</td><td>FREEZE</td><td>G5</td><td>GATE 1/32 (из Glitchbox)</td></tr>
+</table></div>
+<p>На любую клавишу можно повесить любой эффект: держи клавишу в слое и крути PRESETS. Там же CRUSH SWEEP и RANDOM.</p>
+
+<h2 id="glo">Мьюты, соло, филлы, песни</h2>
+<p>Держи <kbd>GLO</kbd>: чёрные F#3-C#4 мьютят дорожки 1-4, белые F3-B3 соло пока держишь, C4 снимает все мьюты,
+D4 MIDI LEARN, E4 FILL пока держишь (играют шаги с условием FILL), F4 TAP темпа. K1-K4 громкости дорожек.</p>
+<figure><img src="../shots/layer_glo_active.png" alt="слой GLO"><figcaption>GLO зажат.</figcaption></figure>
+<p>Нажми <kbd>GLO</kbd>: SONG, до 16 секций, в каждой на всех дорожках играют слоты проекта A-D, с повторами.</p>
+
+<h2 id="fx">Эффекты: что есть что</h2>
+<p>Нажимай <kbd>FX</kbd> раз за разом: страницы идут по кругу. Крупная строка под ручками говорит, что делает
+страница. Любое значение, которое выключает эффект, на нуле показывает <b>OFF</b>.</p>
+<div class="tw"><table>
+<tr><th>Страница</th><th>Что это</th><th>Как выключить</th></tr>
+<tr><td>SENDS</td><td>сколько звука <b>этой дорожки</b> уходит в дисторшн, хорус, дилей и ревер (K1-K4)</td><td>ручку в OFF</td></tr>
+<tr><td>SLICER</td><td>рубит дорожку во времени: GATE или STUTTER, в темп</td><td>K1 OFF</td></tr>
+<tr><td>PEDAL</td><td>один эффект только на этой дорожке, как педаль перед усилителем: SOFT, HARD, FOLD, FUZZ, CRUSH,
+PHASR, FLANG, CHOR, MUFF (фузз), BASS (перегруз басового усилителя), SMASH (задавленный компрессор), DAMG (износ, ниже)</td><td>K1 OFF</td></tr>
+<tr><td>PEDAL MIX</td><td>сколько педали слышно, от сухого к мокрому</td><td>OFF</td></tr>
+<tr><td>DELAY</td><td>один дилей на все дорожки: TIME, FEEDBACK, COLOUR, MIX</td><td>MIX OFF (все дорожки) или посыл DLY у дорожки</td></tr>
+<tr><td>REVERB</td><td>один ревер на все дорожки: ROOM, SPRING, HALL, размер, глушение</td><td>посыл REV у дорожки</td></tr>
+<tr><td>CHORUS</td><td>один хорус на все дорожки</td><td>посыл CHO у дорожки</td></tr>
+<tr><td>DAMAGE</td><td>износ всего микса и СТЕНА</td><td>DMG OFF, WALL OFF</td></tr>
+</table></div>
+<p>Дилей, ревер и хорус общие: дорожка попадает в них через свои SENDS. Поэтому дилей «не выключается», когда
+меняешь звук: у звука свой посыл DLY. DELAY &gt; MIX в OFF глушит дилей для всех, SENDS &gt; DLY в OFF для одной
+дорожки.</p>
+<div class="shots">
+<figure><img src="../shots/fx.png" alt="SENDS"><figcaption>SENDS: эта дорожка в эффекты.</figcaption></figure>
+<figure><img src="../shots/dly.png" alt="DELAY"><figcaption>DELAY: общий, MIX 0 = выключен.</figcaption></figure>
+</div>
+
+<h2 id="damage">DAMAGE и СТЕНА</h2>
+<p>Последняя страница FX, на ней четыре отдельные вещи:</p>
+<ul>
+<li><b>DMG</b> (K1) изнашивает весь микс: сильный перегруз, а дальше, по мере того как <b>CHAR</b> (K2) идёт от плёнки к
+цифре, тёмный тон, плавающая высота и провалы как у растянутой ленты, или потерянные биты, упавшая частота
+дискретизации и жёсткие обрывы.</li>
+<li><b>WALL</b> (K3) это одна ручка от тишины до стены, без всякого износа: поднимает у всех дорожек дисторшн и посылы в
+эффекты, сильно сжимает микс и подмешивает его под самого себя (всё становится плотным и огромным), а с 80 %
+включает шаги FILL. Крути прямо в игре: держи <kbd>FX</kbd> и крути <b>SELECT</b>.</li>
+<li><b>HISS</b> (K4) это шум плёнки отдельно от всего: шипит, пока крутится лента, то есть пока нажат PLAY, а в стопе пока ты играешь и ещё секунду после. В стопе и тишине молчит. OFF: никогда.</li>
+</ul>
+<p>С контроллера: CC85 это WALL, CC86 это DMG. Педаль <b>DAMG</b> делает тот же износ на одной дорожке (AMT, CHAR, LEVEL).</p>
+<div class="shots">
+<figure><img src="../shots/damage.png" alt="DAMAGE"><figcaption>FX &gt; DAMAGE.</figcaption></figure>
+<figure><img src="../shots/insert_damg.png" alt="педаль DAMG"><figcaption>PEDAL DAMG на одной дорожке.</figcaption></figure>
+</div>
+
+<h2 id="save">Сохранение и отмена</h2>
+<ul>
+  <li><b>Отмена:</b> держи <kbd>SAVE</kbd>. Работает для смены звука, инструментов, DICE, OOPS, очистки.</li>
+  <li><b>Звук:</b> останови, нажми <kbd>SAVE</kbd> (USER), K1 выбери слот, <kbd>OCT+</kbd>, назови клавишами, <kbd>OCT+</kbd>. 32 слота.</li>
+  <li><b>Музыка:</b> SAVE &gt; PROJECT: четыре проекта, K4 сохранить, K3 загрузить, K2 стереть.</li>
+  <li><b>Паттерны:</b> SAVE &gt; PHRASES грузит готовые паттерны в дорожку.</li>
+  <li><b>Автосейв:</b> выключил и включил FM-1, музыка на месте (MENU &gt; RESTORE LAST).</li>
+</ul>
+<figure><img src="../shots/project.png" alt="PROJECT"><figcaption>SAVE &gt; PROJECT.</figcaption></figure>
+
+<h2 id="midi">MIDI и USB-аудио</h2>
+<ul>
+  <li>MIDI вход по USB и TRS: каналы 1-4 играют дорожки 1-4 (другие каналы: MENU &gt; MIDI &gt; MIDI IN).</li>
+  <li>Клавиши шлют MIDI на канал дорожки. Клок внутренний, по USB или по TRS.</li>
+  <li>CC: 5 глайд, 7 громкость, 10 панорама, 71 резонанс, 74 яркость, 72/73/75 релиз/атака/спад, 91/93/94 ревер, хорус, дилей. На GLCH 74 срез, 71 резонанс.</li>
+  <li>MIDI LEARN: держи GLO, нажми D4, покрути ручку на FM-1 и ручку на контроллере.</li>
+  <li>USB-аудио: FM-1 виден как стерео аудиовход KRIECHSTROM. Пиши в любую DAW, драйвер не нужен.
+  В KRIECHSTROM служебная USB-консоль выключена по умолчанию, поэтому macOS 13-15 сразу видит аудиовход.</li>
+</ul>
+
+<h2 id="menu">Меню и экран</h2>
+<p>Держи <kbd>HOME</kbd>: меню. ALGORITHM переключает вкладки, PRESETS строки, любая ручка меняет значение, HOME
+закрывает. KRIECHSTROM стартует с темой STROM (чёрное с красным), с крупными цифрами (LARGE) и с подсказками (HELP).
+Другие цвета: DISPLAY &gt; COLOR.</p>
+<figure><img src="../shots/menu.png" alt="меню"><figcaption>Меню.</figcaption></figure>
+
+<h2 id="list">Все звуки</h2>
+<p>171 звуков. В скобках категория для фильтра LIST на SAVE &gt; PRESETS (K4).</p>
+<h3>ANALOG · 24</h3>
+<p>SAW LEAD <small>(лид)</small>, SOFT PAD <small>(пэд)</small>, SQR BASS <small>(бас)</small>, PWM STR <small>(пэд)</small>, ACID <small>(бас)</small>, SINE KEY <small>(клавиши)</small>, RAVE <small>(лид)</small>, SUB BASS <small>(бас)</small>, PLUCK <small>(щипок)</small>, BRASS <small>(лид)</small>, WIND <small>(лид)</small>, STRINGS <small>(пэд)</small>, RUST SAW <small>(бас)</small>, PISTON <small>(бас)</small>, COLD SQUARE <small>(бас)</small>, BLACK PULSE <small>(бас)</small>, IRON LUNG <small>(бас)</small>, SUB FLOOR <small>(бас)</small>, HAMMER <small>(бас)</small>, SEQUENCE <small>(бас)</small>, SPINE <small>(бас)</small>, SLOW BURN <small>(бас)</small>, HOLLOW <small>(пэд)</small>, GUTTER <small>(бас)</small></p>
+<h3>FM6 · 20</h3>
+<p>TINE EP <small>(клавиши)</small>, BELL <small>(щипок)</small>, FM BASS <small>(бас)</small>, BRASS <small>(лид)</small>, PAD <small>(пэд)</small>, MARIMBA <small>(щипок)</small>, ORGAN <small>(клавиши)</small>, PLUCK <small>(щипок)</small>, BROKEN PIANO <small>(клавиши)</small>, GLASS BELL <small>(щипок)</small>, CHAPEL <small>(клавиши)</small>, WIRE HARP <small>(щипок)</small>, MERCY <small>(клавиши)</small>, SHARDS <small>(щипок)</small>, GRAVE BELL <small>(щипок)</small>, RUSTED EP <small>(клавиши)</small>, TOY PIANO <small>(клавиши)</small>, MOURNING <small>(пэд)</small>, FERRIC <small>(бас)</small>, NEEDLE <small>(щипок)</small></p>
+<h3>PHASE · 16</h3>
+<p>BRASS <small>(лид)</small>, ORGAN <small>(клавиши)</small>, STRING <small>(пэд)</small>, RESO <small>(лид)</small>, BELL <small>(щипок)</small>, WIRE <small>(щипок)</small>, SICK PAD <small>(пэд)</small>, ICE <small>(пэд)</small>, STATIC ANGEL <small>(пэд)</small>, COMA <small>(пэд)</small>, VAULT <small>(пэд)</small>, LAST LIGHT <small>(пэд)</small>, HYMN <small>(пэд)</small>, SCREAM LEAD <small>(лид)</small>, RAZOR <small>(лид)</small>, SIREN <small>(пэд)</small></p>
+<h3>LOFI · 5</h3>
+<p>PULSE LD <small>(лид)</small>, WAVE BASS <small>(бас)</small>, ARP 8BIT <small>(лид)</small>, WAVE LEAD <small>(лид)</small>, STEP LEAD <small>(лид)</small></p>
+<h3>SAMPLE · 3</h3>
+<p>PIANO <small>(клавиши)</small>, FLUTE <small>(лид)</small>, SAX <small>(лид)</small></p>
+<h3>VOICE · 4</h3>
+<p>CHOIR AAH <small>(пэд)</small>, VOX LEAD <small>(лид)</small>, WOW BASS <small>(бас)</small>, WHISPER <small>(шум и FX)</small></p>
+<h3>TRIO · 5</h3>
+<p>FAT BASS <small>(бас)</small>, ARP LEAD <small>(лид)</small>, SYNC LEAD <small>(лид)</small>, RING BELL <small>(щипок)</small>, CHIP CHOIR <small>(пэд)</small></p>
+<h3>GLCH · 48</h3>
+<p>DESTROYER <small>(лид)</small>, FUZZ BASS <small>(бас)</small>, BROKEN <small>(шум и FX)</small>, SCREAM <small>(лид)</small>, NOIZ HIT <small>(шум и FX)</small>, HUM <small>(бас)</small>, NASTY FM <small>(лид)</small>, CRUSH LEAD <small>(лид)</small>, SQR FUZZ <small>(бас)</small>, FM BASS <small>(бас)</small>, MELTDOWN <small>(лид)</small>, RUST SAW <small>(бас)</small>, REESE <small>(бас)</small>, 808 DIST <small>(бас)</small>, GRIT BASS <small>(бас)</small>, GROWL <small>(бас)</small>, ACID FUZZ <small>(бас)</small>, OCTA SMASH <small>(бас)</small>, GRINDER <small>(бас)</small>, FILTH <small>(бас)</small>, SCAR TISSUE <small>(лид)</small>, DEAD WIRE <small>(лид)</small>, BITROT <small>(бас)</small>, BREAKER <small>(бас)</small>, FAULT LINE <small>(лид)</small>, FUZZ GUT <small>(бас)</small>, VOLTAGE <small>(лид)</small>, NERVE <small>(щипок)</small>, WIRE BRUSH <small>(шум и FX)</small>, SPLINTER <small>(шум и FX)</small>, BLOODLINE <small>(бас)</small>, SICK ENGINE <small>(бас)</small>, RUST BELT <small>(бас)</small>, CONCRETE <small>(бас)</small>, STATIC LEAD <small>(лид)</small>, HOWLER <small>(лид)</small>, BURN UNIT <small>(лид)</small>, CAUTERIZE <small>(щипок)</small>, STUTTER BASS <small>(бас)</small>, FRACTAL <small>(шум и FX)</small>, HUSHED FUZZ <small>(пэд)</small>, WARHEAD <small>(бас)</small>, SCREWDRIVER <small>(лид)</small>, CORRODED PAD <small>(пэд)</small>, TERMINAL HUM <small>(пэд)</small>, BROKEN RADIO <small>(шум и FX)</small>, SPIKE <small>(щипок)</small>, MACHINE GUN <small>(шум и FX)</small></p>
+<h3>GRAIN · 4</h3>
+<p>CLOUD PAD <small>(пэд)</small>, GLITCH <small>(шум и FX)</small>, FROZEN <small>(пэд)</small>, SHIMMER <small>(пэд)</small></p>
+<h3>PHYS · 9</h3>
+<p>BELL TREE <small>(щипок)</small>, MARIMBA <small>(щипок)</small>, PLUCK <small>(щипок)</small>, BOWED METAL <small>(пэд)</small>, KALIMBA <small>(щипок)</small>, HAND DRUM <small>(драмы)</small>, TOMS <small>(драмы)</small>, DRONE STRING <small>(пэд)</small>, HARP <small>(щипок)</small></p>
+<h3>DRUM · 13</h3>
+<p>DRUM KIT <small>(драмы)</small>, DEEP KIT <small>(драмы)</small>, TIGHT KIT <small>(драмы)</small>, PERC KIT <small>(драмы)</small>, DESTROY <small>(драмы)</small>, FACTORY <small>(драмы)</small>, STOMP <small>(драмы)</small>, GATED <small>(драмы)</small>, BUNKER <small>(драмы)</small>, TOMB <small>(драмы)</small>, RIOT <small>(драмы)</small>, METAL SHOP <small>(драмы)</small>, DRY BONES <small>(драмы)</small></p>
+<h3>NOISE · 18</h3>
+<p>WIND <small>(шум и FX)</small>, RAIN <small>(шум и FX)</small>, ARCADE <small>(шум и FX)</small>, METAL <small>(шум и FX)</small>, STATIC <small>(шум и FX)</small>, TV DEATH <small>(шум и FX)</small>, CRACKLE <small>(шум и FX)</small>, FEEDBACK <small>(шум и FX)</small>, VACUUM <small>(шум и FX)</small>, RISER <small>(шум и FX)</small>, GEIGER <small>(шум и FX)</small>, RADIO GHOST <small>(шум и FX)</small>, GENERATOR <small>(шум и FX)</small>, RUST WIND <small>(шум и FX)</small>, EARTHQUAKE <small>(шум и FX)</small>, DEAD AIR <small>(шум и FX)</small>, ALARM <small>(шум и FX)</small>, SHOCK <small>(шум и FX)</small></p>
+<h3>SLICE · 2</h3>
+<p>CHOP <small>(драмы)</small>, STUTTER <small>(драмы)</small></p>
+
+<h2 id="credits">Авторы и исходники</h2>
+<p>KRIECHSTROM это свободная программа под GNU GPL 3.0. Форк <b>Felucca</b> (Leo Kuroshita, Hügelton Instruments,
+GPL-3.0, движки под MIT). Из <b>Glitchbox</b> (erikdevos): движок GLCH, кит DESTROY, педали MUFF / BASS / SMASH,
+ROLL и GATE. Идеи из <b>DIRGE</b> (sinscum). Исходники именно этой сборки лежат на
+<a href="../ru.html#source">главной</a>.</p>
+</main>
+<footer>KRIECHSTROM 0.1 · на основе Felucca 1.8.2 · GPL-3.0</footer>
+</body>
+</html>
