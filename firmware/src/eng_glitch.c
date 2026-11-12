@@ -42,10 +42,11 @@
  * is not part of a bass: it would chop the sub) and EDIT 3 is called FUZZ. The lead waves SYNC (a hard-synced saw, its
  * slave swept by the envelope) and SUPR (three saws +-22 cents: Tron's wall) are in the chopped family. */
 static const char *const N_GLITCH_WAVE[] = {"SAW", "SQR", "DUAL", "RING", "NOIS", "FAT", "FM", "FMX",
-                                            "FUZZ", "REES", "808", "GRIT", "GROW", "SYNC", "SUPR"};
+                                            "FUZZ", "REES", "808", "GRIT", "GROW", "SYNC", "SUPR", "HOWL", "MIC"};
 enum { GW_SAW, GW_SQR, GW_DUAL, GW_RING, GW_NOIS, GW_FAT, GW_FM, GW_FMX,
-       GW_FUZZ, GW_REES, GW_808, GW_GRIT, GW_GROW, GW_SYNC, GW_SUPR };
+       GW_FUZZ, GW_REES, GW_808, GW_GRIT, GW_GROW, GW_SYNC, GW_SUPR, GW_HOWL, GW_MIC };
 #define GL_BASS(w) ((w) >= GW_FUZZ && (w) <= GW_GROW)
+#define GL_HOWL(w) ((w) >= GW_HOWL)                  /* KRIECHSTROM: the feedback family (howl_render) */
 
 #define GL_POLY 2u
 #define GL_BUF 3072u
@@ -85,6 +86,7 @@ static gl_slot_t *gl_slot_of(track_t *t, voice_t *v)
 /* the segment length of SIZE: 256..3072 samples */
 static uint32_t gl_seg(int32_t size) { return 256u + (uint32_t)clamp(size, 0, 127) * (GL_BUF - 256u) / 127u; }
 
+static void howl_note_on(track_t *t, voice_t *v, gl_slot_t *S);
 static void glitch_note_on(track_t *t, voice_t *v)
 {
     gl_slot_t *S = gl_slot_of(t, v);
@@ -97,6 +99,10 @@ static void glitch_note_on(track_t *t, voice_t *v)
     v->s[5] = 0;                                      /* DC block, Q8 */
     v->s[6] = 0;                                      /* FMX feedback */
     v->s[7] = 0;                                      /* bass family: the SUB octave's phase */
+    if (GL_HOWL(t->p[P_E0])) {                        /* KRIECHSTROM: the feedback family: an empty loop */
+        howl_note_on(t, v, S);
+        return;
+    }
     if (GL_BASS(t->p[P_E0])) {                        /* the bass family starts at phase 0 (the sub, the 808's */
         v->ph[0] = 0;                                 /* sine and the fuzz's fundamental add, not fight) */
         v->ph[1] = t->p[P_E0] == GW_808 ? 163840u : 0x40000000u;   /* 808: the pitch drop left, Q16 (2.5 x the pitch) */
@@ -272,9 +278,129 @@ static void bass_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
     v->s[7] = (int32_t)sph;
 }
 
+/* KRIECHSTROM: THE FEEDBACK FAMILY (HOWL MIC): no oscillator, a loop that feeds itself. The voice's ring (S->buf) is
+ * the loop; what comes round goes through the filter (CUT RES, the envelopes and the LFO move CUT as on the leads), a
+ * low cut, GAIN and a tanh, and back in. Under the loop's loss (GAIN under ~56: x1) a note is struck and dies away;
+ * above, it sustains, and higher it screams into the tanh. Noise starts it: BITE a burst at the note-on (10 ms) and, under
+ * it, from GAIN x0.9 up, a floor that never stops (so a loop over its loss grows out of nothing, as feedback does). BLOOM: GAIN climbs
+ * from half to the knob over 0 .. ~3 s (the howl swells in). CHAOS: the loop's length wanders (a random walk, up to
+ * +-6 %), the pitch with it. CRSH takes bits inside the loop (the grit goes round and round).
+ *   HOWL  the loop as long as the note's period: a string in overdrive, in tune with the keys (a filter's delay
+ *         flattens it a little)
+ *   MIC   a microphone in front of a speaker: the loop as long as a room (54 ms), a resonator tuned to the note in it
+ *         (RES: how narrow); the howl locks onto the room's mode at the note (its modes 18 Hz apart: on the key at
+ *         RES 110, a wide RES lets it slip to a neighbour) and CHAOS, moving the microphone, makes it jump between modes
+ * States: S->w the loop's write, S->rpos the gain now (Q12), S->xfrom the walk, S->spd its target, S->cnt the burst
+ * left, S->rng the noise; the voice's s[0] s[1] the SVF, s[2] s[3] MIC's resonator (a second SVF), s[5] the DC block
+ * (Q10), s[6] the low cut (Q8) */
+#define HW_ROOM (2400u << 8)                          /* MIC's loop: 2400 samples, 54 ms (Q8) */
+static int32_t howl_gain(const int16_t *p)           /* GAIN, Q12: x0.25 .. x2 (MIC x2.5: a room loses more) */
+{
+    return 1024 + p[P_E3] * (p[P_E0] == GW_MIC ? 72 : 56);
+}
+static void howl_note_on(track_t *t, voice_t *v, gl_slot_t *S)
+{
+    uint32_t k;
+    v->s[0] = v->s[1] = v->s[2] = v->s[3] = v->s[5] = v->s[6] = 0;
+    if (!S)
+        return;
+    for (k = 0; k < GL_BUF; k++)
+        S->buf[k] = 0;
+    S->w = 0;
+    S->rpos = t->p[P_E7] ? howl_gain(t->p) / 2 : howl_gain(t->p);
+    S->xfrom = S->spd = 0;
+    S->cnt = 441;
+    S->rng = (int32_t)(0x9E3779B9u ^ ((uint32_t)v->note << 8) ^ ((uint32_t)v->vel << 20));
+    if (!S->rng)
+        S->rng = 1;
+    S->loop = S->xf = 0;
+    S->filled = 0;
+}
+static void howl_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vmod_t *m)
+{
+    const int16_t *p = t->p;
+    gl_slot_t *S = gl_slot_of(t, v);
+    uint32_t i, mic = p[P_E0] == GW_MIC, inc = m->inc, w, len;
+    int32_t ic1 = v->s[0], ic2 = v->s[1], r1 = v->s[2], r2 = v->s[3], dc = v->s[5], lc = v->s[6];
+    int32_t gt = howl_gain(p), g, bloom = p[P_E7], chaos = p[P_E5], bite = p[P_E6], crsh = p[P_E4];
+    int32_t sh = crsh * 13 / 127, rk = 0;
+    tsvf_t flt, rf;
+    if (!S)
+        return;
+    {   /* BLOOM: the gain towards the knob (a line: 0 at once .. 127 ~3 s from half) */
+        int32_t st = (gt * 32) / (1 + bloom * bloom * 10);
+        st = st < 1 ? 1 : st;
+        S->rpos = S->rpos < gt ? (S->rpos + st < gt ? S->rpos + st : gt) : gt;
+        g = S->rpos;
+    }
+    {   /* CHAOS: a random walk of the length, a new target every 16 blocks */
+        if (!(S->filled++ & 15u))
+            S->spd = (int32_t)(noise32(&S->rng) >> 16) - 32768;
+        S->xfrom += (S->spd - S->xfrom) >> 4;
+    }
+    if (mic) {
+        len = HW_ROOM;
+        /* the resonator: the SVF's band at the note (cut index: 30 Hz .. 16 kHz in 127 steps, Q8), RES its width;
+         * the band peaks at 1 / k, so k (Q12) back down to 1 at the note */
+        rk = 8192 - p[P_E2] * 7600 / 127;
+        tsvf_coef_k(&rf, 13904 + 299 * ((int32_t)v->note - 69), rk);
+    } else {
+        len = (inc >> 8) ? 0xFFFFFFFFu / (inc >> 8) : (GL_BUF - 2u) << 8;   /* the period, Q8 */
+    }
+    len += (uint32_t)(((int32_t)(len >> 8) * ((S->xfrom * chaos) >> 11)) >> 8);   /* (+-1/16 at the top) */
+    len = len < (2u << 8) ? 2u << 8 : len > ((GL_BUF - 2u) << 8) ? (GL_BUF - 2u) << 8 : len;
+    tsvf_coef(&flt, (p[P_E1] << 8) + m->cutoff, mic ? 40 : p[P_E2]);
+    w = S->w;
+    for (i = 0; i < n; i++) {
+        int32_t x, y, e, a0, a1;
+        uint32_t li = len >> 8, fr = len & 255u, ri = w >= li ? w - li : w + GL_BUF - li;
+        a0 = S->buf[ri];
+        a1 = S->buf[ri ? ri - 1u : GL_BUF - 1u];
+        x = a0 + (((a1 - a0) * (int32_t)fr) >> 8);
+        if (mic) {                                    /* the resonator at the note: the SVF's band (tsvf_lp's v1) */
+            int32_t v3 = x - r2, v1 = (rf.a1 * r1 + rf.a2 * v3) >> 13, v2 = r2 + ((rf.a2 * r1 + rf.a3 * v3) >> 13);
+            r1 = clamp(2 * v1 - r1, -150000, 150000);
+            r2 = clamp(2 * v2 - r2, -150000, 150000);
+            x = clamp((v1 * rk) >> 12, -65535, 65535);
+        }
+        y = tsvf_lp(&flt, x >> 1, &ic1, &ic2) << 1;   /* the filter (MIC: a gentle one, the room's air) */
+        lc += ((y << 8) - lc) >> 8;                   /* the low cut, ~27 Hz */
+        y -= lc >> 8;
+        y = softclip(((y >> 2) * g) >> 10);           /* GAIN into the tanh */
+        if (sh)
+            y = (y >> sh) << sh;
+        e = (int32_t)(noise32(&S->rng) >> 17) - 16384;   /* the noise: the burst, then the floor */
+        if (S->cnt) {
+            S->cnt--;
+            e = (e * bite) >> 6;
+        } else {
+            e = gt >= 3686 ? (e * (bite + 8)) >> 13 : 0;   /* (the floor only near the threshold and over it) */
+        }
+        S->buf[w] = (int16_t)clamp(y + e, -32767, 32767);
+        w = w + 1u < GL_BUF ? w + 1u : 0u;
+        dc += y - (dc >> 10);
+        y -= dc >> 10;
+        out[i] += voice_amp(soft_knee(y, 24000), m, i) << 1;
+    }
+    S->w = (uint16_t)w;
+    v->s[0] = ic1;
+    v->s[1] = ic2;
+    v->s[2] = r1;
+    v->s[3] = r2;
+    v->s[5] = dc;
+    v->s[6] = lc;
+}
+
 /* EDIT 3 .. 7 of the bass family as the bass family names them (the same ranges and defaults) */
 static const param_desc_t *glitch_desc(const track_t *t, uint32_t k)
 {
+    static const param_desc_t H[8] = {                /* KRIECHSTROM: the feedback family's */
+        {0}, {0}, {0},
+        {"GAIN", F_PCT, 0, 127, 80, 0, 0}, {0},
+        {"CHAOS", F_PCT, 0, 127, 30, 0, 0}, {"BITE", F_PCT, 0, 127, 64, 0, 0}, {"BLOOM", F_PCT, 0, 127, 40, 0, 0},
+    };
+    if (GL_HOWL(t->p[P_E0]))
+        return k >= 3u && k != 4u ? &H[k] : 0;
     static const param_desc_t B[8] = {
         {0}, {0}, {0},
         {"FUZZ", F_PCT, 0, 127, 110, 0, 0}, {0},
@@ -289,6 +415,10 @@ static void glitch_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, cons
     gl_slot_t *S = gl_slot_of(t, v);
     if (GL_BASS(p[P_E0])) {
         bass_render(t, v, out, n, m);
+        return;
+    }
+    if (GL_HOWL(p[P_E0])) {
+        howl_render(t, v, out, n, m);
         return;
     }
     uint32_t wave = (uint32_t)p[P_E0], i, seg = gl_seg(p[P_E6]);
@@ -475,6 +605,15 @@ static const preset_t GLITCH_PRESETS[] = {
     {"BROKEN RADIO", {GW_NOIS, 80, 100, 90, 120, 120, 20, 90}, {0, 60, 30, 40}, 20, 0, FX(15, 20, 45, 40), PAT(5)},
     {"SPIKE", {GW_FM, 95, 100, 120, 80, 50, 15, 70}, {0, 50, 0, 40}, 55, 0, FX(25, 0, 35, 25), PAT(13)},
     {"MACHINE GUN", {GW_808, 70, 90, 127, 90, 127, 30, 0}, {0, 60, 30, 40}, 60, 0, FX(40, 0, 10, 20), PAT(12)},
+    /* KRIECHSTROM: the feedback family {WAVE, CUT, RES, GAIN, CRSH, CHAOS, BITE, BLOOM} */
+    {"FEEDBACK", {GW_HOWL, 100, 20, 80, 0, 20, 64, 30}, {0, 60, 127, 60}, 0, 1, FX(0, 0, 20, 30), PAT(18)},
+    {"STRUNG OUT", {GW_HOWL, 115, 10, 50, 0, 0, 110, 0}, {0, 80, 0, 40}, 0, 0, FX(10, 0, 30, 20), PAT(0)},
+    {"SCREAMER", {GW_HOWL, 95, 60, 127, 30, 40, 80, 10}, {0, 60, 127, 40}, 0, 1, FX(30, 0, 20, 20), PAT(0)},
+    {"SWELL", {GW_HOWL, 90, 30, 85, 0, 25, 30, 110}, {0, 60, 127, 80}, 0, 0, FX(0, 0, 30, 50), PAT(18)},
+    {"WOUNDED", {GW_HOWL, 70, 40, 75, 20, 100, 60, 40}, {0, 60, 127, 50}, 0, 1, FX(20, 0, 20, 30), PAT(0)},
+    {"PA HOWL", {GW_MIC, 110, 110, 90, 0, 20, 20, 60}, {0, 60, 127, 70}, 0, 1, FX(0, 0, 20, 40), PAT(18)},
+    {"WRONG ROOM", {GW_MIC, 100, 100, 100, 0, 90, 40, 30}, {0, 60, 127, 60}, 0, 1, FX(0, 0, 25, 40), PAT(0)},
+    {"STAGE FRIGHT", {GW_MIC, 105, 115, 120, 50, 50, 50, 10}, {0, 60, 127, 50}, 0, 1, FX(25, 0, 10, 30), PAT(0)},
 };
 
 /* KRIECHSTROM: each sound's INSERT (Glitchbox kept it in preset_t; here a table beside the presets, so the shared
@@ -533,6 +672,14 @@ static const uint8_t GLITCH_INS[][5] = {
     {0, 0, 0, 0, 0},   /* BROKEN RADIO */
     {0, 0, 0, 0, 0},   /* SPIKE */
     {INS_V(INS_SMASH, 95, 40, 110, 110)},   /* MACHINE GUN */
+    {0, 0, 0, 0, 0},   /* FEEDBACK */
+    {0, 0, 0, 0, 0},   /* STRUNG OUT */
+    {INS_V(INS_FUZZ, 80, 90, 110, 80)},   /* SCREAMER */
+    {0, 0, 0, 0, 0},   /* SWELL */
+    {0, 0, 0, 0, 0},   /* WOUNDED */
+    {0, 0, 0, 0, 0},   /* PA HOWL */
+    {0, 0, 0, 0, 0},   /* WRONG ROOM */
+    {INS_V(INS_CRUSH, 60, 70, 100, 70)},   /* STAGE FRIGHT */
 };
 _Static_assert(sizeof GLITCH_INS / sizeof GLITCH_INS[0] == sizeof GLITCH_PRESETS / sizeof GLITCH_PRESETS[0],
                "GLITCH_INS: one row a preset");
@@ -541,7 +688,7 @@ static const engine_t ENG_GLITCH = {
     .name = "GLCH",
     .page_title = {"TONE", "CHOP"},
     .edit = {
-        {"WAVE", F_ENUM, 0, 14, GW_FAT, N_GLITCH_WAVE, 0},
+        {"WAVE", F_ENUM, 0, 16, GW_FAT, N_GLITCH_WAVE, 0},
         {"CUT", F_CUTOFF, 0, 127, 80, 0, 0},
         {"RES", F_PCT, 0, 127, 95, 0, 0},
         {"DRV", F_PCT, 0, 127, 110, 0, 0},

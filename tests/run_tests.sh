@@ -388,6 +388,10 @@ if [ -f build/gen/felucca_tables.h ]; then
     mkdir -p build/infect_demo
     run "KRIECHSTROM INFECT (INSERT INFCT): off bit for bit, GATE DUCK CRUSH FOLD RING driven by a silent DRUM track, the page, demos" \
         "$OUT/krst_infect_test" build/infect_demo
+    $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_howl_test" tests/krst_howl_test.c -lm
+    mkdir -p build/howl_demo
+    run "KRIECHSTROM GLCH HOWL and MIC (the feedback family): threshold, in tune, BLOOM, the room's howl at the note, release, its sounds, demos" \
+        "$OUT/krst_howl_test" build/howl_demo
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_poweron_test" tests/krst_poweron_test.c -lm
     mkdir -p build/poweron_demo
     run "KRIECHSTROM power-on: its four sounds and patterns, PLAY sounds at once on every track" \

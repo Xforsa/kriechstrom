@@ -27,7 +27,7 @@ static const char *const PRESET_CAT[16] = {   /* (KRIECHSTROM: its sounds, the 2
     "KKLL",                      /* 4 SAMPLE: PIANO, (PIANO: the retired TRANH's alias), FLUTE, SAX */
     "PLBF",                      /* 5 VOICE: CHOIR AAH, VOX LEAD, WOW BASS, WHISPER */
     "BLLUP",                     /* 6 TRIO: FAT BASS, ARP LEAD, SYNC LEAD, RING BELL, CHIP CHOIR */
-    "LBFLFBLLBBLBBBBBBB" "BBLLBBLBLU" "FFBBBBLLLUBFPBLPPFUF",        /* 7 GLCH (KRIECHSTROM, from Glitchbox): DESTROYER, FUZZ BASS, BROKEN, SCREAM, NOIZ HIT, HUM,
+    "LBFLFBLLBBLBBBBBBB" "BBLLBBLBLU" "FFBBBBLLLUBFPBLPPFUF" "PULPLFFF",        /* 7 GLCH (KRIECHSTROM, from Glitchbox): DESTROYER, FUZZ BASS, BROKEN, SCREAM, NOIZ HIT, HUM,
                                   * NASTY FM, CRUSH LEAD, SQR FUZZ, FM BASS, MELTDOWN, RUST SAW, REESE, 808 DIST, GRIT BASS,
                                   * GROWL, ACID FUZZ, OCTA SMASH */
     "PFPP",                      /* 8 GRAIN: CLOUD PAD, GLITCH, FROZEN, SHIMMER */
