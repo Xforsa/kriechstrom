@@ -119,7 +119,8 @@ export class Updater {
     const outs = [...this.access.outputs.values()];
     for (const input of this.access.inputs.values()) {
       if (input.state === "disconnected") continue;
-      if (!/fm-1|felucca|kriechstrom|ota|composite|sinco|usb-midi/i.test(input.name || "")) continue;   // never probe other gear
+      if (!/fm-1|felucca|kriechstrom|clipper|sloop|ota|composite|sinco|usb-midi/i.test(input.name || "")) continue;   // never probe other gear
+      // (KRIECHSTROM: macOS keeps a port's first name; an FM-1 that once ran Clipper or SLOOP is still called so)
       const output = outs.find((o) => o.name === input.name && o.state !== "disconnected");
       if (!output) continue;
       try { await input.open(); await output.open(); } catch (_) { continue; }

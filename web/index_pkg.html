@@ -65,7 +65,7 @@ const TEXT = {
   ru: {
     intro: "Подключи FM-1 по USB. (Работает в Chrome или Edge.)",
     warn: "Не выдёргивай USB, пока идёт запись.",
-    install: "Установить", other: "English",
+    install: "Установить", other: "English", searching: "Ищу FM-1…",
     editor: "Редактор (после установки: звуки и паттерны с компьютера)",
     home: "Сайт и мануал",
     direct: "Кабель USB подключай прямо в компьютер. Ни программатор, ни Transporter не нужны.",
@@ -97,7 +97,7 @@ const TEXT = {
   en: {
     intro: "Connect the FM-1 by USB. (Works in Chrome or Edge.)",
     warn: "Do not unplug the USB cable while writing.",
-    install: "Install", other: "Русский",
+    install: "Install", other: "Русский", searching: "Looking for the FM-1…",
     home: "Site and manual",
     editor: "Editor (after installing: edit sounds and sequences from the computer)",
     direct: "Connect the USB cable directly to the computer. No probe or Transporter is needed.",
@@ -164,6 +164,7 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
 $("go").addEventListener("click", async () => {
   if (writing) return;
   lockInstaller(true);
+  sayK("searching");
   let midi;
   try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
   catch (e) { sayK("denied"); lockInstaller(false); return; }
@@ -222,6 +223,7 @@ function archiveInfo(a) {
 $("stock-go").addEventListener("click", async () => {
   if (!stock || writing) return;
   const selected = stock; lockInstaller(true);
+  sayK("searching");
   let link = null;
   try {
     let midi;

@@ -37,7 +37,7 @@ LOADER_MARK = b"FELUCCA-LOADER-1"
 # as the web installer's "Return to official V15" (web/fm1pkg.js validateStockPackage)
 STOCK_V15_SHA256 = "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a"
 STOCK_V16_SHA256 = "d017fb65e70aca97ee29d944470c3515a74581df5c0576bf70de917c7b2b61d5"   # KRIECHSTROM: newer units ship it
-PORT_RE = re.compile(r"fm-1|felucca|kriechstrom|ota|composite|sinco|usb-midi", re.I)   # never probe other gear
+PORT_RE = re.compile(r"fm-1|felucca|kriechstrom|clipper|sloop|ota|composite|sinco|usb-midi", re.I)   # never probe other gear
 
 # seconds; the tests shorten them
 DELAY = {"open": 0.3, "start": 2.0, "reply": 0.01, "loader": 3.0, "reboot": 3.0, "retry": 1.0,
