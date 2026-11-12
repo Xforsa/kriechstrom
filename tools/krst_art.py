@@ -170,14 +170,16 @@ def main():
         seed = int(sys.argv[sys.argv.index("--seed") + 1])
     art = ROOT / "site" / "art"
     art.mkdir(parents=True, exist_ok=True)
-    (art / "plant.png").unlink(missing_ok=True)
+    for old in ("plant.png", "splash_preview.png"):
+        (art / old).unlink(missing_ok=True)
     for old in ("hero.png", "tracking.png", "band.png"):
         (art / old).unlink(missing_ok=True)
     hero(seed).save(art / "hero.jpg", quality=84, optimize=True)
     tracking(seed).save(art / "tracking.jpg", quality=84, optimize=True)
     band(seed).save(art / "band.jpg", quality=84, optimize=True)
     small = splash(seed)
-    small.save(art / "splash_preview.png")
+    (ROOT / "build").mkdir(exist_ok=True)
+    small.save(ROOT / "build" / "splash_preview.png")      # (a look at it, not published)
     data = rle(to_levels(small))
     hdr = ROOT / "firmware" / "src" / "krst_art.h"
     rows = ["    " + ", ".join(f"0x{b:02X}" for b in data[i:i + 16]) + "," for i in range(0, len(data), 16)]
