@@ -5,6 +5,8 @@ versions are `X.Y`, the package identity `FM-1_5781XXYY`.
 
 ## [Unreleased]
 
+## [0.2] - 2026-11-12
+
 ### Changed
 - HISS hisses only while the tape runs: while PLAY plays, and when stopped while notes sound and a second after;
   stopped and silent it is quiet (it opens in ~50 ms, closes over 0.6 s)
@@ -32,4 +34,5 @@ The first release, built on Felucca 1.8.2.
 - the USB device name and the identity: KRIECHSTROM, `FM-1_57810001`
 - Felucca-Engines and felucca-bsp are kept in the tree instead of submodules
 
+[0.2]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.2
 [0.1]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.1

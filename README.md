@@ -52,7 +52,7 @@ with a cheat sheet of the button combinations that are not printed on the panel.
 
 ## Build
 
-See [BUILDING.md](BUILDING.md). In short: `./build.sh --release 0.1` (Docker and the JieLi toolchain), then
+See [BUILDING.md](BUILDING.md). In short: `./build.sh --release X.Y` (Docker and the JieLi toolchain), then
 `sh tests/run_tests.sh` for the host tests.
 
 ## Contributing
