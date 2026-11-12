@@ -1388,8 +1388,17 @@ static void draw_splash(void)
     lcd_fill(0, 0, 240, 240, T_BG);
     splash_art();
     cv_begin(240, 240 - SPL_TXT_Y, T_BG);
-    GFX_HOOK_ALIGN(0, 0, 240, 0, AL_H, "splash name centred");
-    cv_text_in(0, 10, 240, f, SPLASH_LINES[0], T_THEME, T_BG);
+    GFX_HOOK_ALIGN(0, 0, 240, 0, AL_H | AL_N(2), "splash name centred");   /* (KRIECH + STROM: one word) */
+    {   /* KRIECHSTROM: KRIECH in the text colour, STROM in the theme red, as on the site; centred as one word */
+        static const char KRIECH[] = "KRIECH";
+        const char *nm = SPLASH_LINES[0];
+        int32_t x = ink_in(f, nm, 240);
+        if (!memcmp(nm, KRIECH, sizeof KRIECH - 1)) {   /* (SPLASH_LINES[0] is KRIECHSTROM) */
+            x = cv_text_on(x, 10, f, KRIECH, T_TEXT, T_BG);
+            nm += sizeof KRIECH - 1;
+        }
+        cv_text_on(x, 10, f, nm, T_THEME, T_BG);
+    }
     cv_text_on(SPL_PAD, 52, &AF_S, SPLASH_LINES[1], T_TEXT, T_BG);
     cv_text_r(240 - SPL_PAD, 52, &AF_S, SPLASH_LINES[2], T_TEXT, T_BG);
     cv_blit(0, SPL_TXT_Y);

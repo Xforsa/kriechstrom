@@ -12,6 +12,8 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 - the installer shows a progress bar with a percentage for both installing and returning to the official firmware;
   the technical log is folded under Details
 - release builds keep the identity `FM-1_57810002` instead of taking a new one per version
+- the power-on screen shows the name as the site does: KRIECH in white, STROM in red
+- the site shows six screens, with the sound list and DAMAGE
 
 ## [0.2] - 2026-11-12
 
