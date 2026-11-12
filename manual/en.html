@@ -16,13 +16,13 @@
 </header>
 <main>
 <img class="band" style="margin-top:0" src="../art/band.jpg" alt="" width="1600" height="360">
-<h1>MANUAL <span class="red">/</span> <span class="red">0.1</span></h1>
-<p class="lead">Firmware for the M-VAVE FM-1. A dark industrial and EBM machine: four tracks, a sequencer with locks,
-drums that hit, sounds that break when you want them to.</p>
+<h1>MANUAL <span class="red">/</span> <span class="red">0.2</span></h1>
+<p class="lead">Firmware for the M-VAVE FM-1 for dark industrial and EBM: four tracks, a sequencer with locks, drums,
+distortion and live effects.</p>
 
 <div class="note">KRIECHSTROM is built on <b>Felucca 1.8.2</b> by Leo Kuroshita (Hügelton Instruments), GPL-3.0. The
 GLCH engine, the DESTROY kit, the MUFF / BASS / SMASH pedals and the ROLL and GATE effects come from
-<b>Glitchbox</b> by erikdevos. Glitchbox itself runs only on the older FM-1 flash chip; KRIECHSTROM brings its best parts to the newer
+<b>Glitchbox</b> by erikdevos. Glitchbox itself runs only on the older FM-1 flash chip; KRIECHSTROM brings these parts to the newer
 units. Everything Felucca does still works: this manual covers what you need to play, and what KRIECHSTROM added.</div>
 
 <h2 id="cheat">Cheat sheet</h2>
@@ -62,7 +62,7 @@ units. Everything Felucca does still works: this manual covers what you need to 
   <li><a href="#panel">The panel</a></li>
   <li><a href="#first">First five minutes</a></li>
   <li><a href="#sounds">Changing sounds</a></li>
-  <li><a href="#glch">GLCH: the signature engine</a></li>
+  <li><a href="#glch">The GLCH engine</a></li>
   <li><a href="#oops">HAPPY ACCIDENT (OOPS)</a></li>
   <li><a href="#seq">The sequencer</a></li>
   <li><a href="#drums">Drums</a></li>
@@ -141,13 +141,13 @@ K4 shows one category only (BASS, LEAD, PAD, PLUCK, KEYS, DRUM, FX).</p>
 <div class="tw"><table>
 <tr><th>Engine</th><th>What it is good for</th></tr>
 <tr><td>ANALOG</td><td>subtractive: basses, sequences, leads</td></tr>
-<tr><td>FM6</td><td>six-operator FM: broken pianos, bells, metal</td></tr>
-<tr><td>PHASE</td><td>phase distortion: pads, cold leads, screams</td></tr>
+<tr><td>FM6</td><td>six-operator FM: electric pianos, bells, metallic tones</td></tr>
+<tr><td>PHASE</td><td>phase distortion: pads and leads</td></tr>
 <tr><td>LOFI</td><td>wavetable chip sounds</td></tr>
 <tr><td>SAMPLE</td><td>the piano and other samples</td></tr>
 <tr><td>VOICE</td><td>formants, choirs, whispers</td></tr>
 <tr><td>TRIO</td><td>three oscillators, fat basses</td></tr>
-<tr><td>GLCH</td><td>from Glitchbox: clip, fold, screaming filter, crush, micro-stutter. The dirtiest engine here</td></tr>
+<tr><td>GLCH</td><td>from Glitchbox: clipping, wavefolding, a resonant filter, bit crushing, micro-stutter</td></tr>
 <tr><td>GRAIN</td><td>granular clouds</td></tr>
 <tr><td>PHYS</td><td>plucked and struck strings, metal</td></tr>
 <tr><td>NOISE</td><td>noise sources: static, wind, alarms, rumble</td></tr>
@@ -160,19 +160,18 @@ glide), and the engine's own pages. <kbd>ENV</kbd> is the envelope, <kbd>LFO</kb
 <figure><img src="../shots/edit_analog.png" alt="EDIT page"><figcaption>EDIT on ANALOG.</figcaption></figure>
 <p>Hold <kbd>LFO</kbd> and turn a knob for a MOMENTARY move: let go of LFO and the value jumps back.</p>
 
-<h2 id="glch">GLCH: the signature engine</h2>
-<p>GLCH is the heart of KRIECHSTROM: an oscillator (15 waves: SAW, SQR, DUAL, RING, NOIS, FAT, FM, FMX, FUZZ, REES,
-808, GRIT, GROW, SYNC, SUPR) into a screaming filter, a clipper and folder, a bit crusher and a micro-stutter that
+<h2 id="glch">The GLCH engine</h2>
+<p>GLCH is an oscillator (15 waves: SAW, SQR, DUAL, RING, NOIS, FAT, FM, FMX, FUZZ, REES,
+808, GRIT, GROW, SYNC, SUPR) into a resonant filter, a clipper and folder, a bit crusher and a micro-stutter that
 chops the note into pieces. Most of its 48 sounds come with a PEDAL already set (MUFF, BASS, SMASH, FUZZ, FOLD,
-CRUSH), so they are loud and broken from the first note.</p>
+CRUSH).</p>
 <div class="tw"><table>
 <tr><th>Knob</th><th>EDIT 1</th><th>EDIT 2</th></tr>
 <tr><td>K1</td><td>WAVE</td><td>CRSH: bit crush</td></tr>
 <tr><td>K2</td><td>CUT: filter cutoff</td><td>GLCH: how often the stutter cuts in</td></tr>
-<tr><td>K3</td><td>RES: resonance, up to a scream</td><td>SIZE: the stutter's slice length</td></tr>
+<tr><td>K3</td><td>RES: resonance, up to self-oscillation</td><td>SIZE: the stutter's slice length</td></tr>
 <tr><td>K4</td><td>DRV: drive into the clipper</td><td>PJMP: pitch jumps between slices</td></tr>
 </table></div>
-<p>Try: a GLCH bass on track 1 (BLOODLINE, SICK ENGINE, WARHEAD), DICE in GRIND, then OOPS a few times while it plays.</p>
 
 <h2 id="oops">HAPPY ACCIDENT (OOPS)</h2>
 <p>Hold <kbd>EDIT</kbd> and press <kbd>G5</kbd>. Two or three of the sound's parameters jump somewhere else, sometimes an
@@ -250,14 +249,14 @@ chords, on tracks 3 and 4 a high line, riser or drone. Notes are in the track's 
 press a key to change the root). Every press is different. MOOD picks what kind of part:</p>
 <div class="tw"><table>
 <tr><th>Mood</th><th>Feel</th></tr>
-<tr><td>MACHINE</td><td>the sequencer: sixteenths on the root, four on the floor, hats on the offbeat</td></tr>
-<tr><td>GRIND</td><td>heavy and late: the bass slides down into the flat second, low held chords</td></tr>
-<tr><td>MARCH 7/8</td><td>14 steps, pounding: the march that limps</td></tr>
-<tr><td>GLITCH</td><td>broken: hits and bleeps anywhere, holes in the beat</td></tr>
-<tr><td>SPIRAL</td><td>lines that keep falling: the floor gives way, toms rolling</td></tr>
-<tr><td>GHOST</td><td>almost empty: a held root, a lonely piano arpeggio, one bell</td></tr>
-<tr><td>SURGE</td><td>everything at once: offbeat bass, open hats, claps, risers</td></tr>
-<tr><td>HUSH</td><td>quiet: eighths on the bass, a held chord, a drone on top</td></tr>
+<tr><td>MACHINE</td><td>straight sixteenths on the root, kick on every beat, hats on the offbeat</td></tr>
+<tr><td>GRIND</td><td>slower: the bass slides to the flat second, low held chords</td></tr>
+<tr><td>MARCH 7/8</td><td>14 steps, accented notes on every other step</td></tr>
+<tr><td>GLITCH</td><td>random hits and notes, gaps in the beat</td></tr>
+<tr><td>SPIRAL</td><td>descending lines, tom rolls</td></tr>
+<tr><td>GHOST</td><td>sparse: a held root, an arpeggio, a single bell</td></tr>
+<tr><td>SURGE</td><td>dense: offbeat bass, open hats, claps, a riser</td></tr>
+<tr><td>HUSH</td><td>quiet: eighth notes in the bass, a held chord, a drone</td></tr>
 </table></div>
 <p>The mood is not saved: the FM-1 starts with MACHINE.</p>
 
@@ -294,12 +293,12 @@ Every value that turns an effect off reads <b>OFF</b> at zero.</p>
 <tr><td>SENDS</td><td>how much of <b>this track</b> goes into distortion, chorus, delay and reverb (K1-K4)</td><td>a knob at OFF</td></tr>
 <tr><td>SLICER</td><td>chops this track in time: GATE or STUTTER, in time with the tempo</td><td>K1 OFF</td></tr>
 <tr><td>PEDAL</td><td>one effect only on this track, like a pedal in front of an amp: SOFT, HARD, FOLD, FUZZ, CRUSH,
-PHASR, FLANG, CHOR, MUFF (fuzz pedal), BASS (bass amp drive), SMASH (squashed to bits), DAMG (wear, see below)</td><td>K1 OFF</td></tr>
+PHASR, FLANG, CHOR, MUFF (fuzz pedal), BASS (bass amp drive), SMASH (heavy compression and clipping), DAMG (wear, see below)</td><td>K1 OFF</td></tr>
 <tr><td>PEDAL MIX</td><td>how much of the pedal you hear, dry to wet</td><td>OFF</td></tr>
 <tr><td>DELAY</td><td>one delay shared by all tracks: TIME, FEEDBACK, COLOUR, MIX</td><td>MIX OFF (all tracks), or a track's DLY send</td></tr>
 <tr><td>REVERB</td><td>one reverb for all tracks: ROOM, SPRING, HALL, size, damping</td><td>a track's REV send</td></tr>
 <tr><td>CHORUS</td><td>one chorus for all tracks</td><td>a track's CHO send</td></tr>
-<tr><td>DAMAGE</td><td>the whole mix wearing out, and WALL</td><td>DMG OFF, WALL OFF</td></tr>
+<tr><td>DAMAGE</td><td>tape or digital degradation of the whole mix, WALL, HISS</td><td>DMG OFF, WALL OFF</td></tr>
 </table></div>
 <p>Delay, reverb and chorus are shared: a track gets them through its SENDS. That is why the delay "does not turn off"
 when you change the sound: the preset's sound has its own DLY send. Set DELAY &gt; MIX to OFF to silence the delay for
@@ -312,10 +311,10 @@ everyone, or SENDS &gt; DLY to OFF for one track.</p>
 <h2 id="damage">DAMAGE and WALL</h2>
 <p>The last FX page, four separate things:</p>
 <ul>
-<li><b>DMG</b> (K1) wears out the whole mix: heavy drive, then, as <b>CHAR</b> (K2) goes from tape to digital, a
+<li><b>DMG</b> (K1) degrades the whole mix: drive, then, as <b>CHAR</b> (K2) goes from tape to digital, a
 darker tone, the pitch wobbling and dips like a stretched tape, or lost bits, a dropped sample rate and hard cuts.</li>
 <li><b>WALL</b> (K3) is one knob from quiet to wall, with no wear in it: it pushes every track's distortion and effect
-sends up, squeezes the mix hard and adds it under itself (the whole thing gets thick and huge), and from 80 % on it
+sends up, adds a heavily compressed copy of the mix under it and widens the stereo, and from 80 % on it
 plays the FILL steps. Turn it while playing: hold <kbd>FX</kbd> and turn <b>SELECT</b>.</li>
 <li><b>HISS</b> (K4) is a tape's noise floor, on its own: it hisses while the tape runs, that is while PLAY plays, and when stopped while you play and for a second after. Stopped and silent: none. OFF: never.</li>
 </ul>
@@ -386,6 +385,6 @@ Instruments (GPL-3.0, its engines MIT). Parts of <b>Glitchbox</b> by erikdevos: 
 MUFF / BASS / SMASH inserts, ROLL and GATE. Ideas from <b>DIRGE</b> by sinscum. The source of this exact build is on
 the <a href="../index.html#source">home page</a>.</p>
 </main>
-<footer>KRIECHSTROM 0.1 · on Felucca 1.8.2 · GPL-3.0</footer>
+<footer>KRIECHSTROM 0.2 · on Felucca 1.8.2 · GPL-3.0</footer>
 </body>
 </html>
