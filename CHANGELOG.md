@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to KRIECHSTROM. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
-versions are `X.Y`, the package identity `FM-1_5781XXYY`.
+versions are `X.Y`; the package identity is `FM-1_57810002` for every release since 0.2.
 
 ## [Unreleased]
 
@@ -11,6 +11,7 @@ versions are `X.Y`, the package identity `FM-1_5781XXYY`.
   looking for the FM-1 at once
 - the installer shows a progress bar with a percentage for both installing and returning to the official firmware;
   the technical log is folded under Details
+- release builds keep the identity `FM-1_57810002` instead of taking a new one per version
 
 ## [0.2] - 2026-11-12
 

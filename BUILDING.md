@@ -2,8 +2,8 @@
 
 KRIECHSTROM builds exactly as Felucca, which it is a fork of; the notes below are Felucca's, with what differs here:
 
-- `./build.sh --release 0.1` makes `build/kriechstrom-0.1.fwsc`, identity `FM-1_57810001` (`FM-1_5781XXYY` for X.Y;
-  a build without `--release` is `FM-1_57810000`)
+- `./build.sh --release 0.1` makes `build/kriechstrom-0.1.fwsc`, identity `FM-1_57810002`, the same
+  for every release since 0.2 (0.1 was `FM-1_57810001`; a build without `--release` is `FM-1_57810000`)
 - the six engines and the hardware layer are in the tree (`firmware/engines/`, `firmware/bsp/`), not submodules:
   a plain clone or a source archive builds
 - `python3 tools/krst_art.py` draws the pictures (the site's and the splash's `firmware/src/krst_art.h`)
@@ -73,10 +73,10 @@ On Linux x86-64 the toolchain runs natively and Docker is not needed.
 `JIELI_TOOLCHAIN` and `AC79_SDK` override the default locations
 (`~/.jieli/toolchain`, `~/fw-AC79_AIoT_SDK`).
 
-`./build.sh --release 1.8.1` makes a release build: the package identity becomes `FM-1_918`
-and the version string `v1.8.1`; the package is `build/felucca-1.8.1.fwsc`, and
-`build/release-1.8.1/` holds what a release ships: the package, the app
-(`felucca-1.8.1-app.bin`), `SHA256SUMS`, the sample attribution, `LICENSE`, `LICENSING.md` and
+`./build.sh --release 0.3` makes a release build: the package identity becomes `FM-1_57810002`
+and the version string `v0.3`; the package is `build/felucca-0.3.fwsc`, and
+`build/release-0.3/` holds what a release ships: the package, the app
+(`felucca-0.3-app.bin`), `SHA256SUMS`, the sample attribution, `LICENSE`, `LICENSING.md` and
 `LICENSES/` (the package contains Apache-2.0 SDK files, so the licence texts travel with it).
 
 Build options (environment, `0` or `1`; defaults in `firmware/src/felucca.c`, `core.h` and `icons.c`):
