@@ -69,6 +69,10 @@ const BLOCKS = 20, BLK = 0x30, KEEP = 0x2F;
 const STOCK_V15_SHA256 = "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a";
 const STOCK_APP_SIZE = 0x8DFBC;
 const STOCK_V15_SIZE = 699956;
+// KRIECHSTROM: M-VAVE's V16 too (what newer FM-1s with the UC25HQ80 flash ship with); pinned the same way
+const STOCK_V16_SHA256 = "d017fb65e70aca97ee29d944470c3515a74581df5c0576bf70de917c7b2b61d5";
+const STOCK_V16_SIZE = 718196;
+const STOCK_SIZES = [STOCK_V15_SIZE, STOCK_V16_SIZE];
 
 const T = new Uint16Array(256);
 for (let i = 0; i < 256; i++) {
@@ -296,14 +300,20 @@ async function sha256hex(bytes) {
 // Only the user's unmodified official V15 is accepted for a return to stock.
 // The digest pins every file, loader and flash layout; filenames are not evidence.
 async function validateStockPackage(bytes) {
-  if (bytes.length !== STOCK_V15_SIZE || await sha256hex(bytes) !== STOCK_V15_SHA256)
-    throw new Error("Select the unmodified official FM-1 V15 file (FM-1.fwsc).");
+  const STOCK = [   /* (KRIECHSTROM: V16 added, its layout as read from M-VAVE's file) */
+    { size: STOCK_V15_SIZE, sha: STOCK_V15_SHA256, product: "FM-1_015", flash: 602112, appOff: 16672, app: STOCK_APP_SIZE },
+    { size: STOCK_V16_SIZE, sha: STOCK_V16_SHA256, product: "FM-1_016", flash: 692224, appOff: 16704, app: 597928 },
+  ];
+  const sha = STOCK.some((s) => s.size === bytes.length) ? await sha256hex(bytes) : "";
+  const s = STOCK.find((x) => x.size === bytes.length && x.sha === sha);
+  if (!s)
+    throw new Error("Select the unmodified official FM-1 firmware file, V15 or V16 (FM-1.fwsc).");
   const pkg = new Package(bytes);
-  if (pkg.product !== "FM-1_015" || pkg.flashFileOff !== 1044 || pkg.flashSize !== 602112 ||
-      pkg.appBase !== 16384 || pkg.appOff !== 16672 || pkg.app.size !== STOCK_APP_SIZE ||
+  if (pkg.product !== s.product || pkg.flashFileOff !== 1044 || pkg.flashSize !== s.flash ||
+      pkg.appBase !== 16384 || pkg.appOff !== s.appOff || pkg.app.size !== s.app ||
       !pkg.entries.some((e) => e.type === 100 && e.name === "ota.bin" && e.size === 19969))
     throw new Error("The official firmware has an unsupported FM-1 layout.");
-  return { product: pkg.product, image: logicalImage(bytes), sha256: STOCK_V15_SHA256 };
+  return { product: pkg.product, image: logicalImage(bytes), sha256: s.sha };
 }
 
 // official V15 + Felucca app -> installable package (Uint8Array)
@@ -733,12 +743,12 @@ const TEXT = {
     home: "Сайт и мануал",
     direct: "Кабель USB подключай прямо в компьютер. Ни программатор, ни Transporter не нужны.",
     brick: "Если установка сорвалась и FM-1 больше не стартует, для восстановления нужен Transporter:",
-    beta: "KRIECHSTROM 0.1 это тестовая версия. Автор не отвечает, если FM-1 сломается или поведёт себя не так из-за этой прошивки. Ставишь на свой риск.",
-    back: "Скачай официальную FM-1 V15 у M-VAVE и выбери нетронутый FM-1.fwsc. Браузер проверяет файл у тебя, на сервер он не уходит.",
-    stockTitle: "Вернуть официальную V15", stockFile: "Официальный FM-1.fwsc", stockGo: "Сделать бэкап и вернуть V15",
+    beta: "KRIECHSTROM пока в ранних версиях (0.x). Автор не отвечает, если FM-1 сломается или поведёт себя не так из-за этой прошивки. Ставишь на свой риск.",
+    back: "Скачай официальную прошивку FM-1 у M-VAVE (V15, для новых экземпляров V16) и выбери нетронутый FM-1.fwsc. Браузер проверяет файл у тебя, на сервер он не уходит.",
+    stockTitle: "Вернуть официальную прошивку (V15 / V16)", stockFile: "Официальный FM-1.fwsc", stockGo: "Сделать бэкап и вернуть официальную",
     stockBackup: "Сначала сохраняются текущая музыка, сохранённые проекты, банки звуков, сэмплы и настройки. Чтобы потом всё вернуть, поставь KRIECHSTROM снова и загрузи архив в редакторе.",
     stockRecovery: "Продолжить прерванное обновление: полный бэкап уже сохранён на компьютере",
-    stockValid: "Официальная V15 проверена", stockConfirm: "Полный бэкап сохранён на компьютере? Дальше FM-1 вернётся на официальную V15. Музыку KRIECHSTROM официальная V15 открыть не сможет.",
+    stockValid: "Официальная прошивка проверена", stockConfirm: "Полный бэкап сохранён на компьютере? Дальше FM-1 вернётся на официальную прошивку. Музыку KRIECHSTROM она открыть не сможет.",
     stockNeedBackup: "Из режима обновления бэкап не сделать. Отметь продолжение, только если бэкап уже сохранён.",
     stockUnsupported: "Эта версия не умеет полный бэкап. Сначала поставь свежий KRIECHSTROM.",
     backup: "Сохраняю полный бэкап ", stockError: "Не получилось проверить официальную прошивку: ",
@@ -765,12 +775,12 @@ const TEXT = {
     editor: "Editor (after installing: edit sounds and sequences from the computer)",
     direct: "Connect the USB cable directly to the computer. No probe or Transporter is needed.",
     brick: "If an install fails and the FM-1 no longer starts, recovering it needs a Transporter:",
-    beta: "KRIECHSTROM 0.1 is a test release. The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
-    back: "Get official FM-1 V15 from M-VAVE and select the unmodified FM-1.fwsc. The browser validates it locally; it is not sent to a server.",
-    stockTitle: "Return to official V15", stockFile: "Official FM-1.fwsc", stockGo: "Back up and return to official V15",
+    beta: "KRIECHSTROM is in its early releases (0.x). The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
+    back: "Get the official FM-1 firmware (V15, or V16 for newer units) from M-VAVE and select the unmodified FM-1.fwsc. The browser validates it locally; it is not sent to a server.",
+    stockTitle: "Return to the official firmware (V15 / V16)", stockFile: "Official FM-1.fwsc", stockGo: "Back up and return to the official firmware",
     stockBackup: "Current music, saved music, sound banks, samples and settings are saved first. To restore an archive later, install KRIECHSTROM again and use the editor.",
     stockRecovery: "Resume an interrupted update: I already saved a complete backup to this computer",
-    stockValid: "Official V15 verified", stockConfirm: "Has the complete backup file been saved to this computer? Continue to return to official V15. Official V15 cannot open KRIECHSTROM music.",
+    stockValid: "Official firmware verified", stockConfirm: "Has the complete backup file been saved to this computer? Continue to return to the official firmware. It cannot open KRIECHSTROM music.",
     stockNeedBackup: "An update loader cannot export a backup. Only select resume if you already saved a complete backup.",
     stockUnsupported: "This version does not support complete backups. Install the current KRIECHSTROM first.",
     backup: "Saving complete backup ", stockError: "Cannot validate official firmware: ",
@@ -861,7 +871,7 @@ $("stock-file").addEventListener("change", async () => {
   const epoch = ++stockFileEpoch, file = $("stock-file").files[0]; stock = null; lockInstaller(false);
   if (!file) return;
   try {
-    if (file.size !== STOCK_V15_SIZE) throw new Error("FM-1 V15 / FM-1.fwsc");
+    if (!STOCK_SIZES.includes(file.size)) throw new Error("FM-1 V15 / V16, FM-1.fwsc");
     const verified = await validateStockPackage(new Uint8Array(await file.arrayBuffer()));
     if (epoch !== stockFileEpoch) return;
     stock = verified; sayK("stockValid"); lockInstaller(false);
