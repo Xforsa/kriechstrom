@@ -4,8 +4,8 @@
   "kinds": [
     "groove"
   ],
-  "editor": "https://Xforsa.github.io/kriechstrom/webapp/editor/",
-  "cheat": "https://Xforsa.github.io/kriechstrom/manual/en.html#cheat",
+  "editor": "https://xforsa.github.io/kriechstrom/webapp/editor/",
+  "cheat": "https://xforsa.github.io/kriechstrom/manual/en.html#cheat",
   "image": "docs/card.png",
   "color": "#FF2018"
 }
