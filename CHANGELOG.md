@@ -5,6 +5,9 @@ versions are `X.Y`, the package identity `FM-1_5781XXYY`.
 
 ## [Unreleased]
 
+### Changed
+- the installer returns to the official firmware from V16 as well as V15 (newer FM-1s ship with V16)
+
 ## [0.2] - 2026-11-12
 
 ### Changed
