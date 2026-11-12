@@ -9,6 +9,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KRIECHSTROM Editor</title>
+<link rel="icon" href="../../art/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="../../art/favicon-32.png">
+<link rel="apple-touch-icon" href="../../art/icon-180.png">
 <style>
   /* Fukiai: Hügelton Instruments' icon font (MIT, FUKIAI-LICENSE.txt). Icons are text in .ic spans;
      they stay hidden until the face has loaded (html.fk), so a missing font never shows boxes. */
@@ -2905,7 +2908,7 @@ const TEXT = {
     smpSlots: "Sample slots", userBank: "User presets", none: "none",
   },
 };
-let lang = (navigator.language || "en").toLowerCase().startsWith("ru") ? "ru" : "en";
+let lang = "en";   /* (KRIECHSTROM: English first; the button switches to Russian) */
 const t = (k) => TEXT[lang][k] ?? k;
 let lastKey = null, lastArg = "";
 function sayK(k, arg = "") { lastKey = k; lastArg = arg; $("status").textContent = t(k) + arg; }
