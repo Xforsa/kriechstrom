@@ -2,8 +2,8 @@
 
 KRIECHSTROM is a fork of Felucca and keeps its licences unchanged: GPL-3.0-only for the firmware, tools, web pages and
 tests, the parts below with their own. Its own files (`firmware/src/krst_*.c`, `krst_art.h`, `tools/krst_art.py`,
-`site/`, `tests/krst_*_test.c` and its changes everywhere else) are GPL-3.0-only too, Copyright (C) 2026 the KRIECHSTROM
-contributors. `firmware/src/eng_glitch.c` and the MUFF / BASS / SMASH inserts come from Glitchbox (erikdevos,
+`site/`, `tests/krst_*_test.c` and its changes everywhere else) are GPL-3.0-only too, Copyright (C) 2026 Grigorii
+Bezborodov. `firmware/src/eng_glitch.c` and the MUFF / BASS / SMASH inserts come from Glitchbox (erikdevos,
 github.com/erikdevos/glitchbox), GPL-3.0-only, as Felucca. `firmware/engines/` (Felucca-Engines, MIT, with KRIECHSTROM's
 added presets) and `firmware/bsp/` (felucca-bsp, MPL-2.0) are in the tree, not submodules, under their own licences.
 The pictures are drawn by `tools/krst_art.py` in this tree (no stock images).

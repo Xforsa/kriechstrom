@@ -1,5 +1,7 @@
 # KRIECHSTROM
 
+by Grigorii Bezborodov
+
 [![build and test](https://github.com/Xforsa/kriechstrom/actions/workflows/ci.yml/badge.svg)](https://github.com/Xforsa/kriechstrom/actions/workflows/ci.yml)
 [![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/Xforsa/kriechstrom)](https://github.com/Xforsa/kriechstrom/releases)
