@@ -9,6 +9,8 @@ versions are `X.Y`, the package identity `FM-1_5781XXYY`.
 - the installer returns to the official firmware from V16 as well as V15 (newer FM-1s ship with V16)
 - the installer and the editor find an FM-1 whose MIDI port macOS still calls Clipper or SLOOP; the installer says it is
   looking for the FM-1 at once
+- the installer shows a progress bar with a percentage for both installing and returning to the official firmware;
+  the technical log is folded under Details
 
 ## [0.2] - 2026-11-12
 
