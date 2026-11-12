@@ -4,9 +4,9 @@
  * then the feature comes in. Each piece is a phrase of 4 bars (64 steps on every track) played twice.
  *   damage    D minor, 84 BPM: a broken piano's arpeggios over a sub bass and a half-time beat; DAMAGE on tape
  *             from bar 3, digital from bar 6
- *   wall      E minor, 120 BPM: EBM, a sixteenth bass, offbeat stabs, four on the floor; WALL from bar 3
- *   infect    A minor, 120 BPM: a held pad, a reese and a saw lead over busy drums; the drums gate the pad (bar 3),
- *             crush the bass (bar 5), ring the lead (bar 7)
+ *   infect    A minor, 120 BPM: a sidechain: a kick on a silent track pumps the pad (DUCK, bar 3), the drums crush
+ *             the bass (bar 5)
+ *   vox       A minor, 110 BPM: a bright pad and metal drums; from bar 3 the drums speak through the pad (VOX)
  *   howl      C minor, 90 BPM: a slow melody in long notes over a sub and a half-time beat; the melody turns into
  *             GLCH FEEDBACK (bar 3), then SCREAMER (bar 6)
  *   resonate  A minor, 100 BPM: sparse: plucked stabs, a marimba, metal drums and silence between; RESONATE in A minor
@@ -106,64 +106,65 @@ static void damage_at(uint32_t b)
 }
 static void dry_at(uint32_t b) { (void)b; }
 
-/* ---- wall: E minor EBM ---- */
-static void wall_song(void)
-{
-    static const uint8_t ROOT[4] = {28, 28, 31, 33};             /* E1 E1 G1 A1 */
-    static const uint8_t STAB[4][3] = {{64, 67, 71}, {64, 67, 71}, {67, 71, 74}, {69, 72, 76}};
-    uint32_t b, s;
-    song.g[G_BPM] = 120;
-    sound(0, 0, "SEQUENCE", 105);
-    sound(1, 0, "COLD SQUARE", 85);
-    sound(2, 2, "VAULT", 60);
-    sound(3, 10, "STOMP", 105);
-    clear_all();
-    for (b = 0; b < 4u; b++) {
-        for (s = 0; s < 16u; s++) {
-            uint8_t n = (uint8_t)(ROOT[b] + (s % 4u == 3u ? 12u : 0u));
-            note(0, b * 16u + s, 1, 1, &n, s % 4u == 0u);
-            hit(b * 16u + s, (s % 4u == 0u ? 1u : 0u) | (s == 4u || s == 12u ? 4u : 0u) | 8u, s % 4u == 0u ? 120 : s % 2u ? 70 : 90);
-        }
-        for (s = 2; s < 16u; s += 4u)
-            note(1, b * 16u + s, 1, 3, STAB[b], 0);
-        if (b % 2u == 0u)
-            note(2, b * 16u, 32, 3, STAB[b], 0);
-    }
-}
-static void wall_at(uint32_t b) { if (b == 2u) song.g[G_WALL] = 115; }
-
-/* ---- infect: A minor, held parts over busy drums ---- */
+/* ---- infect: A minor; a sidechain: a silent kick on track 2 pumps the pad, the drums crush the bass ---- */
 static void infect_song(void)
 {
     static const uint8_t ROOT[4] = {33, 33, 29, 31};             /* A1 A1 F1 G1 */
     static const uint8_t PAD[4][3] = {{57, 60, 64}, {57, 60, 64}, {53, 57, 60}, {55, 59, 62}};
     uint32_t b, s;
     song.g[G_BPM] = 120;
-    sound(0, 7, "REESE", 95);
-    sound(1, 0, "SAW LEAD", 80);
-    sound(2, 2, "SICK PAD", 95);
-    sound(3, 10, "FACTORY", 110);
+    sound(0, 7, "REESE", 90);
+    sound(1, 10, "DRUM KIT", 0);                                 /* (the trigger: a kick nobody hears) */
+    sound(2, 2, "SICK PAD", 110);
+    sound(3, 10, "FACTORY", 100);
+    clear_all();
+    for (b = 0; b < 4u; b++) {
+        note1(0, b * 16u, 16, ROOT[b]);
+        note(2, b * 16u, 16, 3, PAD[b], 0);
+        for (s = 0; s < 16u; s += 4u) {
+            put_step(&trk[1], b * 16u + s, 0, 0, ST_NOTE, 0);
+            trk[1].step[b * 16u + s].hit = 1u;
+            trk[1].step[b * 16u + s].vel = 120;
+            hit(b * 16u + s, 1, 120);
+            hit(b * 16u + s + 2u, 16, 80);
+        }
+        hit(b * 16u + 4u, 2, 115);
+        hit(b * 16u + 12u, 2, 115);
+    }
+}
+static void infect_at(uint32_t b)
+{
+    if (b == 2u) infct(2, 1, IFX_DUCK, 120, 127);               /* the pad pumps with the silent kick */
+    if (b == 4u) infct(0, 3, IFX_CRUSH, 115, 127);              /* the drums crush the bass */
+}
+
+/* ---- vox: A minor; the drums speak through a bright pad (INFECT VOX) ---- */
+static void vox_song(void)
+{
+    static const uint8_t PAD[4][3] = {{57, 64, 69}, {57, 64, 69}, {53, 60, 65}, {55, 62, 67}};
+    static const uint8_t ROOT[4] = {33, 33, 29, 31};
+    uint32_t b, s;
+    song.g[G_BPM] = 110;
+    sound(0, 0, "SUB BASS", 95);
+    sound(1, 0, "SAW LEAD", 0);
+    sound(2, 0, "RAVE", 105);
+    sound(3, 10, "METAL SHOP", 95);
     clear_all();
     for (b = 0; b < 4u; b++) {
         note1(0, b * 16u, 16, ROOT[b]);
         note(2, b * 16u, 16, 3, PAD[b], 0);
         for (s = 0; s < 16u; s++) {
-            uint32_t h = 8u;
-            if (s == 0u || s == 3u || s == 6u || s == 10u || (b == 3u && s == 14u)) h |= 1u;
+            uint32_t h = 0;
+            if (s == 0u || s == 7u || s == 10u) h |= 1u;
             if (s == 4u || s == 12u) h |= 2u;
-            if (s == 7u || s == 15u) h |= 64u;
-            hit(b * 16u + s, h, (h & 3u) ? 118 : s % 2u ? 60 : 85);
+            if (s % 2u == 0u) h |= 8u;
+            if (s == 14u || (b == 3u && s >= 12u)) h |= 64u;
+            if (h)
+                hit(b * 16u + s, h, (h & 3u) ? 118 : 80);
         }
     }
-    note1(1, 0, 32, 76);                                         /* E5 two bars, D5 two bars */
-    note1(1, 32, 32, 74);
 }
-static void infect_at(uint32_t b)
-{
-    if (b == 2u) infct(2, 3, IFX_GATE, 127, 127);
-    if (b == 4u) infct(0, 3, IFX_CRUSH, 115, 127);
-    if (b == 6u) infct(1, 3, IFX_RING, 110, 110);
-}
+static void vox_at(uint32_t b) { if (b == 2u) infct(2, 3, IFX_VOX, 127, 127); }
 
 /* ---- howl: C minor, a slow melody ---- */
 static void howl_song(void)
@@ -230,8 +231,9 @@ static void resonate_at(uint32_t b)
 }
 
 static const struct { const char *name; void (*song)(void); void (*at)(uint32_t); } DEMO[] = {
-    {"dry", damage_song, dry_at}, {"damage", damage_song, damage_at}, {"wall", wall_song, wall_at},
-    {"infect", infect_song, infect_at}, {"howl", howl_song, howl_at}, {"resonate", resonate_song, resonate_at},
+    {"dry", damage_song, dry_at}, {"damage", damage_song, damage_at},
+    {"infect", infect_song, infect_at}, {"vox", vox_song, vox_at}, {"howl", howl_song, howl_at},
+    {"resonate", resonate_song, resonate_at},
 };
 
 int main(int argc, char **argv)
@@ -255,7 +257,7 @@ int main(int argc, char **argv)
         barb = 4u * 60u * FS / (uint32_t)song.g[G_BPM] / CTL;   /* a bar, in blocks */
         seq_start();
         for (k = 0; k < BARS * barb && nf + CTL <= MAXF; k++) {
-            if (k % barb == 0u)
+            if (k % barb == 0u && !getenv("KRST_DEMO_DRY"))   /* (KRST_DEMO_DRY: none of it, a reference) */
                 DEMO[d].at(k / barb);
             mix_block(out, CTL);
             for (i = 0; i < 2u * CTL; i++) {

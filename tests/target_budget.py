@@ -33,7 +33,7 @@ FUNCS = ["analog_render", "digital_render", "digital_render_legacy", "digital_re
          "rev_room", "rev_spring", "rev_hall", "rev_side_mix",   # the reverb bus (fx.c): REVERB TYPE ROOM / SPRING / HALL (and its stereo)
          "track_insert", "ins_drive", "ins_swept",          # the per-track INSERT (fx.c, 1.5), while a TYPE plays
          "bass_render", "howl_render",                      # KRIECHSTROM: GLCH, its bass and feedback families (eng_glitch.c)
-         "ins_damage", "ins_infect", "ifx_feed",            # .. the INSERTs DAMG, INFCT and INFECT's copy of a source
+         "ins_damage", "ins_infect", "ins_vox", "ifx_feed",            # .. the INSERTs DAMG, INFCT and INFECT's copy of a source
          "res_master", "dmg_master", "wall_master", "krst_level", "hiss_master",   # .. the master: RESONATE DAMAGE WALL HISS
          "adp_render", "adp_block", "adp_post"]           # ADPCM (eng_adpcm.c, FELUCCA_ADPCM=1): voices, clock, echo
 # built only with FELUCCA_FM4=1 (DIGITAL, src/eng_digital.c; not in the default build, so not in BUDGET): absent,

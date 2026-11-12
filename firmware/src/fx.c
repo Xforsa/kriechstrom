@@ -661,7 +661,10 @@ typedef struct {
     int32_t hp, lp1, lp2, dc, hold;     /* low cut (Q8), the two low-passes, DC blocker (Q8), CRUSH's held sample */
     int32_t px[PH_ST], py[PH_ST], fb;   /* PHASR: each stage's last input and output, the fed back */
     int32_t x[6];                       /* MUFF, BASS, SMASH: their filter states, SMASH's level and gain */
-    int16_t line[IL_LEN];               /* FLANG / CHOR, at a quarter (headroom) */
+    union {
+        int16_t line[IL_LEN];           /* FLANG / CHOR, at a quarter (headroom) */
+        int32_t v32[IL_LEN / 2u];       /* KRIECHSTROM: INFCT VOX's bands (krst_infect.c) */
+    };
 } ins_t;
 static ins_t ins[NTRK] __attribute__((section(".pool")));
 

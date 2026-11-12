@@ -65,7 +65,7 @@ static const char *const N_ITYPE[] = {"OFF", "SOFT", "HARD", "FOLD", "FUZZ", "CR
 static const char *const N_RKEY[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};   /* RESONATE */
 static const char *const N_RCHD[] = {"OCT", "5TH", "MIN", "MAJ", "SUS", "MIN7", "DIM", "CLST"};
 static const char *const N_ISRC[] = {"T1", "T2", "T3", "T4"};   /* KRIECHSTROM: INFCT's source, its MODE */
-static const char *const N_IMODE[] = {"GATE", "DUCK", "CRUSH", "FOLD", "RING"};
+static const char *const N_IMODE[] = {"GATE", "DUCK", "CRUSH", "FOLD", "RING", "VOX"};
 static const char *const N_IBITS[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
                                       "16", 0};
 static const char *const N_IRATE[] = {"689", "919", "1.1k", "1.4k", "1.8k", "2.2k", "2.8k", "3.7k", "4.4k", "5.5k",
@@ -199,7 +199,7 @@ static const param_desc_t INS_DESC[8][3] = {
     /* KRIECHSTROM: DAMG (CHAR: 0 TAPE .. 127 DIGITAL) */
     {PU("AMT", F_PCT, 80, 0, 0), PU("CHAR", F_PCT, 32, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
     /* KRIECHSTROM: INFCT (krst_infect.c): the track it listens to, how, how deep */
-    {{"SRC", F_ENUM, 0, 3, 0, N_ISRC, 0}, {"MODE", F_ENUM, 0, 4, 0, N_IMODE, 0}, PU("DEPTH", F_PCT, 127, 0, 0)},
+    {{"SRC", F_ENUM, 0, 3, 0, N_ISRC, 0}, {"MODE", F_ENUM, 0, 5, 0, N_IMODE, 0}, PU("DEPTH", F_PCT, 127, 0, 0)},
 };
 #undef PU
 static const param_desc_t *ins_desc(int32_t type, uint32_t k)

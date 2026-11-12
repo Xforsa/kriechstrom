@@ -4,9 +4,11 @@
  * T1 a held SOFT PAD chord with INFCT listening to T2, a DRUM loop (kick, snare, hats) at LEVEL 0: the mix is the pad
  * alone, driven by drums nobody hears (a silent trigger).
  * 1. off: INFCT at MIX 0 renders bit for bit as no INSERT; with no INFCT nothing is copied.
- * 2. GATE: between the hits the pad is near silent, on them it sounds; DUCK the other way round.
+ * 2. GATE: between the hits the pad is near silent, on them it sounds; DUCK the other way round (and stays down a
+ *    while after: a sidechain's pump).
  * 3. CRUSH: on the hits the pad holds samples (few distinct values in a block), between them not.
- * 4. FOLD and RING: the pad changes, stays bounded; RING is silent where the source is.
+ * 4. FOLD and RING: the pad changes, stays bounded; RING is silent where the source is; VOX: the pad speaks only with
+ *    the drums (the vocoder: their spectrum opens its bands).
  * 5. the page: INSRT lists INFCT, SRC T1..T4, MODE GATE..RING, DEPTH.
  * 6. demos (DEMO_DIR): the drums heard, the pad two bars dry, two bars infected, one per MODE. */
 #define UI_TEST_NO_MAIN 1
@@ -140,7 +142,7 @@ static meas_t run(int32_t mode, int32_t mix)
 static void tests(void)
 {
     meas_t dry = run(-1, 0), z = run(IFX_GATE, 0), g = run(IFX_GATE, 127), d = run(IFX_DUCK, 127), c = run(IFX_CRUSH, 127);
-    meas_t f = run(IFX_FOLD, 127), r = run(IFX_RING, 127);
+    meas_t f = run(IFX_FOLD, 127), r = run(IFX_RING, 127), v = run(IFX_VOX, 127);
     printf("infect:   pad rms on the hits / between: dry %.0f / %.0f | GATE %.0f / %.0f | DUCK %.0f / %.0f | RING %.0f / %.0f\n",
            dry.on, dry.off, g.on, g.off, d.on, d.off, r.on, r.off);
     printf("infect:   distinct values a block on the hits / between: dry %u / %u | CRUSH %u / %u; peaks: FOLD %d RING %d\n",
@@ -179,14 +181,17 @@ static void tests(void)
     }
     (void)c;
     ck("FOLD: changed on the hits, bounded", f.h != dry.h && f.peak < 32768);
+    printf("infect:   VOX: pad rms on the hits / between %.0f / %.0f, peak %d\n", v.on, v.off, (int)v.peak);
+    ck("VOX: the pad speaks with the drums: near silent between the hits, sounding on them, bounded",
+       v.off < dry.off * 0.15 && v.on > dry.on * 0.05 && v.peak < 32768 && v.h != dry.h);
     ck("RING: silent where the source is (between the hits), sounding on them, bounded",
        r.off < dry.off * 0.1 && r.on > dry.on * 0.1 && r.peak < 32768);
     {
         int ok = str_eq(N_ITYPE[IT_INFECT], "INFCT") && str_eq(ins_desc(IT_INFECT, 0)->label, "SRC") &&
                  str_eq(ins_desc(IT_INFECT, 1)->label, "MODE") && str_eq(ins_desc(IT_INFECT, 2)->label, "DEPTH") &&
-                 ins_desc(IT_INFECT, 0)->max == 3 && ins_desc(IT_INFECT, 1)->max == 4 &&
-                 str_eq(N_IMODE[IFX_GATE], "GATE") && str_eq(N_IMODE[IFX_RING], "RING");
-        ck("the page: INSRT INFCT, SRC T1..T4, MODE GATE DUCK CRUSH FOLD RING, DEPTH", ok);
+                 ins_desc(IT_INFECT, 0)->max == 3 && ins_desc(IT_INFECT, 1)->max == 5 &&
+                 str_eq(N_IMODE[IFX_GATE], "GATE") && str_eq(N_IMODE[IFX_RING], "RING") && str_eq(N_IMODE[IFX_VOX], "VOX");
+        ck("the page: INSRT INFCT, SRC T1..T4, MODE GATE DUCK CRUSH FOLD RING VOX, DEPTH", ok);
     }
 }
 
