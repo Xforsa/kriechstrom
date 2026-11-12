@@ -911,6 +911,7 @@ static __attribute__((noinline)) void ins_wreck(ins_t *s, const track_t *t, int3
 
 #include "krst_damage.c"                               /* KRIECHSTROM: DAMAGE (INSERT DAMG, the master's, WALL) */
 #include "krst_infect.c"                               /* KRIECHSTROM: INFECT (INSERT INFCT: a track driven by another) */
+#include "krst_resonate.c"                             /* KRIECHSTROM: RESONATE (the mix rings strings in a key) */
 
 /* the INSERT at rest at once (mix_part: TYPE turned OFF while the part was silent, its fade never ran) */
 static __attribute__((noinline)) void ins_rest(track_t *t)
@@ -1219,7 +1220,7 @@ static void mix_block(int32_t *out, uint32_t n)
     fx_buses(send_c, send_d, send_r, wet, n);
     if (hl.side)
         rev_side_mix(mix_l, mix_r, n);                  /* HALL: stereo */
-    if (dmg_master_on() || wall_master_on() || krst_level_on() || hiss_on()) {   /* KRIECHSTROM: DAMAGE, WALL,
+    if (res_on() || dmg_master_on() || wall_master_on() || krst_level_on() || hiss_on()) {   /* KRIECHSTROM: RESONATE, DAMAGE, WALL,
                                                          * HISS on the master */
         uint32_t ein;
         int act = dmg_master_on() || wall_master_on();
@@ -1228,6 +1229,8 @@ static void mix_block(int32_t *out, uint32_t n)
             mix_r[i] += wet[i];
             wet[i] = 0;
         }
+        if (res_on())
+            res_master(mix_l, mix_r, n);                /* (the strings ring with the mix, before its wear) */
         ein = act || krst_level_on() ? kl_energy(mix_l, mix_r, n) : 0u;
         if (dmg_master_on())
             dmg_master(mix_l, mix_r, n);

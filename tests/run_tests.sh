@@ -392,6 +392,10 @@ if [ -f build/gen/felucca_tables.h ]; then
     mkdir -p build/howl_demo
     run "KRIECHSTROM GLCH HOWL and MIC (the feedback family): threshold, in tune, BLOOM, the room's howl at the note, release, its sounds, demos" \
         "$OUT/krst_howl_test" build/howl_demo
+    $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_resonate_test" tests/krst_resonate_test.c -lm
+    mkdir -p build/resonate_demo
+    run "KRIECHSTROM RESONATE: off bit for bit, the strings in tune with the chord, AMT the ring's length, stored, the page, demo" \
+        "$OUT/krst_resonate_test" build/resonate_demo
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_poweron_test" tests/krst_poweron_test.c -lm
     mkdir -p build/poweron_demo
     run "KRIECHSTROM power-on: its four sounds and patterns, PLAY sounds at once on every track" \

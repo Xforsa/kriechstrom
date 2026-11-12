@@ -62,6 +62,8 @@ static const char *const N_ITYPE[] = {"OFF", "SOFT", "HARD", "FOLD", "FUZZ", "CR
                                       "MUFF", "BASS", "SMASH", "DAMG", "INFCT"};   /* (Glitchbox: fx.c ins_wreck; KRIECHSTROM:
                                                                            * DAMG, krst_damage.c) */
 /* CRUSH: BITS 1..16 and RATE (the held sample's rate, fx.c INS_HOLD) over the range in 16 even parts (0-terminated) */
+static const char *const N_RKEY[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};   /* RESONATE */
+static const char *const N_RCHD[] = {"OCT", "5TH", "MIN", "MAJ", "SUS", "MIN7", "DIM", "CLST"};
 static const char *const N_ISRC[] = {"T1", "T2", "T3", "T4"};   /* KRIECHSTROM: INFCT's source, its MODE */
 static const char *const N_IMODE[] = {"GATE", "DUCK", "CRUSH", "FOLD", "RING"};
 static const char *const N_IBITS[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
@@ -246,6 +248,9 @@ static const param_desc_t GP[G_ALL] = {
     [G_DMG] = PD("DMG", F_PCT, 0, 127, 0),       /* KRIECHSTROM: the master's DAMAGE (krst_damage.c) .. */
     [G_DMGC] = PD("CHAR", F_PCT, 0, 127, 32),    /* .. TAPE (0) .. DIGITAL (127) */
     [G_HISS] = PD("HISS", F_PCT, 0, 127, 0),     /* KRIECHSTROM: the master's tape hiss, on its own (core.h) */
+    [G_RES] = PD("AMT", F_PCT, 0, 127, 0),       /* KRIECHSTROM: RESONATE (krst_resonate.c): how much the strings ring, */
+    [G_RKEY] = PE("KEY", N_RKEY, 9),             /* .. their key (A: the factory sounds' minor), */
+    [G_RCHD] = PE("CHORD", N_RCHD, 2),           /* .. their chord */
 };
 
 static const param_desc_t *track_desc(const track_t *t, uint32_t id)
@@ -351,7 +356,8 @@ static uint8_t fmt_named;        /* the last param_format was a name (F_ENUM, ev
 static int off_at_zero(const param_desc_t *d)
 {
     return d == &TP[P_DIST] || d == &TP[P_CHOR] || d == &TP[P_DLY] || d == &TP[P_REV] || d == &TP[P_IMIX] ||
-           d == &GP[G_DMIX] || d == &GP[G_DMG] || d == &GP[G_WALL] || d == &GP[G_HISS] || d == &INS_DESC[6][0];
+           d == &GP[G_DMIX] || d == &GP[G_DMG] || d == &GP[G_WALL] || d == &GP[G_HISS] ||
+           d == &GP[G_RES] || d == &INS_DESC[6][0];
 }
 static void param_format(const param_desc_t *d, int32_t v, char *val, const char **unit)
 {
@@ -496,6 +502,7 @@ static const page_t PAGES[] = {
     {"REVERB", FAM_FX, SC_GLOBAL, GR_NONE, {G_RTYPE, G_RSIZE, G_RDAMP, 0xFF}},   /* TYPE: ROOM / SPRING / HALL */
     {"CHORUS", FAM_FX, SC_GLOBAL, GR_NONE, {G_CRATE, G_CDEPTH, 0xFF, 0xFF}},
     {"DAMAGE", FAM_FX, SC_GLOBAL, GR_NONE, {G_DMG, G_DMGC, G_WALL, G_HISS}},   /* KRIECHSTROM: the master's wear, WALL */
+    {"RESONATE", FAM_FX, SC_GLOBAL, GR_NONE, {G_RES, G_RKEY, G_RCHD, 0xFF}},   /* KRIECHSTROM: the mix rings strings */
     {"SCL", FAM_SCL, SC_TRACK, GR_SCALE, {P_ROOT, P_SCALE, P_QUANT, P_TRANS}},
     {"CHORD", FAM_SCL, SC_TRACK, GR_CHORD, {P_CHRD, P_VOIC, 0xFF, 0xFF}},   /* SCL again: the chord keys (chord.c) */
     {"EDIT 1", FAM_EDIT, SC_ENGINE, GR_NONE, {P_E0, P_E1, P_E2, P_E3}},
@@ -548,6 +555,7 @@ static const struct { const char *title, *name, *what; } PAGE_SAY[] = {
     {"REVERB", "REVERB", "SHARED BY ALL TRACKS"},
     {"CHORUS", "CHORUS", "SHARED BY ALL TRACKS"},
     {"DAMAGE", "DAMAGE", "THE WHOLE MIX WEARS OUT"},
+    {"RESONATE", "RESONATE", "THE MIX RINGS IN A KEY"},
     {"ENV DEST", "ENV DEST", "WHERE THE ENVELOPE GOES"},
     {"LFO DEST", "LFO DEST", "WHERE THE LFO GOES"},
     {"VOICE", "VOICE", "POLY, MONO, GLIDE"},

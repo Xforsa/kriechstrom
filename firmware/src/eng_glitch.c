@@ -175,7 +175,7 @@ static int32_t bs_lpk(int32_t c)
 /* the bass family (see the top). States in S->bs: 0 the coupling high-pass, 1 2 the tone stack's two low-passes (x16),
  * 3 the octave's rectifier average (Q8); the voice's: s[0] s[1] the SVF, s[2] noise, s[3] s[4] CRSH, s[5] the DC block
  * (Q10), s[6] GROW's feedback, s[7] the SUB octave's phase; ph[1] of the 808 its pitch drop left */
-static void bass_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vmod_t *m)
+static __attribute__((noinline)) void bass_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vmod_t *m)
 {
     const int16_t *p = t->p;
     gl_slot_t *S = gl_slot_of(t, v);
@@ -316,7 +316,7 @@ static void howl_note_on(track_t *t, voice_t *v, gl_slot_t *S)
     S->loop = S->xf = 0;
     S->filled = 0;
 }
-static void howl_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vmod_t *m)
+static __attribute__((noinline)) void howl_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vmod_t *m)
 {
     const int16_t *p = t->p;
     gl_slot_t *S = gl_slot_of(t, v);

@@ -129,6 +129,7 @@ typedef struct {
     uint8_t fm6[NTRK][FM6_PACKED];             /* each track's FM6 patch, packed (eng_fm6.c) */
     uint8_t mch[NTRK];                         /* 1.5.5: MIDI IN TRACK's channels, as song.mch (PROJ_MIDI_OFF) */
     uint8_t hiss;                              /* KRIECHSTROM: G_HISS (PROJ_HISS_OFF) */
+    uint8_t res, rkey;                         /* KRIECHSTROM: G_RES; G_RKEY | G_RCHD << 4 (PROJ_RES_OFF, PROJ_RKEY_OFF) */
     char name[PROJ_NAME_LEN];                  /* the project's name: upper-case ASCII 32..126, 0-padded; "" = none */
     uint32_t sum;
 } project_t;
@@ -168,6 +169,11 @@ _Static_assert(sizeof(project_v5_t) == 3352u && sizeof(project_v6_t) == 3388u, "
 #define PROJ_MIDI_OFF (PROJ_FM6_OFF - 3u)
 /* KRIECHSTROM: HISS (core.h G_HISS), the spare byte just under them (0 in every project before: none) */
 #define PROJ_HISS_OFF (PROJ_MIDI_OFF - 1u)
+/* .. RESONATE (core.h G_RES, G_RKEY, G_RCHD): the header's two bytes no firmware writes or reads (65, after phys; 67,
+ * after np), 0 in every project before (RESONATE off; KEY C, CHORD OCT). (Under HISS there is no room: four tracks of
+ * 64 full steps reach it) */
+#define PROJ_RES_OFF 65u
+#define PROJ_RKEY_OFF 67u
 typedef union { uint32_t align; uint8_t raw[PROJ_STORE_SIZE]; } project_store_t;
 _Static_assert(G_COUNT == 27u, "FUN7 globals retain original IDs");
 _Static_assert(sizeof(project_store_t) == 3840u && PROJ_STORE_V7 == sizeof(project_v6_t), "FUN10 / FUN7 sizes");
@@ -656,6 +662,8 @@ static int proj_pack(project_store_t *out, const project_t *q)
     memcpy(b + pos, &q->motion, sizeof q->motion);
     proj_midi_pack(b, q);
     b[PROJ_HISS_OFF] = q->hiss & 127u;
+    b[PROJ_RES_OFF] = q->res & 127u;
+    b[PROJ_RKEY_OFF] = q->rkey & 127u;
     memcpy(b + PROJ_FM6_OFF, q->fm6, sizeof q->fm6);
     {   /* the name (0-padded; stops at the first 0) */
         char n[PROJ_NAME_LEN + 1u];
@@ -758,6 +766,8 @@ static int proj_unpack(project_t *q, const uint8_t *b, uint32_t st)
     if (v10)
         proj_midi_unpack(q, b);                         /* (1.5.5: 0 in every FUN10 before, FUN9..FUN7 have none) */
     q->hiss = v10 ? (uint8_t)(b[PROJ_HISS_OFF] & 127u) : 0u;   /* (KRIECHSTROM) */
+    q->res = v10 ? (uint8_t)(b[PROJ_RES_OFF] & 127u) : 0u;
+    q->rkey = v10 ? (uint8_t)(b[PROJ_RKEY_OFF] & 127u) : 0u;
     for (t = 0; t < NTRK; t++) {
         if (v7)
             memcpy(q->fm6[t], FM6_INIT, FM6_PACKED);
@@ -884,6 +894,8 @@ static void project_capture(project_t *p)
     p->motion = motion;
     memcpy(p->mch, song.mch, sizeof p->mch);
     p->hiss = (uint8_t)clamp(song.g[G_HISS], 0, 127);
+    p->res = (uint8_t)clamp(song.g[G_RES], 0, 127);
+    p->rkey = (uint8_t)(clamp(song.g[G_RKEY], 0, 11) | clamp(song.g[G_RCHD], 0, 7) << 4);
     motion_unguard(f);
     memcpy(p->name, proj_name, str_len(proj_name));
     p->sum = proj_sum(p);
@@ -1088,6 +1100,9 @@ static int project_restore_runtime(const project_t *input)
     for (k = 0; k < NTRK; k++)                          /* MIDI IN TRACK's channels (1.5.5; 0, channels 1..4, before) */
         song.mch[k] = (uint8_t)(p->mch[k] < MCH_N ? p->mch[k] : 0u);
     song.g[G_HISS] = (int16_t)(p->hiss & 127u);         /* (KRIECHSTROM) */
+    song.g[G_RES] = (int16_t)(p->res & 127u);
+    song.g[G_RKEY] = (int16_t)((p->rkey & 15u) < 12u ? p->rkey & 15u : 0u);
+    song.g[G_RCHD] = (int16_t)(p->rkey >> 4 & 7u);
     midi_route = MIDI_ROUTE_AGAIN;                      /* (events_block: what the channels no longer hear let go) */
     for (k = 0; k < NTRK; k++) {
         track_t *t = &trk[k];
@@ -1155,6 +1170,7 @@ static int project_new(void)
     q->parts = NPART;
     for (i = 0; i < G_COUNT; i++)
         q->g[i] = GP[i].def;
+    q->rkey = (uint8_t)(GP[G_RKEY].def | GP[G_RCHD].def << 4);   /* (KRIECHSTROM: RESONATE's key and chord) */
     chain_defaults(&q->chain);
     for (i = 0; i < NTRK; i++) {
         for (k = 0; k < P_COUNT; k++)
@@ -1371,6 +1387,7 @@ static uint32_t autosave_sig(void)
             h = as_mix(h, &song.g[i], sizeof song.g[i]);
     h = as_mix(h, song.mch, sizeof song.mch);           /* (1.5.5: MIDI IN TRACK's channels, the project's) */
     h = as_mix(h, &song.g[G_HISS], sizeof song.g[G_HISS]);   /* (KRIECHSTROM) */
+    h = as_mix(h, &song.g[G_RES], 3u * sizeof song.g[G_RES]);   /* (G_RES G_RKEY G_RCHD) */
     h = as_mix(h, &motion, sizeof motion);
     h = as_mix(h, &chain_config, sizeof chain_config);
     return as_mix(h, proj_name, sizeof proj_name);

@@ -117,7 +117,12 @@ enum {                          /* global parameters */
 /* .. and HISS (the master's tape hiss, krst_damage.c), past the 27 the formats and the protocol fix: a byte of its own
  * in the project (project.c PROJ_HISS_OFF), on FX > DAMAGE's KNOB 4; the editor does not see it */
 #define G_HISS G_COUNT
-#define G_ALL (G_COUNT + 1)
+/* .. and RESONATE (krst_resonate.c: four strings on the master tuned to a chord, the mix rings them): its amount, KEY
+ * (C .. B) and CHORD; in the project's two header bytes no firmware wrote (project.c PROJ_RES_OFF, PROJ_RKEY_OFF) */
+#define G_RES (G_COUNT + 1)
+#define G_RKEY (G_COUNT + 2)
+#define G_RCHD (G_COUNT + 3)
+#define G_ALL (G_COUNT + 4)
 
 /* stored parameters of an older layout -> today's P_* order. A store keeps np = the P_COUNT it was
  * written with; common parameters are only ever added just before P_E0, so the first np - 8 are
@@ -360,7 +365,7 @@ typedef struct track {
 _Static_assert(sizeof(track_t) % 16u == 0, "track_t: a multiple of 16 bytes (a cheap trk[] index on the target)");
 
 typedef struct {
-    int16_t g[G_ALL];                         /* (KRIECHSTROM: G_HISS past G_COUNT) */
+    int16_t g[G_ALL];                         /* (KRIECHSTROM: G_HISS, G_RES G_RKEY G_RCHD past G_COUNT) */
     uint8_t playing, seq_mode;
     uint8_t grid;                /* 1: the keys are the DRUM grid (ui.c grid_on): only the lane keys play (seq.c);
                                   * 2: NAME (ui_name.c): no key plays; 3: SONG, A..D are its (seq.c song_key) */
