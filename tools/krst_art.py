@@ -140,6 +140,18 @@ def splash(seed):
     return im.resize((240, 150), Image.LANCZOS)
 
 
+def icon(seed):
+    """the favicon and the touch icon: a few thick branches from the centre, red with a white core, on black"""
+    rnd = random.Random(seed + 9)
+    s = 512
+    m = Image.new("L", (s * 2, s * 2), 0)
+    d = ImageDraw.Draw(m)
+    for k in range(5):
+        tree(d, s, s, k * 2 * math.pi / 5 + 0.4, 330, 46, 3, rnd, 0.35)
+    m = m.resize((s, s), Image.LANCZOS)
+    return burn(Image.new("RGB", (s, s), BLACK), m, 9)
+
+
 def to_levels(im):
     """4 levels for the device: 0 BG, 1 dim red, 2 red, 3 white"""
     w, h = im.size
@@ -177,6 +189,10 @@ def main():
     hero(seed).save(art / "hero.jpg", quality=84, optimize=True)
     tracking(seed).save(art / "tracking.jpg", quality=84, optimize=True)
     band(seed).save(art / "band.jpg", quality=84, optimize=True)
+    ic = icon(seed)
+    ic.resize((180, 180), Image.LANCZOS).save(art / "icon-180.png", optimize=True)
+    ic.resize((32, 32), Image.LANCZOS).save(art / "favicon-32.png", optimize=True)
+    ic.save(art / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
     small = splash(seed)
     (ROOT / "build").mkdir(exist_ok=True)
     small.save(ROOT / "build" / "splash_preview.png")      # (a look at it, not published)
