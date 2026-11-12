@@ -31,7 +31,8 @@ static uint8_t eng_mem_owner[NPART];       /* engine index + 1 whose state is in
 #include "eng_sample.c"
 #include "eng_formant.c"
 #include "../engines/src/eng_trio.c"
-#include "../engines/src/eng_wheel.c"
+#include "../engines/src/eng_wheel.c"   /* (WHEEL: in the tree, not in ENGINES[]: KRIECHSTROM has GLCH in its slot 7) */
+#include "eng_glitch.c"          /* GLCH (Glitchbox, erikdevos): engine 7 */
 #include "eng_grain.c"
 #include "eng_phys.c"           /* PHYS: DaisySP physical models (phys_dsp.c, MIT) */
 #include "eng_drum.c"           /* DRUM: the 8-lane kit (drum_voice.c) */
@@ -61,7 +62,7 @@ static const engine_t *const ENGINES[NENGINES] = {
     &ENG_SAMPLE,                 /* 4 */
     &ENG_FORMANT,                /* 5 VOICE (eng_formant.c: "voice" is a sounding note in voice.c) */
     &ENG_TRIO,                   /* 6 */
-    &ENG_WHEEL,                  /* 7 */
+    &ENG_GLITCH,                 /* 7 GLCH (KRIECHSTROM; Felucca: WHEEL) */
     &ENG_GRAIN,                  /* 8 */
     &ENG_PHYS,                   /* 9 (ENGI_PHYS) */
     &ENG_DRUM,                   /* 10 (ENGI_DRUM) */
@@ -74,6 +75,22 @@ static const engine_t *const ENGINES[NENGINES] = {
     &ENG_ADPCM,                  /* 14 (ENGI_ADPCM; FELUCCA_ADPCM=0 builds without it) */
 #endif
 };
+
+/* KRIECHSTROM: a sound's INSERT onto track values p (after a load set them to their defaults; ui.c load_preset):
+ * GLCH's from GLITCH_INS, DRUM DESTROY's SMASH (both after Glitchbox, which kept them in preset_t) */
+static void preset_ins(int16_t *p, const engine_t *e, uint32_t idx)
+{
+    static const uint8_t DRUM_DESTROY_INS[5] = {INS_V(INS_SMASH, 85, 45, 110, 110)};
+    const uint8_t *ins = 0;
+    uint32_t i;
+    if (e == &ENG_GLITCH && idx < sizeof GLITCH_INS / sizeof GLITCH_INS[0])
+        ins = GLITCH_INS[idx];
+    else if (e == &ENG_DRUM && idx < e->npresets && e->presets[idx].e[0] == DK_DSTR)
+        ins = DRUM_DESTROY_INS;
+    for (i = 0; ins && i < 5u; i++)
+        if (ins[i])
+            p[P_ITYPE + i] = (int16_t)(ins[i] - 1);
+}
 
 /* a track's engine number as an index (the audio paths: a compare, cheaper than % NENGINES; a bad number: 0) */
 static inline uint32_t eng_idx(uint32_t e) { return e < NENGINES ? e : 0u; }
@@ -195,11 +212,27 @@ static const struct {
      * now that the arpeggiator is the track's and a preset no longer switches it on */
     {"ARP", {48, 51, 55, 60, 63, 67, 72, 75, 48, 51, 55, 60, 63, 67, 72, 75},       /* 13 */
      {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}},
+    /* KRIECHSTROM, from Glitchbox: an industrial beat for KIT DSTR (GM: 36 kick, 38 snare, 39 clap, 42 / 46 hats) */
+    {"DESTROY", {36, 42, 42, 36, 38, 42, 36, 46, 36, 36, 42, 36, 38, 39, 42, 38},   /* 14 */
+     {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1}},
+    /* KRIECHSTROM's power-on four (TRK_DEF): E with its flat second, the machine that starts when PLAY is pressed */
+    {"PISTON", {40, 40, 52, 40, 41, 40, 40, 47, 40, 40, 52, 40, 41, 43, 41, 39},   /* 15 the bass */
+     {1, 0, 0, 0, 2, 0, 1, 0, 1, 0, 0, 0, 2, 0, 2, 0}},
+    {"WRECK", {36, 42, 39, 42, 38, 42, 36, 36, 36, 42, 39, 46, 38, 42, 36, 38},     /* 16 the drums */
+     {1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1}},
+    {"DREAD", {64, 0, 0, 67, 0, 0, 63, 0, 64, 0, 0, 0, 59, 0, 0, 0},                /* 17 the piano */
+     {1, T_, T_, 0, T_, 0, 1, T_, 0, 0, 0, 0, 1, T_, T_, T_}},
+    {"DRONE", {52, 0, 0, 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0},                   /* 18 the pad: E, then F */
+     {0, T_, T_, T_, T_, T_, T_, T_, 0, T_, T_, T_, T_, T_, T_, T_}},
 };
 #undef T_
 #define NPATTERNS (sizeof PATTERNS / sizeof PATTERNS[0])
 
 /* the parts at power-on (engine, preset, PATTERNS[n - 1] in the sequencer, 0 = empty: all are): bass, pad, lead, drums */
+#if KRST_DEMO_DEF   /* KRIECHSTROM: GLCH SICK ENGINE on PISTON, FM6 BROKEN PIANO on DREAD, PHASE SICK PAD on DRONE, DRUM FACTORY on WRECK */
+static const uint8_t TRK_DEF[NPART][3] = {{7, 31, 15}, {ENGI_FM6, 8, 17}, {2, 6, 18}, {ENGI_DRUM, 5, 16}};
+#else
 static const uint8_t TRK_DEF[NPART][3] = {{0, 4, 0}, {ENGI_FM6, 4, 0}, {3, 0, 0}, {ENGI_DRUM, 0, 0}}; /* ANALOG ACID,
                                                                        * FM6 PAD (was DIGITAL PAD), LOFI PULSE LD, DRUM KIT */
+#endif
 static uint32_t trk_def_engine(uint32_t i) { return TRK_DEF[i % NPART][0]; }

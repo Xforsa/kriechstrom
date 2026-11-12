@@ -9,12 +9,11 @@ sample_render 128
 formant_render 312
 trio_render 341
 trio_pass 175
-wheel_render 267
-wheel_block 86
+glitch_render 1762
 grain_render 1723
 grain_block 137
 phys_render 61
-drum_render 89
+drum_render 170
 noise_render 259
 fm6_render 364
 fm6_op_run 72
@@ -36,11 +35,11 @@ dv_bell_run 52
 dv_cym_run 67
 dv_out 35
 dv_metal_mix 16
-slicer_track 556
+slicer_track 558
 slice_render 436
 slc_rev 120
-fm1_alnk0_irq 4196
-fm1_timer5_irq 14959
+fm1_alnk0_irq 4444
+fm1_timer5_irq 15035
 click_render 30
 mod_begin 170
 mod_voice 30
@@ -48,7 +47,7 @@ mod_end 6
 perf_begin 28
 perf_mute 18
 perf_pre 26
-perf_block 854
+perf_block 907
 perf_master 30
 perf_flanger 369
 perf_phaser 440
@@ -58,5 +57,5 @@ rev_spring 126
 rev_hall 1994
 rev_side_mix 8
 track_insert 0
-ins_drive 166
+ins_drive 100
 ins_swept 228

@@ -972,7 +972,7 @@ static __attribute__((noinline)) int seq_cond_miss(const track_t *t, const step_
 {
     uint32_t c = step_cond(s), loop;
     if (c >= COND_FILL)
-        return (c == COND_FILL) != (seq_fill != 0u);
+        return (c == COND_FILL) != (seq_fill != 0u || song.g[G_WALL] >= 100);   /* (KRIECHSTROM: WALL at its top fills) */
     if (!c)
         return 0;
     loop = t->cond_loop + (idx < t->seq_idx);       /* (an early play of step 1: the next loop's) */

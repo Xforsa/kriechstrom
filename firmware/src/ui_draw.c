@@ -1349,40 +1349,50 @@ static void draw_columns(void)
 }
 
 
-/* The power-on splash (main.c fm1_main, web/emu felucca_web.c; 1.1.5): a RAISE square centred on the screen, square
- * corners (in every style; LINE too: RAISE from the palette's SURF), in it in AF_M, the ink SPL_PAD in from the left:
- * at the top the name and the version, the first line's capitals' top SPL_PAD down; at the bottom the maker and
- * "with community", the last line's capitals' bottom (its baseline) SPL_PAD up from the square's bottom. Both
- * margins are measured to the capitals (the descender of "community" hangs into the bottom one, as off a baseline).
- * The square (176 x 176) is more than the canvas (CV_MAX, 240 x 124): it is filled straight on the screen and its
- * two text bands drawn on it as canvases, the top one from the square's top edge, the bottom one to its bottom edge.
- * In the saved palette (settings_init before it) */
-#define SPL_SQ 176                                  /* the square (even: centred exactly) */
-#define SPL_X0 ((240u - SPL_SQ) / 2u)               /* its top-left on the screen (x and y) */
-#define SPL_PAD 16                                  /* the text's inset: left (its ink), top and bottom (the capitals) */
-#define SPL_PITCH 20                                /* line to line */
-static const char *const SPLASH_LINES[] = {"Felucca", FELUCCA_VERSION, "H\xFCgelton Instruments", "with community"};
-/* a band of two lines, h tall, at y on the screen: the first line's top at ly; the two lines' capitals declared
- * against al0..al1 (mode: AL_V the band centred there, AL_B the last baseline on al1) */
-static void splash_band(uint32_t y, uint32_t h, int32_t ly, const char *const *l, uint32_t mode, int32_t al0,
-                        int32_t al1, const char *tag)
+/* The power-on splash (main.c fm1_main, web/emu felucca_web.c; 1.1.5; KRIECHSTROM: its own): the picture (krst_art.h,
+ * tools/krst_art.py: a Lichtenberg figure, the scar a creeping current leaves) across the top, 240 x 150, its four
+ * levels in the palette's BG, THEME dimmed, THEME, TEXT; under it on BG the name in L (M where L lacks a glyph) centred,
+ * the version at the left and "built on Felucca" at the right of one row. In the saved
+ * palette (settings_init before it) */
+#include "krst_art.h"
+#define SPL_ART_Y 0                                 /* the picture's top */
+#define SPL_TXT_Y (SPL_ART_Y + KRST_ART_H)          /* the text band's (90 px) */
+#define SPL_PAD 16
+static const char *const SPLASH_LINES[] = {"KRIECHSTROM", FELUCCA_VERSION, "built on Felucca"};   /* (the maker: ABOUT) */
+static void splash_art(void)
 {
-    cv_begin(SPL_SQ, h, T_RAISE);
-    GFX_HOOK_ALIGN(0, al0, 0, al1, mode | AL_N(2), tag);
-    cv_text_on(SPL_PAD, ly, &AF_M, l[0], T_TEXT, T_RAISE);
-    cv_text_on(SPL_PAD, ly + SPL_PITCH, &AF_M, l[1], T_TEXT, T_RAISE);
-    cv_blit(SPL_X0, y);
+    uint16_t col[4];
+    uint32_t i, x = 0, y = 0;
+    col[0] = T_BG;
+    col[1] = ux_mix(T_BG, T_THEME, 40);
+    col[2] = T_THEME;
+    col[3] = T_TEXT;
+    for (i = 0; i < KRST_ART_N && y < KRST_ART_H; i++) {   /* runs of one level, a row split where it ends */
+        uint32_t n = (KRST_ART[i] & 63u) + 1u, v = KRST_ART[i] >> 6;
+        while (n && y < KRST_ART_H) {
+            uint32_t k = n < KRST_ART_W - x ? n : KRST_ART_W - x;
+            if (v)
+                lcd_fill(x, SPL_ART_Y + y, k, 1, col[v]);
+            x += k;
+            n -= k;
+            if (x >= KRST_ART_W) {
+                x = 0;
+                y++;
+            }
+        }
+    }
 }
 static void draw_splash(void)
 {
-    int32_t h = SPL_PAD - AF_M_CAP_Y + SPL_PITCH + AF_M.h;     /* a band: its two lines, the descenders in */
-    int32_t lb = h - SPL_PAD - AF_M_CAP_H - AF_M_CAP_Y;         /* the bottom band's last line: its top */
+    const aafont_t *f = large_face_has(SPLASH_LINES[0]) ? &AF_L : &AF_M;
     lcd_fill(0, 0, 240, 240, T_BG);
-    lcd_fill(SPL_X0, SPL_X0, SPL_SQ, SPL_SQ, T_RAISE);
-    splash_band(SPL_X0, (uint32_t)h, SPL_PAD - AF_M_CAP_Y, SPLASH_LINES, AL_V, SPL_PAD,
-                SPL_PAD + SPL_PITCH + AF_M_CAP_H, "splash name + version SPL_PAD from the top");
-    splash_band(SPL_X0 + SPL_SQ - (uint32_t)h, (uint32_t)h, lb - SPL_PITCH, SPLASH_LINES + 2, AL_B, 0, h - SPL_PAD,
-                "splash maker's baseline SPL_PAD from the bottom");
+    splash_art();
+    cv_begin(240, 240 - SPL_TXT_Y, T_BG);
+    GFX_HOOK_ALIGN(0, 0, 240, 0, AL_H, "splash name centred");
+    cv_text_in(0, 10, 240, f, SPLASH_LINES[0], T_THEME, T_BG);
+    cv_text_on(SPL_PAD, 52, &AF_S, SPLASH_LINES[1], T_TEXT, T_BG);
+    cv_text_r(240 - SPL_PAD, 52, &AF_S, SPLASH_LINES[2], T_TEXT, T_BG);
+    cv_blit(0, SPL_TXT_Y);
     lcd_sync();
 }
 

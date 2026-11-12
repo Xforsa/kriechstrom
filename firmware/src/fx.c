@@ -93,9 +93,19 @@ static struct {                          /* HALL's state (in the pool: no .bss) 
  * (a little bias = even harmonics) -> tone low-pass that closes with drive ->
  * make-up gain (straight into tanh over the full band, it would sound like a
  * broken digital fuzz). State per part (track_t dist_*). */
+/* KRIECHSTROM: WALL's push (QUIET .. WALL, G_WALL) of a send or DIST p towards its top: 85 % of the way at WALL 127;
+ * nothing at 0 (krst_damage.c: WALL drives the master's DAMAGE too, seq.c its top plays the FILL steps) */
+static inline int32_t wall_push(int32_t p)
+{
+    int32_t w = song.g[G_WALL];
+    return w > 0 ? p + ((127 - p) * w) / 150 : p;       /* (at WALL 127: 85 % of the way) */
+}
+
 static void track_dist(track_t *t, int32_t *b, uint32_t n)
 {
     int32_t d = t->p[P_DIST], i, g, k, mk, bias = 2400, b0;
+    if (song.g[G_WALL] > 0 && t->engine != ENGI_DRUM)    /* KRIECHSTROM: WALL pushes it half the way (not on a DRUM part: */
+        d += ((127 - d) * song.g[G_WALL]) >> 8;          /* the DIST's low cut would take the kick's body) */
     if (!d)
         return;                                         /* states kept: switching on does not click */
     g = 4096 + d * d * 2;                                /* Q12: 1x .. ~9x, gentle at first */
@@ -636,7 +646,10 @@ static __attribute__((noinline)) void rev_side_mix(int32_t *l, int32_t *r, uint3
  * recordings) comes after, so its edges stay sharp (no flanger feedback or phaser ringing smears them) and a STUT
  * repeats the processed sound. State in the pool, per track (ins[], 580 B each); noinline, its own loops: the audio
  * ISR's inlined path gains one test per part (track_t ins_run) */
-enum { IT_OFF, IT_SOFT, IT_HARD, IT_FOLD, IT_FUZZ, IT_CRUSH, IT_PHASER, IT_FLANGER, IT_CHORUS, IT_N };
+enum { IT_OFF, IT_SOFT, IT_HARD, IT_FOLD, IT_FUZZ, IT_CRUSH, IT_PHASER, IT_FLANGER, IT_CHORUS,
+       IT_MUFF, IT_BASS, IT_SMASH, IT_DAMAGE, IT_N };   /* KRIECHSTROM: DAMG (krst_damage.c) */   /* Glitchbox's three: MUFF, BASS, SMASH (ins_wreck) */
+_Static_assert(IT_FOLD == INS_FOLD && IT_FUZZ == INS_FUZZ && IT_CRUSH == INS_CRUSH && IT_MUFF == INS_MUFF &&
+               IT_BASS == INS_BASS && IT_SMASH == INS_SMASH && IT_DAMAGE == INS_DAMG, "core.h INS_* follow fx.c IT_*");
 #define IL_LEN 256u                     /* FLANG / CHOR: the line, samples (a power of 2: masked) */
 static const uint8_t INS_HOLD[16] = {64, 48, 40, 32, 24, 20, 16, 12, 10, 8, 6, 5, 4, 3, 2, 1};   /* CRUSH RATE */
 typedef struct {
@@ -647,6 +660,7 @@ typedef struct {
     uint32_t ph;                        /* the sweep's phase */
     int32_t hp, lp1, lp2, dc, hold;     /* low cut (Q8), the two low-passes, DC blocker (Q8), CRUSH's held sample */
     int32_t px[PH_ST], py[PH_ST], fb;   /* PHASR: each stage's last input and output, the fed back */
+    int32_t x[6];                       /* MUFF, BASS, SMASH: their filter states, SMASH's level and gain */
     int16_t line[IL_LEN];               /* FLANG / CHOR, at a quarter (headroom) */
 } ins_t;
 static ins_t ins[NTRK] __attribute__((section(".pool")));
@@ -674,6 +688,14 @@ static inline int32_t ins_shape(uint32_t ty, int32_t v, uint32_t sh)
     }
     case IT_FUZZ:
         return v > 0 ? (v > 20000 ? 20000 : v) : softclip(v) >> 1;
+    case IT_MUFF:                                       /* Glitchbox: the graph's curve (ins_wreck: two stages) */
+        return softclip(softclip(v) * 2);
+    case IT_BASS:                                       /* .. the highs' (the lows pass as they are) */
+        return softclip(softclip(v) * 2) >> 1;
+    case IT_SMASH:                                      /* .. the clip after the squeeze */
+        return clamp(v, -24000, 24000);
+    case IT_DAMAGE:                                     /* KRIECHSTROM: its drive (the rest is wear, not a curve) */
+        return softclip(v);
     case IT_CRUSH:                                      /* sh: 16 - BITS; to the nearest step */
         return sh ? ((v + (1 << (sh - 1u))) >> sh) << sh : v;
     default:
@@ -774,6 +796,121 @@ static __attribute__((noinline)) void ins_swept(ins_t *s, const track_t *t, int3
     }
 }
 
+/* MUFF, BASS, SMASH (Glitchbox): the INSERTs for destroyed bass and drums. Like the drives they are the pedal's and
+ * the dry / wet MIX is the whole effect (the state does not depend on it).
+ *   MUFF   a Big-Muff's fuzz: low cut (~27 Hz) -> DRIVE (4x .. 56x, squared) into a tanh -> a coupling high-pass (~55 Hz,
+ *          the bass stays) -> a second, harder stage -> the tone stack: a low-pass at ~400 Hz and a high-pass at ~1.6
+ *          kHz, TONE (B) balancing them (64: both, the mid scoop; 0 the low-pass only, a wall of low end; 127 the
+ *          high-pass only, a buzzsaw) -> LEVEL (C). Sustains forever: the square it makes of any note
+ *   BASS   a bass amp's blend: the low band (two one-poles, ~150 Hz, complementary: the highs are what is left) goes
+ *          through a mild saturation that adds the harmonics a small speaker can play but keeps its weight; the highs go
+ *          through DRIVE (A, 4x .. 49x) into a hard clip and a TONE (B) low-pass of two poles. SUB (C) sets the low
+ *          band's level under it (0: gone, 96: as it was +1.5 dB, 127 +4 dB). The fuzz never eats the bottom end: a bass
+ *          that is all sub and sandpaper
+ *   SMASH  a bus smasher: AMT (A) drives the input 1x .. 13x into a peak compressor (threshold ~ -9 dB of a voice, ratio
+ *          infinite, instant attack by the block's peak, a gain that glides over the block), REL (B) its release 20 .. 660 ms,
+ *          then a hard clip at +-24000. LEVEL (C) after it. MIX in parallel is the New York trick: the body of the hit
+ *          held, its transient and tail from the dry */
+static __attribute__((noinline)) void ins_wreck(ins_t *s, const track_t *t, int32_t *b, uint32_t n, int32_t tw)
+{
+    uint32_t i, ty = s->type;
+    int32_t a = clamp(t->p[P_IA], 0, 127), bb = clamp(t->p[P_IB], 0, 127), c = clamp(t->p[P_IC], 0, 127);
+    int32_t lvl = LEVEL_Q12[c];
+    if (ty == IT_SMASH) {
+        int32_t gi = 4096 + a * a * 3, pk = 0, dg, g, gt, dec = 32768 / (27 + bb * 7);
+        int32_t env = s->x[0];
+        if (!s->x[1])
+            s->x[1] = 32768;                            /* (from rest: the gain at unity) */
+        g = s->x[1];
+        for (i = 0; i < n; i++) {
+            int32_t x = b[i] < 0 ? -b[i] : b[i];
+            if (x > pk)
+                pk = x;
+        }
+        pk = (((pk > 262143 ? 262143 : pk) >> 3) * gi) >> 9;           /* the block's peak after the drive */
+        if (pk > env)
+            env = pk > 1048575 ? 1048575 : pk;
+        else
+            env -= (env * dec) >> 15;
+        gt = env > 11000 ? (int32_t)((11000u << 15) / (uint32_t)env) : 32768;
+        dg = (gt - g) / (int32_t)n;
+        for (i = 0; i < n; i++) {
+            int32_t x = b[i], y, v;
+            s->w += clamp(tw - s->w, -SL_SLOPE, SL_SLOPE);
+            g += dg;
+            v = clamp((((clamp(x, -262143, 262143) >> 3) * gi) >> 9), -1048575, 1048575);
+            y = clamp((((v >> 4) * g) >> 11) * 2, -24000, 24000);
+            y = (y * lvl) >> 12;
+            s->dc += ((y << 8) - s->dc) >> 9;           /* DC blocker, ~14 Hz (a clip of a lopsided wave) */
+            y -= s->dc >> 8;
+            b[i] = pf_mix(x, y, s->w);
+        }
+        s->x[0] = env;
+        s->x[1] = g ? g : 1;
+        return;
+    }
+    if (ty == IT_MUFF) {
+        int32_t g1 = 4096 + a * a * 14, ka = ins_lpk(52), kb = ins_lpk(80);
+        for (i = 0; i < n; i++) {
+            int32_t x = b[i], y, u, v, o1, o2, hi;
+            s->w += clamp(tw - s->w, -SL_SLOPE, SL_SLOPE);
+            s->hp += ((x << 8) - s->hp) >> 8;            /* ~27 Hz low cut (Q8) */
+            v = clamp(x - (s->hp >> 8), -65535, 65535);
+            u = softclip(((v >> 3) * g1) >> 9);          /* stage 1: up to 56x into a tanh */
+            s->x[0] += ((u << 8) - s->x[0]) >> 7;        /* the coupling high-pass, ~55 Hz */
+            u -= s->x[0] >> 8;
+            u = softclip(u * 2);                         /* stage 2: harder */
+            y = u << 4;                                  /* (x16: the low cutoffs' rounding) */
+            v = mulq16(y - s->lp1, (uint32_t)ka);        /* the tone stack: a low-pass at ~400 Hz .. */
+            o1 = v + s->lp1;
+            s->lp1 = o1 + v;
+            v = mulq16(y - s->lp2, (uint32_t)kb);        /* .. and a high-pass at ~1.6 kHz (the input minus its low-pass) */
+            o2 = v + s->lp2;
+            s->lp2 = o2 + v;
+            hi = y - o2;
+            y = ((o1 * (127 - bb) + hi * bb) >> 7) * 11 >> 4;   /* TONE balances them, x0.69 (a high-pass of a square rings to 2x) */
+            y = ((y + 8) >> 4) * lvl >> 12;
+            s->dc += ((y << 8) - s->dc) >> 9;
+            y -= s->dc >> 8;
+            b[i] = pf_mix(x, y, s->w);
+        }
+        return;
+    }
+    {   /* BASS */
+        int32_t gh = 4096 + a * a * 12, kl = ins_lpk(32), kt = ins_lpk(bb), sub = c * 52;
+        for (i = 0; i < n; i++) {
+            int32_t x = clamp(b[i], -262143, 262143), y, v, o1, lo, hi, d, th;
+            s->w += clamp(tw - s->w, -SL_SLOPE, SL_SLOPE);
+            y = x << 4;
+            v = mulq16(y - s->lp1, (uint32_t)kl);        /* the low band: two one-poles */
+            o1 = v + s->lp1;
+            s->lp1 = o1 + v;
+            v = mulq16(o1 - s->lp2, (uint32_t)kl);
+            lo = v + s->lp2;
+            s->lp2 = lo + v;
+            hi = clamp((y - lo + 8) >> 4, -65535, 65535);                 /* the highs: what the low band leaves */
+            d = softclip(((hi >> 3) * gh) >> 9);                          /* DRIVE into a clip .. */
+            d = softclip(d * 2) >> 1;                                     /* .. and a second, +-16383 */
+            th = d << 4;                                                  /* TONE: two poles */
+            v = mulq16(th - s->x[0], (uint32_t)kt);
+            o1 = v + s->x[0];
+            s->x[0] = o1 + v;
+            v = mulq16(o1 - s->x[1], (uint32_t)kt);
+            d = v + s->x[1];
+            s->x[1] = d + v;
+            d = (d + 8) >> 4;
+            lo = (lo + 8) >> 4;
+            lo = softclip(lo << 1) >> 1;                 /* the low band's saturation: its harmonics, its weight */
+            y = d + ((lo * sub) >> 12);
+            s->dc += ((y << 8) - s->dc) >> 9;
+            y -= s->dc >> 8;
+            b[i] = pf_mix(x, y, s->w);
+        }
+    }
+}
+
+#include "krst_damage.c"                               /* KRIECHSTROM: DAMAGE (INSERT DAMG, the master's, WALL) */
+
 /* the INSERT at rest at once (mix_part: TYPE turned OFF while the part was silent, its fade never ran) */
 static __attribute__((noinline)) void ins_rest(track_t *t)
 {
@@ -797,7 +934,11 @@ static __attribute__((noinline)) void track_insert(track_t *t, int32_t *b, uint3
         memset(s, 0, sizeof *s);                        /* starting: no stale line or filter */
         s->type = (uint8_t)ty;
     }
-    if (s->type >= IT_PHASER)
+    if (s->type == IT_DAMAGE)
+        ins_damage(s, t, b, n, tw);
+    else if (s->type >= IT_MUFF)
+        ins_wreck(s, t, b, n, tw);
+    else if (s->type >= IT_PHASER)
         ins_swept(s, t, b, n, tw);
     else
         ins_drive(s, t, b, n, tw);
@@ -831,7 +972,7 @@ static __attribute__((noinline)) void mix_spread(track_t *t, int32_t *b, uint32_
     int32_t gla = 4096 - (pa > 0 ? pa * 64 : 0), gra = 4096 + (pa < 0 ? pa * 64 : 0);
     int32_t glb = 4096 - (pb > 0 ? pb * 64 : 0), grb = 4096 + (pb < 0 ? pb * 64 : 0);
     int32_t glm = (gla + glb) >> 1, grm = (gra + grb) >> 1, gld = (gla - glb) >> 1, grd = (gra - grb) >> 1;
-    int32_t c = t->p[P_CHOR] * 258, dl = t->p[P_DLY] * 258, r = t->p[P_REV] * 258, pk = t->peak;
+    int32_t c = wall_push(t->p[P_CHOR]) * 258, dl = wall_push(t->p[P_DLY]) * 258, r = wall_push(t->p[P_REV]) * 258, pk = t->peak;
     int32_t xmax = c > dl ? c : dl;
     xmax = 0x7FFFFFFF / ((xmax > r ? xmax : r) | 1);
     for (i = 0; i < n; i++)
@@ -918,7 +1059,7 @@ static void mix_part(track_t *t, uint32_t n SM_DECL)
                                                          * them, no spill in the loop: the ISR's cost as before 1.5) */
         int32_t lvl = LEVEL_Q12[t->p[P_LEVEL] & 127], pan = t->p[P_PAN];
         int32_t gl = 4096 - (pan > 0 ? pan * 64 : 0), gr = 4096 + (pan < 0 ? pan * 64 : 0);
-        int32_t c = t->p[P_CHOR] * 258, d = t->p[P_DLY] * 258, r = t->p[P_REV] * 258, pk = t->peak;
+        int32_t c = wall_push(t->p[P_CHOR]) * 258, d = wall_push(t->p[P_DLY]) * 258, r = wall_push(t->p[P_REV]) * 258, pk = t->peak;
         int32_t xmax = c > d ? c : d;
         xmax = 0x7FFFFFFF / ((xmax > r ? xmax : r) | 1);   /* sends: loud chords at a high LEVEL */
         for (i = 0; i < n; i++) {
@@ -1072,6 +1213,25 @@ static void mix_block(int32_t *out, uint32_t n)
     fx_buses(send_c, send_d, send_r, wet, n);
     if (hl.side)
         rev_side_mix(mix_l, mix_r, n);                  /* HALL: stereo */
+    if (dmg_master_on() || wall_master_on() || krst_level_on() || song.g[G_HISS] > 0) {   /* KRIECHSTROM: DAMAGE, WALL,
+                                                         * HISS on the master */
+        uint32_t ein;
+        int act = dmg_master_on() || wall_master_on();
+        for (i = 0; i < n; i++) {                       /* (the buses in first) */
+            mix_l[i] += wet[i];
+            mix_r[i] += wet[i];
+            wet[i] = 0;
+        }
+        ein = act || krst_level_on() ? kl_energy(mix_l, mix_r, n) : 0u;
+        if (dmg_master_on())
+            dmg_master(mix_l, mix_r, n);
+        if (wall_master_on())
+            wall_master(mix_l, mix_r, n);
+        if (act || krst_level_on())
+            krst_level(mix_l, mix_r, n, ein, act);      /* (denser, not louder) */
+        if (song.g[G_HISS] > 0)
+            hiss_master(mix_l, mix_r, n);
+    }
     if (scope_mix)
         scope_take_mix(n);
     if (perf) {

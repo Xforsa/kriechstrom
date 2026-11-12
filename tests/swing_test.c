@@ -161,7 +161,7 @@ static int test_display(void)
         ok &= sw[k]->fmt == F_PCT && sw[k]->min == 0 && sw[k]->max == 100 && !strcmp(shown(sw[k], 100), "100") &&
               !strcmp(shown(sw[k], 50), "50") && !strcmp(shown(sw[k], 0), "0");
     ok &= !strcmp(shown(&TP[P_SUS], 127), "100") && !strcmp(shown(&TP[P_SUS], 64), "50") &&
-          !strcmp(shown(&TP[P_DLY], 0), "0");
+          !strcmp(shown(&TP[P_DLY], 0), "OFF") && !strcmp(shown(&TP[P_DLY], 64), "50");   /* (KRIECHSTROM: a send at 0 reads OFF) */
     return check("display: SWG / global SWG / ARP SWG 100 -> 100 %, 50 -> 50 %; 0..127 percents unchanged", ok);
 }
 

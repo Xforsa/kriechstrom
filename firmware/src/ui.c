@@ -52,6 +52,17 @@ static uint32_t up_gen;                      /* bumped on every user bank change
 #define PREF_BPM_LOCK 16u                      /* MENU > BPM LOCK ON (#58): SELECT sets the tempo only with GLO held */
 #define PREF_LARGE 32u                         /* MENU > LARGE ON (#15, Discussion #80): big knob labels and values
                                                 * (ui_draw.c large_kind); clear in every older setting = OFF */
+#ifndef KRST_LARGE_DEF
+#define KRST_LARGE_DEF 1                       /* KRIECHSTROM: LARGE ON at a first start (its stored bit then means OFF);
+                                                * the tests build with 0, as Felucca */
+#endif
+#define large_on() (((ui_prefs & PREF_LARGE) != 0u) != (KRST_LARGE_DEF != 0))
+#ifndef KRST_PANEL_DEF
+#define KRST_PANEL_DEF 1                       /* KRIECHSTROM's first start: USB SERIAL OFF (macOS 13-15 then shows the USB
+                                                * audio input) and HELP ON; their stored bits then mean the other value.
+                                                * The tests build with 0, as Felucca */
+#endif
+#define serial_off() (((ui_prefs & PREF_SERIAL_OFF) != 0u) != (KRST_PANEL_DEF != 0))
 #define PREF_SERIAL_OFF 64u                    /* MENU > USB SERIAL OFF (#67): no serial console, the device enumerates as
                                                 * audio + MIDI only (usb.c usb_cdc_switch); clear in every older setting = ON */
 #define PREF_RESTORE_OFF 128u                  /* MENU > RESTORE LAST OFF (1.2, Discussion #130): no autosave written, none
@@ -388,7 +399,7 @@ enum { LK_OFF, LK_LABEL, LK_TALL };
 static uint32_t large_kind(void)
 {
     uint32_t g;
-    if (!(ui_prefs & PREF_LARGE))
+    if (!large_on())
         return LK_OFF;
     if (ui.layer)
         return LK_LABEL;
@@ -523,7 +534,7 @@ static void ev_enter(void);
 /* 1.5 (Discussion #156): MENU > HELP ON: a page entered (here, go_home) shows its hint in the footer for ~2 s
  * (ui_help.c, ui_draw.c draw_foot) */
 #define HELP_FRAMES 120u                       /* (~2 s at the UI's ~60 frames a second) */
-static int help_on(void) { return (ui_prefs2 & (PREF_HELP >> 16)) != 0u; }
+static int help_on(void) { return ((ui_prefs2 & (PREF_HELP >> 16)) != 0u) != (KRST_PANEL_DEF != 0); }
 /* 1.5.5 (#208): a MIDI IN note into track k lights its number cushion for MLIT_MS (the header's for the selected track,
  * HOME TRACKS / LEVELS, the MIXER); midi_lit_ms[k]: fm1_ms | 1 of the last (ui_input.c midi_take), 0 none */
 #define MLIT_MS 90u
@@ -1382,6 +1393,7 @@ static void apply_preset_to(track_t *t, uint32_t pi)
         const preset_t *pr = &e->presets[pi];
         for (i = 0; i < 4u; i++)
             t->p[P_DIST + i] = (int16_t)(pr->fx[i] ? pr->fx[i] - 1 : FX_DEF[i]);
+        preset_ins(t->p, e, pi);                      /* KRIECHSTROM: the sound's INSERT (GLCH's, after Glitchbox) */
     }
     fm6_track_loaded(t);                              /* FM6: the preset's patch (its SLOT) */
     load_end(t);

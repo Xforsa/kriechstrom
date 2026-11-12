@@ -58,7 +58,9 @@ static const char *const N_GO[] = {"--", "GO"};
 static const char *const N_SLCR[] = {"OFF", "GATE", "STUT"};             /* SL_OFF .. SL_STUT (slicer.c) */
 static const char *const N_SLDIV[] = {"1/8", "1/16", "1/32", "8T", "16T", "32T"};   /* SL_DEN */
 /* the INSERT's types (1.5, fx.c IT_*; append-only: stored). Its three values A B C mean what the type says (ins_desc) */
-static const char *const N_ITYPE[] = {"OFF", "SOFT", "HARD", "FOLD", "FUZZ", "CRUSH", "PHASR", "FLANG", "CHOR"};
+static const char *const N_ITYPE[] = {"OFF", "SOFT", "HARD", "FOLD", "FUZZ", "CRUSH", "PHASR", "FLANG", "CHOR",
+                                      "MUFF", "BASS", "SMASH", "DAMG"};   /* (Glitchbox: fx.c ins_wreck; KRIECHSTROM:
+                                                                           * DAMG, krst_damage.c) */
 /* CRUSH: BITS 1..16 and RATE (the held sample's rate, fx.c INS_HOLD) over the range in 16 even parts (0-terminated) */
 static const char *const N_IBITS[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
                                       "16", 0};
@@ -73,7 +75,7 @@ static const char *const N_MDST[] = {"OFF", "PITCH", "CUT", "SHP", "AMP", "PAN",
 /* 1.8: AFTERTOUCH SENS, the keys' pressure (keytouch.c): OFF (the keys send none; the routing still takes MIDI's), 1 the
  * firmest lean for full pressure .. 10 the lightest */
 static const char *const N_ATSNS[] = {"OFF", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
-static const char *const N_ENGNAME[] = {"ANALOG", FELUCCA_FM4 ? "DIGITAL" : "-", "PHASE", "LOFI", "SAMPLE", "VOICE", "TRIO", "WHEEL", "GRAIN", "PHYS",
+static const char *const N_ENGNAME[] = {"ANALOG", FELUCCA_FM4 ? "DIGITAL" : "-", "PHASE", "LOFI", "SAMPLE", "VOICE", "TRIO", "GLCH", "GRAIN", "PHYS",
                                              "DRUM", "NOISE", "FM6",
 #if FELUCCA_SLICE
                                              "SLICE",
@@ -182,20 +184,27 @@ static const param_desc_t TP[P_COUNT] = {
 /* the INSERT's A B C as its TYPE means them (TP's ranges and defaults): the drives DRIVE TONE LEVEL, CRUSH BITS RATE
  * LPF, the swept ones RATE DEPTH FDBK; OFF TP's own */
 #define PU(l, f, df, n, u) {l, f, 0, 127, df, n, u}
-static const param_desc_t INS_DESC[3][3] = {
+static const param_desc_t INS_DESC[7][3] = {
     {PU("DRIVE", F_PCT, 64, 0, 0), PU("TONE", F_CUTOFF, 96, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
     {PU("BITS", F_INT, 64, N_IBITS, 0), PU("RATE", F_INT, 96, N_IRATE, "Hz"), PU("LPF", F_CUTOFF, 96, 0, 0)},
     {PU("RATE", F_LFOHZ, 64, 0, 0), PU("DEPTH", F_PCT, 96, 0, 0), PU("FDBK", F_PCT, 96, 0, 0)},
+    /* Glitchbox: MUFF (TONE: 64 the mid scoop, 0 all low, 127 all high), BASS (SUB: the clean low band's level), SMASH */
+    {PU("DRIVE", F_PCT, 90, 0, 0), PU("TONE", F_PCT, 64, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
+    {PU("DRIVE", F_PCT, 100, 0, 0), PU("TONE", F_CUTOFF, 96, 0, 0), PU("SUB", F_PCT, 96, 0, 0)},
+    {PU("AMT", F_PCT, 90, 0, 0), PU("REL", F_PCT, 50, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
+    /* KRIECHSTROM: DAMG (CHAR: 0 TAPE .. 127 DIGITAL) */
+    {PU("AMT", F_PCT, 80, 0, 0), PU("CHAR", F_PCT, 32, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
 };
 #undef PU
 static const param_desc_t *ins_desc(int32_t type, uint32_t k)
 {
+    static const uint8_t GRP[13] = {0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 4, 5, 6};   /* by TYPE (fx.c IT_*) */
     if (type <= 0 || type >= (int32_t)NELEM(N_ITYPE))
         return &TP[P_IA + k];
-    return &INS_DESC[type < 5 ? 0 : type == 5 ? 1 : 2][k];   /* (IT_SOFT .. IT_FUZZ, IT_CRUSH, the swept ones) */
+    return &INS_DESC[GRP[type]][k];
 }
 
-static const param_desc_t GP[G_COUNT] = {
+static const param_desc_t GP[G_ALL] = {
     [G_BPM] = PD("BPM", F_BPM, 40, 240, 120),
     [G_SWING] = PD("SWG", F_PCT, 0, 100, 0),
     [G_CLOCK] = PE("CLK", N_CLOCK, 0),
@@ -222,7 +231,7 @@ static const param_desc_t GP[G_COUNT] = {
     [G_LOAD] = PE("LOAD", N_GO, 0),
     [G_SAVE] = PE("SAVE", N_GO, 0),
     [G_ENGSEL] = PE("ENG", N_ENGNAME, 0),
-    [G_ENGGO] = PE("SET", N_GO, 0),
+    [G_WALL] = PD("WALL", F_PCT, 0, 127, 0),   /* KRIECHSTROM: QUIET .. WALL (was G_ENGGO, unused: core.h) */
     [G_CLRSEQ] = PE("CLRSQ", N_GO, 0),
     [G_INITSND] = PE("INIT", N_GO, 0),
     /* the reverb's model on the REVERB page: the id of the old GM drum channel (G_DRCH, inert since 1.0) */
@@ -230,8 +239,9 @@ static const param_desc_t GP[G_COUNT] = {
     /* inert: they set the GM drum part (level, reverb send), which is gone (drums are the DRUM engine
      * on any part). On no page; kept so the ids and G_COUNT, which the project format and the
      * editor protocol depend on, do not move */
-    [G_DRLVL] = PD("-", F_INT, 0, 0, 0),
-    [G_DRREV] = PD("-", F_INT, 0, 0, 0),
+    [G_DMG] = PD("DMG", F_PCT, 0, 127, 0),       /* KRIECHSTROM: the master's DAMAGE (krst_damage.c) .. */
+    [G_DMGC] = PD("CHAR", F_PCT, 0, 127, 32),    /* .. TAPE (0) .. DIGITAL (127) */
+    [G_HISS] = PD("HISS", F_PCT, 0, 127, 0),     /* KRIECHSTROM: the master's tape hiss, on its own (core.h) */
 };
 
 static const param_desc_t *track_desc(const track_t *t, uint32_t id)
@@ -332,10 +342,22 @@ static int32_t param_turn(const param_desc_t *d, int32_t v, int32_t steps)
 static uint8_t fmt_named;        /* the last param_format was a name (F_ENUM, even "4"): ui_draw.c's digits do not roll it */
 
 /* value string (<= 5 chars) and unit for a parameter value */
+/* KRIECHSTROM: the values whose 0 means the effect is off read OFF there: the sends, the INSERT's MIX, the delay's MIX,
+ * DAMAGE (the master's, the INSERT DAMG's AMT) and WALL */
+static int off_at_zero(const param_desc_t *d)
+{
+    return d == &TP[P_DIST] || d == &TP[P_CHOR] || d == &TP[P_DLY] || d == &TP[P_REV] || d == &TP[P_IMIX] ||
+           d == &GP[G_DMIX] || d == &GP[G_DMG] || d == &GP[G_WALL] || d == &GP[G_HISS] || d == &INS_DESC[6][0];
+}
 static void param_format(const param_desc_t *d, int32_t v, char *val, const char **unit)
 {
     *unit = "";
     fmt_named = d->fmt == F_ENUM;
+    if (v == 0 && off_at_zero(d)) {
+        str_cpy(val, "OFF", 4);
+        fmt_named = 1;
+        return;
+    }
     switch (d->fmt) {
     case F_PCT:                                     /* a 0..100 range (SWG) is its value, others a share of 127 */
         fmt_int(val, d->max == 100 ? v : (v * 100 + 63) / 127);
@@ -469,6 +491,7 @@ static const page_t PAGES[] = {
     {"DLY", FAM_FX, SC_GLOBAL, GR_NONE, {G_DTIME, G_DFDBK, G_DCOLOR, G_DMIX}},
     {"REVERB", FAM_FX, SC_GLOBAL, GR_NONE, {G_RTYPE, G_RSIZE, G_RDAMP, 0xFF}},   /* TYPE: ROOM / SPRING / HALL */
     {"CHORUS", FAM_FX, SC_GLOBAL, GR_NONE, {G_CRATE, G_CDEPTH, 0xFF, 0xFF}},
+    {"DAMAGE", FAM_FX, SC_GLOBAL, GR_NONE, {G_DMG, G_DMGC, G_WALL, G_HISS}},   /* KRIECHSTROM: the master's wear, WALL */
     {"SCL", FAM_SCL, SC_TRACK, GR_SCALE, {P_ROOT, P_SCALE, P_QUANT, P_TRANS}},
     {"CHORD", FAM_SCL, SC_TRACK, GR_CHORD, {P_CHRD, P_VOIC, 0xFF, 0xFF}},   /* SCL again: the chord keys (chord.c) */
     {"EDIT 1", FAM_EDIT, SC_ENGINE, GR_NONE, {P_E0, P_E1, P_E2, P_E3}},
@@ -510,6 +533,38 @@ static const page_t PAGES[] = {
     {"MIXER", FAM_TRK, SC_TRK, GR_TRK, {0, 1, 2, 3}},
     {"CLOCK", FAM_TRK, SC_GLOBAL, GR_NONE, {G_BPM, G_SWING, G_CLOCK, 0xFF}},
 };
+/* KRIECHSTROM: what the screen calls a page and the one line under it (MENU > LARGE's strip): the stored titles stay
+ * (help, tests, the editor look pages up by them); a page not listed shows its title, nothing under it */
+static const struct { const char *title, *name, *what; } PAGE_SAY[] = {
+    {"FX", "SENDS", "THIS TRACK INTO THE EFFECTS"},
+    {"SLICER", "SLICER", "CHOPS THIS TRACK IN TIME"},
+    {"INSERT", "PEDAL", "ONE EFFECT ON THIS TRACK"},
+    {"INSERT 2", "PEDAL MIX", "HOW MUCH PEDAL YOU HEAR"},
+    {"DLY", "DELAY", "ALL TRACKS. MIX 0 = OFF"},
+    {"REVERB", "REVERB", "SHARED BY ALL TRACKS"},
+    {"CHORUS", "CHORUS", "SHARED BY ALL TRACKS"},
+    {"DAMAGE", "DAMAGE", "THE WHOLE MIX WEARS OUT"},
+    {"ENV DEST", "ENV DEST", "WHERE THE ENVELOPE GOES"},
+    {"LFO DEST", "LFO DEST", "WHERE THE LFO GOES"},
+    {"VOICE", "VOICE", "POLY, MONO, GLIDE"},
+};
+static const char *page_name(const char *t)
+{
+    uint32_t i;
+    for (i = 0; i < NELEM(PAGE_SAY); i++)
+        if (str_eq(PAGE_SAY[i].title, t))
+            return PAGE_SAY[i].name;
+    return t;
+}
+static const char *page_what(const char *t)
+{
+    uint32_t i;
+    for (i = 0; i < NELEM(PAGE_SAY); i++)
+        if (str_eq(PAGE_SAY[i].title, t))
+            return PAGE_SAY[i].what;
+    return 0;
+}
+
 #define NPAGES (sizeof(PAGES) / sizeof(PAGES[0]))
 static uint8_t mod_ui_slot;      /* the MOD page: the matrix slot (0..3) KNOB 2..4 edit */
 

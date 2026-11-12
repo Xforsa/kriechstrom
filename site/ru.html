@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KRIECHSTROM</title>
+<meta name="description" content="KRIECHSTROM: мрачная индастриал и EBM прошивка для M-VAVE FM-1.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="ru.html">KRIECH<b>STROM</b></a>
+  <nav><a href="manual/ru.html">Мануал</a><a href="webapp/installer/">Установка</a><a href="webapp/editor/">Редактор</a><a href="index.html">English</a></nav>
+</header>
+<main>
+<div class="hero"><img src="art/hero.jpg" alt="" width="1600" height="800"><h1>KRIECH<span class="red">STROM</span></h1></div>
+<p class="lead">Прошивка для M-VAVE FM-1 под мрачный индастриал и EBM: четыре дорожки, пошаговый секвенсор,
+перегруженные синтезаторы, драмы и живые эффекты.</p>
+<p>
+  <a class="btn" href="webapp/installer/">Поставить на FM-1</a>
+  <a class="btn ghost" href="manual/ru.html">Читать мануал</a>
+  <a class="btn ghost" href="manual/ru.html#cheat">Шпаргалка</a>
+  <a class="btn ghost" href="firmware/@FWSC@">Скачать @FWSC@</a>
+</p>
+
+<div class="shots">
+  <figure><img src="shots/home.png" alt="HOME"><figcaption>HOME</figcaption></figure>
+  <figure><img src="shots/layer_seq_tools_drum.png" alt="SEQ TOOLS"><figcaption>SEQ TOOLS с DICE и MOOD</figcaption></figure>
+  <figure><img src="shots/drum.png" alt="драм-сетка"><figcaption>Драм-сетка</figcaption></figure>
+  <figure><img src="shots/perform_held.png" alt="слой FX"><figcaption>Живые эффекты</figcaption></figure>
+</div>
+
+<h2>Что внутри</h2>
+<ul>
+  <li><b>GLCH</b>, движок из Glitchbox: клиппинг, фолдер, резонансный фильтр, понижение разрядности и микрозаикание; 48 звуков, у большинства уже стоит педаль перегруза.</li>
+  <li><b>@NSOUNDS@ звуков</b> в 13 движках, готовых к игре: перегруженные басы, холодные лиды, расстроенные клавиши, пэды, шумы и текстуры, плюс 13 драм-китов. Список можно фильтровать по категориям.</li>
+  <li><b>DICE</b>: держи SEQ, жми F5, и у дорожки новая партия в одном из восьми настроений, от MACHINE до HUSH.</li>
+  <li><b>HAPPY ACCIDENT</b>: держи EDIT, жми G5, и два-три параметра звука случайно меняются. Удержание SAVE отменяет.</li>
+  <li>Секвенсор на 64 шага на каждой дорожке: локи, условия, рэтчеты, автоматизация, песни.</li>
+  <li>Драмы: 13 китов, включая DESTROY, восемь линий, сетка на клавишах.</li>
+  <li>Живые эффекты на клавишах: повторы, остановка ленты, фриз, свипы фильтра, ROLL, GATE, броски в ревер и дилей.</li>
+  <li>MIDI вход по USB и TRS, MIDI learn, USB-аудио. На компьютере видна как KRIECHSTROM.</li>
+  <li>Чёрное с красным, крупные читаемые цифры, подсказки на экране.</li>
+</ul>
+
+<div class="split"><img src="art/tracking.jpg" alt="фигура Лихтенберга" width="1200" height="1200">
+<p class="lead">Kriechstrom по-немецки ток утечки по поверхности изоляции. На старой изоляции он оставляет ветвистый
+след вроде этого, фигуру Лихтенберга.</p></div>
+
+<h2>Зачем</h2>
+<p>Glitchbox сделан на Felucca 1.5.1 под старый чип памяти FM-1 и на новых экземплярах не запускается. KRIECHSTROM собран
+на текущей Felucca, которая поддерживает оба чипа, и переносит из Glitchbox движок GLCH и эффекты.</p>
+
+<h2 id="source">На чём сделано</h2>
+<p>KRIECHSTROM сделан на основе <a href="https://github.com/hugelton/Felucca"><b>Felucca 1.8.2</b></a> (Leo Kuroshita, Hügelton Instruments), с частями <a href="https://github.com/erikdevos/glitchbox"><b>Glitchbox</b></a>
+(erikdevos) и идеями из <a href="https://github.com/sinscum/DIRGE"><b>DIRGE</b></a> (sinscum). Спасибо всем троим за вдохновение. Свободная программа под GNU GPL 3.0:
+<a href="src/@SRC@">исходники этой сборки</a> (@SRCSIZE@).</p>
+<img class="band" src="art/band.jpg" alt="" width="1600" height="360">
+</main>
+<footer>KRIECHSTROM @VERSION@ · на основе Felucca 1.8.2 · GPL-3.0</footer>
+</body>
+</html>

@@ -1524,7 +1524,9 @@ static void ui_input(void)
         if (trk[k].eng_req == ENGI_DIGITAL)             /* already): FM6 (fm4_convert.c) */
             fm4_track(&trk[k]);
 #endif
-    perf_latch_on = fx_latch & 1u;                      /* (MENU > FX LATCH; a settings load sets it too) */
+    perf_latch_on = (uint8_t)(((fx_latch & PREF_LATCH) != 0u) != (KRST_PANEL_DEF != 0));   /* (MENU > FX LATCH; a settings
+                                                         * load sets it too. KRIECHSTROM: ON at a first start, a tap
+                                                         * turns an effect on, the next off) */
     fx_map_sync();                                      /* (the FX layer's key map: ui_layer.c, a settings load too) */
     fx_usb_fixed = (ui_prefs & PREF_USB_FIXED) != 0u;   /* (MENU > USB LEVEL: fx.c, audio.c) */
     scope_mix = (ui_prefs2 & (PREF_SCOPE_MIX >> 16)) != 0u;   /* (MENU > SCOPE: fx.c, audio.c) */
@@ -1593,6 +1595,13 @@ static void ui_input(void)
         panel_enc(EN_ALGO);                             /* (another track: OCT- puts back the layer's track only) */
         if (glo && (sel = panel_enc(EN_SELECT)) != 0)   /* GLO + SELECT: the tempo, a combo (OCT- puts it back) */
             combo = 1;
+        if (ui.ly == LAYER_FX && (s = panel_enc(EN_SELECT)) != 0) {   /* KRIECHSTROM: FX + SELECT, WALL (QUIET .. WALL, */
+            char b[8];                                  /* FX > DAMAGE's KNOB 3, krst_damage.c) */
+            song.g[G_WALL] = (int16_t)clamp(song.g[G_WALL] + accel(EN_SELECT, s, 127), 0, 127);
+            fmt_int(b, (int32_t)song.g[G_WALL] * 100 / 127);
+            ui_say("WALL ", b);
+            combo = 1;
+        }
     } else if ((kq = (uint32_t)layer_knobs_quiet()) != 0) {   /* a layer letting go: KNOB 1..4 are nobody's (#39) */
         for (k = 0; k < 4u; k++)
             if (panel_enc(EN_K1 + k) != 0)

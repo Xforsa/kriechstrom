@@ -621,9 +621,9 @@ static int cc_map_test(void)
         }
     }
     bad += check("every engine's CC74 / CC71 target is a continuous EDIT value (or none)", ok);
-    trk[2].eng_req = trk[2].engine = 7u;               /* WHEEL: no brightness, no resonance */
-    memcpy(before, trk[2].p, sizeof before); queued(0xB2, 74, 3, 1); queued(0xB2, 71, 3, 1);
-    bad += check("CC74 / CC71 on WHEEL: ignored", !memcmp(before, trk[2].p, sizeof before));
+    trk[2].eng_req = trk[2].engine = 7u;               /* GLCH (KRIECHSTROM; Felucca's WHEEL had neither): CUT, RES */
+    queued(0xB2, 74, 3, 1); queued(0xB2, 71, 5, 1);
+    bad += check("CC74 / CC71 on GLCH: CUT and RES", trk[2].p[P_E1] == 3 && trk[2].p[P_E2] == 5);
     memcpy(before, trk[0].p, sizeof before);
     queued(0xB0, 121, 0, 1);
     bad += check("CC121 resets no mapped parameter (RP-015)", !memcmp(before, trk[0].p, sizeof before));
@@ -909,39 +909,40 @@ static int pc_test(void)
                 ok &= k == P_E0 || dr->p[k] == was.p[k];
             last = dr->p[P_E0];
         }
-        ok &= n == 9u && last == d->max;                 /* (1.5.6, #216: DEEP TIGHT PERC 6..8) */
+        ok &= n == 10u && last == d->max;                /* (1.5.6, #216: DEEP TIGHT PERC 6..8; KRIECHSTROM: DSTR 9) */
         pc(3, DK_COUNT + 2u); frame();
         ok &= dr->p[P_E0] == last;
-        bad += check("  DRUM: 0..8 the nine kits (STD 80 10 66 55 77 DEEP TIGHT PERC; HAND CYM H+CYM skipped), only KIT; 9.. ignored", ok);
+        bad += check("  DRUM: 0..8 the nine kits (STD 80 10 66 55 77 DEEP TIGHT PERC; HAND CYM H+CYM skipped), only KIT; KRIECHSTROM: 9 DSTR; 10.. ignored", ok);
     }
 
     /* FM6: its presets, then the bank's voices */
     {
         track_t *f = &trk[1];
         uint8_t v[FP_SIZE + 1u];
+        uint32_t fb = preset_shown(ENGI_FM6);           /* (KRIECHSTROM: 20 presets, the bank after them) */
         set_engine_of(f, ENGI_FM6);
         pc(1, 4); frame();
         ok = f->preset == 4 && f->p[P_E7] == 4 && fm6_slot[1] == 4u && f->p[P_E6] == 30;   /* PAD: F5, DTUN 30 */
         bad += check("  FM6: 0..7 its presets (PC 4: PAD, SLOT F5, its DTUN)", ok);
-        pc(1, 8); frame();
+        pc(1, fb); frame();
         ok = f->p[P_E7] == 4 && fm6_slot[1] == 4u;
         fm6_bank_used = 1u | 1u << 5;
         fm6_bank_read = pc_bank_read;
-        pc(1, 8); frame();
+        pc(1, fb); frame();
         fm6_unpack(FM6_FACTORY[2], v);
         ok &= f->p[P_E7] == (int16_t)(FM6_OWN + 1u) && fm6_slot[1] == FM6_OWN + 1u && pc_bank_k == 0u &&
               !memcmp(v, fm6_patch[1], FP_SIZE) && f->p[P_E6] == 30 && f->preset == 4;
-        pc(1, 9); frame();
+        pc(1, fb + 1u); frame();
         ok &= f->p[P_E7] == (int16_t)(FM6_OWN + 1u);
-        pc(1, 13); frame();
+        pc(1, fb + 5u); frame();
         ok &= f->p[P_E7] == (int16_t)(FM6_OWN + 6u) && pc_bank_k == 5u;
-        pc(1, 8u + FM6_NBANK); frame();
+        pc(1, fb + FM6_NBANK); frame();
         ok &= f->p[P_E7] == (int16_t)(FM6_OWN + 6u);
         pc(1, 0); frame();
         ok &= f->p[P_E7] == 0 && fm6_slot[1] == 0u && f->p[P_E6] == 0;
         fm6_bank_used = 0;
         fm6_bank_read = 0;
-        bad += check("  FM6: 8.. the voice bank B1..B32 through SLOT (the rest stays), an empty or no bank ignored", ok);
+        bad += check("  FM6: past its presets the voice bank B1..B32 through SLOT (the rest stays), an empty or no bank ignored", ok);
     }
 
     /* ROUT */

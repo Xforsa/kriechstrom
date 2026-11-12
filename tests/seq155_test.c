@@ -602,9 +602,138 @@ static int test_double_half(void)
     return bad;
 }
 
+/* ------------------------------------------------------- KRST DICE, MOOD --- */
+static uint32_t notes_in(const track_t *t, uint32_t len)
+{
+    uint32_t i, n = 0;
+    for (i = 0; i < len; i++)
+        n += t->step[i].time != ST_REST && t->step[i].time != ST_TIE && t->step[i].note[0] != 0u;
+    return n;
+}
+static int test_dice(void)
+{
+    int bad = 0, ok;
+    uint32_t m, i, k, lanes;
+    uint8_t nt[256];
+    track_t *t = melody(0);
+    step_t ref[NSTEP];
+    t->p[P_SLEN] = 8;
+    memcpy(ref, t->step, sizeof ref);
+    go_page(GR_ROLL); frame();
+    ok = dice_mood == MOOD_MACHINE;
+    btn_down(B_SEQ); frame();
+    tkey(14);                                          /* F5: DICE */
+    ok &= msg_is("DICE: MACHINE") && t->p[P_SLEN] == 16 && notes_in(t, 16) >= 4u;
+    btn_up(B_SEQ); frame();
+    seq_start(); m = ons(t, 16u * div_samples(2) / CTL, nt, sizeof nt); seq_stop();
+    bad += check("DICE (F5) on T1, MOOD MACHINE: LEN 16, a bass line written, it plays", ok && m >= 4u);
+    hold(B_SAVE);
+    bad += check("  SAVE held: one undo (LEN 8, the empty steps back)", t->p[P_SLEN] == 8 && !memcmp(t->step, ref, sizeof ref));
+    btn_down(B_SEQ); frame();
+    tkey(15);                                          /* G5: MOOD */
+    ok = msg_is("MOOD GRIND") && dice_mood == MOOD_GRIND && t->p[P_SLEN] == 8 && !memcmp(t->step, ref, sizeof ref);
+    tkey(15);
+    ok &= msg_is("MOOD MARCH 7/8");
+    tkey(14);
+    ok &= msg_is("DICE: MARCH 7/8") && t->p[P_SLEN] == 14;
+    bad += check("MOOD (G5): the next mood, the steps untouched; MARCH 7/8 rolls 14 steps", ok);
+    for (k = 0; k < MOOD_N - 2u; k++)
+        tkey(15);
+    bad += check("  MOOD wraps after HUSH to MACHINE", dice_mood == MOOD_MACHINE);
+    for (m = 0, k = 0; k < MOOD_N; k++) {              /* every mood on every melodic track writes something */
+        for (i = 0; i < 3u; i++) {
+            song.sel = i;
+            track_defaults_steps(TSEL);
+            tkey(14);
+            m += notes_in(TSEL, (uint32_t)TSEL->p[P_SLEN]) > 0u;
+        }
+        tkey(15);
+    }
+    btn_up(B_SEQ); frame();
+    bad += check("  every mood on T1 (bass), T2 (keys), T3 (line) writes notes", m == MOOD_N * 3u);
+    ui_power_on();
+    song.sel = 3;
+    set_engine_of(TSEL, ENGI_DRUM);
+    TSEL->engine = TSEL->eng_req;
+    track_defaults_steps(TSEL);
+    go_page(GR_ROLL); frame();
+    btn_down(B_SEQ); frame();
+    tkey(14);
+    for (lanes = 0, i = 0; i < 16u; i++)
+        lanes |= step_lanes(&TSEL->step[i]);
+    btn_up(B_SEQ); frame();
+    bad += check("DICE on a DRUM track: a beat on the grid (kick and snare or clap among the lanes)",
+                 msg_is("DICE: MACHINE") && (lanes & (1u << DV_KICK)) && (lanes & (1u << DV_SNARE | 1u << DV_CLAP)));
+    {   /* rolls differ: 8 DICE on T2 give at least 6 different patterns */
+        step_t seen[8][16];
+        uint32_t d = 0, j;
+        ui_power_on();
+        song.sel = 1;
+        go_page(GR_ROLL); frame();
+        btn_down(B_SEQ); frame();
+        for (k = 0; k < 8u; k++) {
+            tkey(14);
+            memcpy(seen[k], TSEL->step, sizeof seen[k]);
+            for (j = 0; j < k && memcmp(seen[j], seen[k], sizeof seen[k]); j++)
+                ;
+            d += j == k;
+        }
+        btn_up(B_SEQ); frame();
+        bad += check("  8 DICE in a row on T2: at least 6 different patterns", d >= 6u);
+    }
+    ui_power_on();
+    return bad;
+}
+
+/* ------------------------------------------------------- KRST HAPPY ACCIDENT (OOPS) --- */
+static int test_oops(void)
+{
+    int bad = 0, ok;
+    uint32_t i, moved, run, okn = 0;
+    int16_t before[P_COUNT];
+    step_t ref[NSTEP];
+    track_t *t = melody(1u | 1u << 4);
+    uint8_t eng = t->eng_req;
+    memcpy(before, t->p, sizeof before);
+    memcpy(ref, t->step, sizeof ref);
+    go_page(GR_ROLL); frame();
+    btn_down(B_EDIT); frame();
+    tkey(15);                                          /* G5: OOPS */
+    for (moved = 0, i = 0; i < 8u; i++)
+        moved += t->p[P_E0 + i] != before[P_E0 + i];
+    ok = ui.msg_t && !memcmp(ui.msg, "OOPS: ", 6) && moved >= 2u && moved <= 3u && t->eng_req == eng &&
+         t->p[P_LEVEL] == before[P_LEVEL] && t->p[P_PAN] == before[P_PAN] && !memcmp(t->step, ref, sizeof ref);
+    for (i = 0; i < 8u; i++)
+        ok &= t->p[P_E0 + i] >= ENGINES[eng]->edit[i].min && t->p[P_E0 + i] <= ENGINES[eng]->edit[i].max &&
+              (ENGINES[eng]->edit[i].fmt != F_ENUM || t->p[P_E0 + i] == before[P_E0 + i]);
+    bad += check("OOPS (EDIT + G5): 2 or 3 engine values moved, in range, no choice (WAVE) changed; the engine, LEVEL, "
+                 "PAN and the steps as they were; the screen says what moved", ok);
+    for (run = 0; run < 5u; run++)
+        tkey(15);
+    btn_up(B_EDIT); frame();
+    hold(B_SAVE);
+    bad += check("  6 OOPS in a row, SAVE held: the sound from before the first", !memcmp(t->p, before, sizeof before));
+    for (run = 0; run < NENG_SHOWN; run++) {             /* every engine: something moves, nothing out of range */
+        ui_power_on();
+        song.sel = 0;
+        set_engine_of(TSEL, eng_vis(run));
+        TSEL->engine = TSEL->eng_req;
+        memcpy(before, TSEL->p, sizeof before);
+        btn_down(B_EDIT); frame();
+        tkey(15);
+        btn_up(B_EDIT); frame();
+        for (ok = 0, i = 0; i < P_COUNT; i++)
+            ok |= TSEL->p[i] != before[i];
+        okn += ok && TSEL->p[P_LEVEL] == before[P_LEVEL];
+    }
+    bad += check("  OOPS on every engine changes its sound, never its LEVEL", okn == NENG_SHOWN);
+    ui_power_on();
+    return bad;
+}
+
 int main(void)
 {
-    int bad = conditions() + cond_locks_rolls() + cond_song() + cond_nudge() + cond_ui() + fill_key() + cond_store() + test_euclid() + test_double_half();
+    int bad = conditions() + cond_locks_rolls() + cond_song() + cond_nudge() + cond_ui() + fill_key() + cond_store() + test_euclid() + test_double_half() + test_dice() + test_oops();
     printf("%s\n", bad ? "SEQ 1.5.5 TEST FAILED" : "seq 1.5.5 tests passed");
     return bad != 0;
 }

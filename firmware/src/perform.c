@@ -37,6 +37,14 @@
  * REVERSE longer than the loop at the tempo (below 81 BPM) does nothing (the map shows it dimmed).
  * KNOB 1..4 with FX: the macros FILTER (the LPF / HPF), CRUSH, THROW (the dry mix into the delay and reverb
  * sends), DEPTH (the buffer effects' level, FLANGER's and PHASER's; OCT UP / DN: the shimmer).
+ * Glitchbox adds four (appended, codes 16..19 of the key map):
+ *   ROLL       a REPEAT that speeds up: 1/8 for a beat, then 1/16, 1/32, 1/64 (each a beat, the last held); it keeps
+ *              playing the start of what it caught, as a drum machine's roll. Starts on the 1/16
+ *   GATE       a rhythmic mute of the master on the 1/32s (open the first half of each), 1.5 ms edges
+ *   CRSH SWP   CRUSH swept from nothing to full over a bar while held (KNOB 2 CRUSH, if higher, wins)
+ *   RANDOM     on every 1/16 a dice roll: half the time nothing, else REPEAT 1/16, REPEAT 1/32, REVERSE or GATE for
+ *              that 1/16 (as if its key were pressed there); the dice: rng()
+ * Default keys (Glitchbox): C5 (was PHASER) GATE, D5 (was REV THROW) CRSH SWP, the two free keys F5 G5 ROLL and RANDOM.
  * MENU > FX LATCH ON (#40, a hand that cannot hold FX, a key and a knob together): a key pressed with FX turns its
  * effect on, the next press turns it off (perf_latched; letting the key or FX go does nothing), the macros keep
  * their values when FX is let go, FX + OCT- turns everything off (ui_layer.c), so does the menu or a dialog.
@@ -47,14 +55,15 @@
  * PF_M1), then the mutes of the black keys */
 enum { PF_R8, PF_R16, PF_R32, PF_REV, PF_LPF, PF_HPF, PF_TAPE, PF_FRZ, PF_OUP, PF_ODN, PF_FLG, PF_PHS,
        PF_RTHR, PF_ETHR,                      /* 1.5.1: REV THROW, ECHO THROW */
+       PF_ROLL, PF_GATE, PF_CRSW, PF_RAND,    /* Glitchbox: ROLL, GATE, CRSH SWP, RANDOM */
        PF_M1, PF_N = PF_M1 + NTRK };
 #define PF_NFX PF_M1                          /* the effects a white key can hold */
 #define PF_KEYS 16u                           /* the white keys F3 .. G5 */
 #define PF_BIT(e) (1u << (e))
 #define PF_REPEAT 0x7u                                         /* the three REPEAT rates */
-#define PF_Q (PF_REPEAT | PF_BIT(PF_REV))                      /* start on the 1/16 */
+#define PF_Q (PF_REPEAT | PF_BIT(PF_REV) | PF_BIT(PF_ROLL))   /* start on the 1/16 */
 #define PF_HARM (PF_BIT(PF_OUP) | PF_BIT(PF_ODN))
-#define PF_BUF (PF_REPEAT | PF_BIT(PF_REV) | PF_BIT(PF_TAPE) | PF_BIT(PF_FRZ) | PF_HARM)
+#define PF_BUF (PF_REPEAT | PF_BIT(PF_REV) | PF_BIT(PF_TAPE) | PF_BIT(PF_FRZ) | PF_HARM | PF_BIT(PF_ROLL))
 #define PF_MUTE (((1u << NTRK) - 1u) << PF_M1)
 #define PF_MOD (PF_BIT(PF_FLG) | PF_BIT(PF_PHS))   /* FLANGER, PHASER: their own stages after CRUSH */
 #define PB_FRAMES (NTRK * SL_LEN / 2u)        /* stereo frames in sl_buf: 8192, 371 ms at 22.05 kHz */
@@ -76,13 +85,17 @@ enum { BM_NONE, BM_LOOP, BM_TAPE, BM_FRZ, BM_HARM };
 #define PH_FB 13107                           /* .. the feedback, Q15: 0.4 */
 #define THR_SLOPE 64                          /* REV / ECHO THROW: the sends' glide a sample, Q15 (11.6 ms end to end) */
 #define THR_FB 22938                          /* ECHO THROW: the delay's feedback while held at least this, Q15 (0.7) */
+#define GT_SLOPE 512                          /* GATE: its edges a sample, Q15 (1.5 ms end to end) */
+#define ROLL_STEPS 3u                         /* ROLL: halvings after the 1/8 (1/16 1/32 1/64) */
 
 /* the white keys' effects by default (1.1.5's ten, then FLANGER and PHASER, 1.5.1's REV THROW and ECHO THROW on D5
  * and E5; PF_N: none) */
 static const uint8_t PF_DEF[PF_KEYS] = {PF_R8, PF_R16, PF_R32, PF_REV, PF_LPF, PF_HPF, PF_TAPE, PF_FRZ, PF_OUP, PF_ODN,
-                                        PF_FLG, PF_PHS, PF_RTHR, PF_ETHR, PF_N, PF_N};
+                                        PF_FLG, PF_PHS, PF_RTHR, PF_ETHR, PF_ROLL, PF_GATE};
+                                        /* (KRIECHSTROM: Felucca's 14, then Glitchbox's ROLL on F5 and GATE 1/32 on G5, the
+                                         * keys Felucca leaves empty; CRUSH SWEEP and RANDOM: any key, with PRESETS) */
 static volatile uint8_t perf_map[PF_KEYS] = {PF_R8, PF_R16, PF_R32, PF_REV, PF_LPF, PF_HPF, PF_TAPE, PF_FRZ, PF_OUP,
-                                             PF_ODN, PF_FLG, PF_PHS, PF_RTHR, PF_ETHR, PF_N, PF_N};
+                                             PF_ODN, PF_FLG, PF_PHS, PF_RTHR, PF_ETHR, PF_ROLL, PF_GATE};
                                       /* main: white key p's effect (PF_N none), from the settings (ui_layer.c) */
 static volatile uint8_t perf_remap;   /* main: perf_map changed (seq.c: a key held takes its new effect) */
 
@@ -142,11 +155,16 @@ static struct {
     int32_t rw, ew, rw1, ew1;          /* REV / ECHO THROW: their shares (Q15) at this block's start and end */
     uint8_t thr;                       /* .. either at work this block (mix_part: perf_throw) */
     int32_t mg[NTRK];                  /* mute gains, Q15 (32768 = open) */
+    /* Glitchbox: ROLL, GATE, CRSH SWP, RANDOM */
+    uint32_t rlt, rls;                 /* ROLL: samples played at this length, halvings done */
+    int32_t gc;                        /* GATE: how far it is closed, Q15 (0 = open: zeroed state is idle) */
+    uint32_t cst;                      /* CRSH SWP: samples held */
+    uint8_t rpick, rarm;               /* RANDOM: the effect it plays this 1/16 (PF_N none); rolled once */
     /* FLANGER, PHASER */
     int32_t fw, pw;                    /* their shares, Q15 */
     uint32_t fwp, fn;                  /* FLANGER: the frame written next; frames written since it started */
     int32_t px[2][PH_ST], py[2][PH_ST], pfb[2];   /* PHASER: each stage's last input and output, L and R; the fed back */
-} pf = {.src = PF_N, .next = PF_N, .lc = PF_TOP, .mg = {32768, 32768, 32768, 32768}};
+} pf = {.src = PF_N, .next = PF_N, .lc = PF_TOP, .mg = {32768, 32768, 32768, 32768}, .rpick = PF_N};
 
 static int16_t fl_buf[FL_LEN][2];      /* FLANGER's line: L R, at half the level (headroom) */
 
@@ -172,7 +190,7 @@ static void perf_map_put(uint8_t *b, uint32_t p, uint32_t e)
 
 /* the loop length of a REPEAT / REVERSE (1/8) at the tempo, 44.1 kHz samples; 0 = not one */
 static const uint8_t PF_DEN[PF_REV + 1] = {2, 4, 8, 2};
-static uint32_t perf_len(uint32_t e) { return e <= PF_REV ? beat_samples() / PF_DEN[e] : 0u; }
+static uint32_t perf_len(uint32_t e) { return e <= PF_REV ? beat_samples() / PF_DEN[e] : e == PF_ROLL ? beat_samples() / 2u : 0u; }
 /* the effects that can run at the tempo: a REPEAT / REVERSE longer than the loop cannot */
 static uint32_t perf_avail(void)
 {
@@ -180,6 +198,8 @@ static uint32_t perf_avail(void)
     for (e = PF_R8; e <= PF_REV; e++)
         if (b > PB_MAX * PF_DEN[e])
             m &= ~PF_BIT(e);
+    if (b > PB_MAX * 2u)                            /* ROLL starts as a 1/8 */
+        m &= ~PF_BIT(PF_ROLL);
     return m;
 }
 
@@ -259,6 +279,7 @@ static void perf_buf_start(uint32_t e)
         pf.state = 0;
         pf.len = perf_len(e);
         pf.rev = e == PF_REV;
+        pf.rlt = pf.rls = 0;
     }
 }
 
@@ -301,6 +322,10 @@ static __attribute__((noinline)) int perf_begin(uint32_t n)
     uint32_t held = perf_kill ? 0u : (perf_held | perf_latched | (perf_solo ? (~(uint32_t)perf_solo & 15u) << PF_M1 : 0u)) & perf_avail();
     uint32_t q, k, ph0, bnd;
     int32_t m;
+    if (!(held & PF_BIT(PF_RAND))) {                /* RANDOM let go: what it played stops with it */
+        pf.rarm = 0;
+        pf.rpick = PF_N;
+    }
     if (!held && !pf.busy && !(perf_k[0] | perf_k[1] | perf_k[2])) {   /* idle: the clock only */
         pf.ph += n;
         pf.sync = 0;
@@ -314,6 +339,18 @@ static __attribute__((noinline)) int perf_begin(uint32_t n)
     }
     ph0 = pf.ph % pf.P;                             /* the 1/16 in this block (n: none) */
     bnd = ph0 ? (pf.P - ph0 < n ? pf.P - ph0 : n) : 0u;
+    if (held & PF_BIT(PF_RAND)) {                   /* RANDOM: a new roll for each 1/16 (and at its press) */
+        if (!pf.rarm || bnd < n) {
+            static const uint8_t RP[8] = {PF_N, PF_N, PF_N, PF_N, PF_R16, PF_R32, PF_REV, PF_GATE};
+            uint32_t e = RP[rng() >> 29];
+            pf.rarm = 1;
+            if (e != pf.rpick && e != PF_N)
+                perf_ord[e] = ++perf_seq;
+            pf.rpick = (uint8_t)e;
+        }
+        if (pf.rpick != PF_N)
+            held |= PF_BIT(pf.rpick) & perf_avail();
+    }
     pf.ph += n;
     pf.act &= held;                                 /* let go: at once */
     pf.act |= held & ~PF_Q;
@@ -578,8 +615,14 @@ static inline void perf_buf(int32_t *pl, int32_t *pr)
                 if (++pf.xrp >= pf.xlen)
                     pf.xrp = 0;
             }
-            if (++pf.rp >= pf.len)
+            if (++pf.rp >= pf.len) {
                 pf.rp = 0;
+                if (pf.src == PF_ROLL && pf.rls < ROLL_STEPS && (pf.rlt += pf.len) >= beat_samples()) {
+                    pf.len >>= 1;                   /* ROLL: a beat at each length, then half of it */
+                    pf.rlt = 0;
+                    pf.rls++;
+                }
+            }
             on = 1;
         }
     } else if (pf.mode == BM_TAPE) {
@@ -741,8 +784,14 @@ static __attribute__((noinline)) void perf_phaser(int32_t *bl, int32_t *br, uint
 /* after the master level: the buffer effect, LPF, HPF, CRUSH on l / r (stereo, Q15) */
 static __attribute__((noinline)) void perf_block(int32_t *bl, int32_t *br, uint32_t n)
 {
-    uint32_t i, a = pf.act0, sh, hold;
+    uint32_t i, a = pf.act0, sh, hold, gq = pf.P >> 1, gp = (pf.ph - n) % (gq ? gq : 1u);
     int32_t c = perf_k[1], lt, ht, ct;
+    pf.cst = pf.act & PF_BIT(PF_CRSW) ? pf.cst + n : 0u;
+    if (pf.cst) {                                   /* CRSH SWP: 0 .. 100 over a bar, KNOB 2 if higher */
+        uint32_t bar = 16u * pf.P, t = pf.cst < bar ? pf.cst : bar;
+        int32_t sw = (int32_t)(t * 100u / bar) + 1;
+        c = sw > c ? sw : c;
+    }
     if (c)
         pf.cc = c;
     ct = c ? 32768 : 0;
@@ -791,6 +840,14 @@ static __attribute__((noinline)) void perf_block(int32_t *bl, int32_t *br, uint3
                 r = pf_mix(r, pf.chr, pf.cw);
             }
         }
+        if ((a & PF_BIT(PF_GATE)) || pf.gc) {       /* GATE: open the first half of each 1/32 */
+            int32_t gt = !(a & PF_BIT(PF_GATE)) || gp < (gq >> 1) ? 0 : 32768;
+            pf.gc += clamp(gt - pf.gc, -GT_SLOPE, GT_SLOPE);
+            l = mulq16(l, (uint32_t)(32768 - pf.gc) << 1);
+            r = mulq16(r, (uint32_t)(32768 - pf.gc) << 1);
+        }
+        if (++gp >= gq)
+            gp = 0;
         bl[i] = l;
         br[i] = r;
     }
@@ -799,5 +856,6 @@ static __attribute__((noinline)) void perf_block(int32_t *bl, int32_t *br, uint3
     if ((pf.act & PF_BIT(PF_PHS)) || pf.pw)
         perf_phaser(bl, br, n);
     pf.busy = pf.act || pf.mode != BM_NONE || pf.w || pf.la || pf.ha || pf.cw || pf.td || pf.mute || pf.fw || pf.pw || pf.thr ||
+              pf.gc ||
               pf.fn || perf_k[0] || perf_k[1] || perf_k[2];
 }

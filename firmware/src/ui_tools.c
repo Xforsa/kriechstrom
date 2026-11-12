@@ -13,7 +13,7 @@
  * steps' automation and locks with them. RANDOM and COOK draw from libc.c rng(): no seed is kept, each press
  * differs. A sequence of ties reversed keeps its note first: N T T -> N T T at the mirrored place */
 enum { TL_CLEAR, TL_REV, TL_LEFT, TL_RIGHT, TL_RANDOM, TL_COOK, TL_BEAT, TL_EUCLID, TL_LCLR, TL_LREV, TL_LFILL, TL_LRND,
-       TL_DOUBLE, TL_HALF, TL_N };
+       TL_DOUBLE, TL_HALF, TL_DICE, TL_MOOD, TL_N };   /* (KRIECHSTROM: F5 DICE, G5 MOOD: krst_dice.c) */
 
 /* the track as the layer opened (OCT-): in the pool (RAM's .bss is tight), taken by layer_opened */
 static struct { step_t step[NSTEP]; motion_store_t mo; } tl_open __attribute__((section(".pool")));
@@ -25,7 +25,7 @@ static uint32_t tl_lane(const step_t *s, uint32_t l) { return (step_lanes(s) >> 
 /* place p's action is there for this track (the lane row and BEAT: DRUM only) */
 static int tl_cell(const track_t *t, uint32_t p)
 {
-    return p < TL_N && (p < TL_BEAT || p == TL_EUCLID || p >= TL_DOUBLE || drum_track(t));
+    return p < TL_N && (p < TL_BEAT || p == TL_EUCLID || p >= TL_DOUBLE || drum_track(t));   /* (DICE, MOOD: every track) */
 }
 
 /* the undo copy of t as it is now (ui.c load_begin, but the automation is copied and stays): one action */
@@ -547,6 +547,8 @@ static uint32_t tl_half(track_t *t, uint32_t len)
 
 /* ------------------------------------------------------------ actions --- */
 /* the action of place p on track t (lane l): its message; 0 = nothing done (said why) */
+#include "krst_dice.c"                          /* KRIECHSTROM: DICE and its MOODs */
+
 static const char *tl_do(track_t *t, uint32_t p, uint32_t l)
 {
     static char b[24];
@@ -557,6 +559,8 @@ static const char *tl_do(track_t *t, uint32_t p, uint32_t l)
     l %= NLANE;
     if ((p == TL_DOUBLE || p == TL_HALF) && !tl_resize_ok(t, p, len))
         return 0;
+    if (p == TL_MOOD)                                   /* (KRIECHSTROM: no steps change, no undo copy) */
+        return mood_next();
     if (p == TL_COOK) {                                 /* (nothing there: nothing to cook, no undo copy) */
         for (i = 0; i < len; i++)
             n += drum ? (uint32_t)__builtin_popcount(step_lanes(&t->step[i])) : (uint32_t)tl_gate(&t->step[i]);
@@ -573,6 +577,10 @@ static const char *tl_do(track_t *t, uint32_t p, uint32_t l)
         msg = "SEQUENCE CLEARED";
         break;
     case TL_REV: tl_reverse(t, len); msg = "REVERSED"; break;
+    case TL_DICE:                                       /* KRIECHSTROM: a new part in the MOOD (krst_dice.c) */
+        msg = dice_do(t);
+        if (tl_len(t) > len) len = tl_len(t);
+        break;
     case TL_LEFT: tl_shift(t, len, len - 1u); msg = "SHIFTED LEFT"; break;
     case TL_RIGHT: tl_shift(t, len, 1u); msg = "SHIFTED RIGHT"; break;
     case TL_RANDOM:

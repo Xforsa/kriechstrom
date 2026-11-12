@@ -14,6 +14,13 @@
 #define NSTEP 64
 #define HALF_FRAMES 128          /* I2S half buffer: 2.9 ms at 44.1 kHz (a key waits 0..1 half, then plays 1 half later) */
 #ifndef FELUCCA_SLICE
+#ifndef KRST_DEMO_DEF
+#define KRST_DEMO_DEF 1          /* KRIECHSTROM: the power-on sounds and patterns are its own (engines.c TRK_DEF); 0 Felucca's */
+#endif
+#ifndef KRST_PALETTE
+#define KRST_PALETTE 5u   /* KRIECHSTROM's palette at a first start: STROM, the last one
+                                            * (tools/gen_ui_palettes.py). The tests build with 0 (GREY, Felucca's) */
+#endif
 #define FELUCCA_SLICE 1          /* the SLICE engine (eng_slice.c), engine 13; FELUCCA_SLICE=0 builds without it */
 #endif
 #ifndef FELUCCA_FM4
@@ -101,6 +108,16 @@ enum {                          /* global parameters */
                                  * the import of an old project reads them: proj_drums_to_part) */
     G_COUNT
 };
+/* KRIECHSTROM: the three inert globals (stored in every project, on no page in Felucca) are DAMAGE's (krst_damage.c):
+ * G_DRLVL the master's AMOUNT, G_DRREV its CHAR (TAPE .. DIGITAL), G_ENGGO WALL (QUIET .. WALL). An old project with
+ * the GM drum part reads the first two once for that part (project.c proj_drums_to_part), then they are cleared */
+#define G_DMG G_DRLVL
+#define G_DMGC G_DRREV
+#define G_WALL G_ENGGO
+/* .. and HISS (the master's tape hiss, krst_damage.c), past the 27 the formats and the protocol fix: a byte of its own
+ * in the project (project.c PROJ_HISS_OFF), on FX > DAMAGE's KNOB 4; the editor does not see it */
+#define G_HISS G_COUNT
+#define G_ALL (G_COUNT + 1)
 
 /* stored parameters of an older layout -> today's P_* order. A store keeps np = the P_COUNT it was
  * written with; common parameters are only ever added just before P_E0, so the first np - 8 are
@@ -343,7 +360,7 @@ typedef struct track {
 _Static_assert(sizeof(track_t) % 16u == 0, "track_t: a multiple of 16 bytes (a cheap trk[] index on the target)");
 
 typedef struct {
-    int16_t g[G_COUNT];
+    int16_t g[G_ALL];                         /* (KRIECHSTROM: G_HISS past G_COUNT) */
     uint8_t playing, seq_mode;
     uint8_t grid;                /* 1: the keys are the DRUM grid (ui.c grid_on): only the lane keys play (seq.c);
                                   * 2: NAME (ui_name.c): no key plays; 3: SONG, A..D are its (seq.c song_key) */

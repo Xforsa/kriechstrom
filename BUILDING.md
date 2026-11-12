@@ -1,3 +1,17 @@
+# Building KRIECHSTROM for the M-VAVE FM-1
+
+KRIECHSTROM builds exactly as Felucca, which it is a fork of; the notes below are Felucca's, with what differs here:
+
+- `./build.sh --release 0.1` makes `build/kriechstrom-0.1.fwsc`, identity `FM-1_57810001` (`FM-1_5781XXYY` for X.Y;
+  a build without `--release` is `FM-1_57810000`)
+- the six engines and the hardware layer are in the tree (`firmware/engines/`, `firmware/bsp/`), not submodules:
+  a plain clone or a source archive builds
+- `python3 tools/krst_art.py` draws the pictures (the site's and the splash's `firmware/src/krst_art.h`)
+- `python3 site/build.py build/kriechstrom-0.1.fwsc 0.1` makes the site in `build/site`
+- `sh tests/run_tests.sh` runs every host test (about 10 minutes)
+
+---
+
 # Building Felucca for the M-VAVE FM-1
 
 This repository builds firmware for the FM-1 only. Host-side tests are development tools, not supported application platforms.
@@ -12,7 +26,7 @@ The build makes three files in `build/`:
 
 ## Get the source
 
-Two parts are git submodules: six engines (`firmware/engines/`, [Felucca-Engines](https://github.com/hugelton/Felucca-Engines),
+(KRIECHSTROM: both are in the tree, see above; in Felucca:) Two parts are git submodules: six engines (`firmware/engines/`, [Felucca-Engines](https://github.com/hugelton/Felucca-Engines),
 MIT) and the hardware layer (`firmware/bsp/`, [felucca-bsp](https://github.com/hugelton/felucca-bsp), MPL-2.0), so clone
 with `--recurse-submodules`:
 

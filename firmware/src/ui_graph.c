@@ -453,17 +453,18 @@ static void graph_fx(const track_t *t, uint16_t c)
 static void graph_insert(const track_t *t, uint16_t c)
 {
     int32_t x, cy = graph_ht / 2, a = 38 * graph_ht / 100, py = cy, ty = clamp(t->p[P_ITYPE], 0, IT_N - 1);
-    int32_t m = ins_mixq(t->p[P_IMIX]), g = 4096 + t->p[P_IA] * t->p[P_IA] * 3, lvl = LEVEL_Q12[t->p[P_IC] & 127];
+    int32_t m = ins_mixq(t->p[P_IMIX]), g = 4096 + t->p[P_IA] * t->p[P_IA] * (ty == IT_MUFF ? 14 : ty == IT_BASS ? 12 : 3);
+    int32_t lvl = ty == IT_BASS ? 4096 : LEVEL_Q12[t->p[P_IC] & 127];
     uint32_t sh = ins_bits_sh(t->p[P_IA]);
     cv_rect(PANEL_X0, cy, PANEL_W, 1, T_RAISE);
     cv_line(PANEL_X0 + PANEL_W / 2, cy - a, PANEL_X0 + PANEL_W / 2, cy + a, T_RAISE);
-    if (ty == IT_OFF || ty >= IT_PHASER || !m)
+    if (ty == IT_OFF || (ty >= IT_PHASER && ty <= IT_CHORUS) || !m)
         cv_line(PANEL_X0 + PANEL_W / 6, cy + a, PANEL_X0 + PANEL_W * 5 / 6, cy - a, ty ? T_RAISE : T_DIM);
     if (ty == IT_OFF)
         return;
     for (x = 0; x < PANEL_W; x++) {
         int32_t y, w;
-        if (ty >= IT_PHASER) {                       /* the sweep, two cycles */
+        if (ty >= IT_PHASER && ty <= IT_CHORUS) {   /* the sweep, two cycles */
             uint32_t ph = (uint32_t)x * (0xFFFFFFFFu / (PANEL_W / 2u)), tr = pf_tri(ph);
             w = ty == IT_CHORUS ? osc_sine(ph) * 2 : ty == IT_FLANGER ? (int32_t)((tr * tr) >> 16) * 2 - 65536 : (int32_t)tr * 2 - 65536;
             y = cy - (w >> 1) * a / 32768 * t->p[P_IB] / 127;
@@ -1155,7 +1156,7 @@ static void page_title(char *ti)
             if (i == ui.page)
                 k = n;
         }
-    str_cpy(ti, pt ? pt : grid_on() && !detail_on() ? "GRID" : pg->title, 12);
+    str_cpy(ti, pt ? pt : grid_on() && !detail_on() ? "GRID" : page_name(pg->title), 12);
     if (n > 1) {
         str_cpy(ti + str_len(ti), " ", 4);
         fmt_int(ti + str_len(ti), (int32_t)k);
@@ -1174,6 +1175,14 @@ static void graph_title(void)
     char ti[20];
     const aafont_t *f = &AF_L;
     int32_t y;
+    const char *what = cur_page()->scope == SC_ENGINE ? 0 : page_what(cur_page()->title);
+    if (what) {                                       /* KRIECHSTROM: its name, what it does under it (no "1/7") */
+        GFX_HOOK_ALIGN(0, 0, 240, LG_H_GRAPH, AL_H, "large strip title centred");
+        cv_text_in(0, 8 + CAP_IN(L, 30) - 8, 240, &AF_L, page_name(cur_page()->title), T_THEME, T_SURF);
+        GFX_HOOK_ALIGN(0, 0, 240, LG_H_GRAPH, AL_H, "large strip title centred");
+        cv_text_in(0, 38 + CAP_IN(S, 18) - 4, 240, &AF_S, what, T_TEXT, T_SURF);
+        return;
+    }
     page_title(ti);
     if (!large_face_has(ti) || text_w(f, ti) > 220)
         f = &AF_M;
@@ -1214,7 +1223,7 @@ static uint32_t graph_signature(void)
             song_layout(&L);
             h = (h ^ (uint32_t)song_follow(&L)) * 16777619u;
             h = (h ^ (uint32_t)(song_playx(&L) + 1)) * 16777619u;
-            h ^= (ui_prefs & PREF_LARGE) ? 0x2545F491u : 0u;
+            h ^= large_on() ? 0x2545F491u : 0u;
         }
     }
     if (pg->graph == GR_MOD)
@@ -1808,7 +1817,7 @@ static void home_track_row(uint32_t c)
 {
     track_t *t = &trk[c];
     const step_t *s = seq_steps(t);
-    uint32_t sel = c == song.sel, mute = t->p[P_MUTE] != 0, large = (ui_prefs & PREF_LARGE) != 0u, lit = (uint32_t)midi_lit(c);
+    uint32_t sel = c == song.sel, mute = t->p[P_MUTE] != 0, large = large_on() != 0, lit = (uint32_t)midi_lit(c);
     uint32_t len = (uint32_t)clamp(t->p[P_SLEN], 1, NSTEP), np = (len + 15u) / 16u, pg, p0, ph, i, sig, carry = 0;
     int32_t y = Y_GRAPH + (int32_t)c * TR_PITCH, m, x, xr = 222, ch = large ? AF_M_CAP_H : AF_S_CAP_H;
     uint16_t bg = sel ? T_THEME : T_SURF, half = ux_mix(T_THEME, T_INK, 35);
@@ -1998,7 +2007,7 @@ static uint16_t sg_fill_at(const sg_fill_t *F, int32_t x)   /* the block's fill 
 /* the slot's letter at x (MENU > LARGE: M), its capitals SG_PAD under the lane's top; 0: no room before x1 */
 static int32_t sg_letter(int32_t x, int32_t x1, int32_t y, uint32_t s, uint16_t ink, uint16_t bg)
 {
-    const aafont_t *f = (ui_prefs & PREF_LARGE) ? &AF_M : &AF_S;
+    const aafont_t *f = large_on() ? &AF_M : &AF_S;
     char a[2] = {(char)('A' + s), 0};
     int32_t w = text_w(f, a);
     if (x + w + SG_PAD > x1)

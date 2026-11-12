@@ -109,18 +109,18 @@ static const char *const STYLE_N[2] = {"FLAT", "LINE"};
  * second name (STYLE LINE, USB LEVEL FIXED); a step down the other (menu_step) */
 typedef struct { uint8_t row; uint32_t bit; const char *name[2]; } menu_flag_t;
 static const menu_flag_t MENU_FLAGS[] = {
-    {MI_LARGE, PREF_LARGE, {"OFF", "ON"}},            /* #15 / Discussion #80: ON, big knob labels and values (ui.c large_kind) */
+    {MI_LARGE, PREF_LARGE, {KRST_LARGE_DEF ? "ON" : "OFF", KRST_LARGE_DEF ? "OFF" : "ON"}},            /* #15 / Discussion #80: ON, big knob labels and values (ui.c large_kind) */
     {MI_ACCEL, PREF_ACCEL, {"OFF", "ON"}},            /* #52: ui_input.c accel */
-    {MI_LATCH, PREF_LATCH, {"OFF", "ON"}},
+    {MI_LATCH, PREF_LATCH, {KRST_PANEL_DEF ? "ON" : "OFF", KRST_PANEL_DEF ? "OFF" : "ON"}},   /* (KRIECHSTROM: ON first) */
     {MI_USB, PREF_USB_FIXED, {"MASTER", "FIXED"}},     /* fx.c fx_usb_fixed: FIXED, USB at the full level */
     {MI_BPMLOCK, PREF_BPM_LOCK, {"OFF", "ON"}},        /* #58: ON, SELECT sets the tempo with GLO held only (ui_input.c) */
-    {MI_SERIAL, PREF_SERIAL_OFF, {"ON", "OFF"}},       /* #67: OFF, no serial console (usb_serial_apply) */
+    {MI_SERIAL, PREF_SERIAL_OFF, {KRST_PANEL_DEF ? "OFF" : "ON", KRST_PANEL_DEF ? "ON" : "OFF"}},       /* #67: OFF, no serial console (usb_serial_apply) */
     {MI_RESTORE, PREF_RESTORE_OFF, {"ON", "OFF"}},     /* 1.2, #130: OFF, no autosave, power-on as new (project.c) */
     {MI_SCLLED, PREF_SCALE_LEDS, {"OFF", "ON"}},      /* 1.2, Discussion #127: ON, the keys show the scale (ui_input.c) */
     {MI_SCOPE, PREF_SCOPE_MIX, {"OUT", "MIX"}},        /* 1.2, Discussion #165: MIX, the scope before MASTER (fx.c) */
     {MI_PREVIEW, PREF_PREVIEW, {"OFF", "ON"}},         /* 1.2, Discussion #169: ON, the cursor's step sounds (ui_input.c) */
     {MI_CHADD, PREF_CHORD_ADD, {"HOLD", "ADD"}},       /* 1.2, #155: ADD, keys add to the cursor step (ui_input.c) */
-    {MI_HELP, PREF_HELP, {"OFF", "ON"}},               /* 1.5, Discussion #156: ON, a hint per page / layer (ui_help.c) */
+    {MI_HELP, PREF_HELP, {KRST_PANEL_DEF ? "ON" : "OFF", KRST_PANEL_DEF ? "OFF" : "ON"}},               /* 1.5, Discussion #156: ON, a hint per page / layer (ui_help.c) */
     {MI_MFOLLOW, PREF_MIDI_FOLLOW, {"OFF", "ON"}},     /* 1.5.5, #208: ON, MIDI IN notes select their track (ui_input.c) */
     {MI_SCRWAKE, PREF_WAKE_PANEL, {"+MIDI", "PANEL"}}, /* 1.5.5: PANEL, only the panel wakes SCREEN OFF (ui.c scr_input) */
 #if FELUCCA_CPU2
@@ -162,7 +162,7 @@ static void usb_serial_apply(void)
     if (menu_serial_at && fm1_ms - (menu_serial_at & ~1u) < 200u)   /* (& ~1: at an even fm1_ms the | 1 was 1 ms ahead) */
         return;
     menu_serial_at = 0;
-    usb_cdc_switch(FELUCCA_CDC_DEFAULT && !(ui_prefs & PREF_SERIAL_OFF));   /* (a FELUCCA_CDC_DEFAULT=0 build: off) */
+    usb_cdc_switch(FELUCCA_CDC_DEFAULT && !serial_off());   /* (a FELUCCA_CDC_DEFAULT=0 build: off) */
 #endif
 }
 static const menu_flag_t *menu_flag(uint32_t row)

@@ -167,6 +167,12 @@ static void palette_set(uint32_t i)
     ux.tint = ux_mix(ux.bg, ux.theme, UI_TINT_PCT);
     ux.ink = ux.bg;
     surf = !cust && i == UI_BW_INDEX ? ux.bg : ux_mix(ux.bg, ux.theme, UI_SURF_PCT);   /* the card colour (MONO: black) */
+    if (!cust && i == UI_STROM_INDEX) {          /* KRIECHSTROM's STROM: black, red, white only: the selection the full
+                                                  * red (its ink readable), the cards a neutral grey of the text, no red
+                                                  * in them (tools/gen_ui_palettes.py SEL_PCT, SURF_PCT) */
+        ux.sel = ux.theme;
+        surf = ux_mix(ux.bg, ux.text, 7);
+    }
     ux.surf = ux.style ? ux.bg : surf;
     ux.raise = ux_mix(surf, ux.text, UI_RAISE_PCT);
     ux.key = ux_mix(ux.bg, ux.text, UI_KEY_PCT);

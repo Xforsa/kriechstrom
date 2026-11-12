@@ -80,6 +80,8 @@ static const page_t *ly_page(uint32_t l) { return l == LAYER_SCL ? &LY_SCL : l =
                                         * stay where they were: 13 engines from F3, INIT E5 (14 and F5 with FELUCCA_FM4) */
 #define LY_INIT LY_ENG_KEYS            /* .. INIT, the white key after them */
 #define LY_CLEAN (LY_INIT + 1u)         /* .. and CLEAN INIT's, the next (1.5.5, #190: F5) */
+#define LY_OOPS (LY_CLEAN + 1u < 16u ? LY_CLEAN + 1u : 99u)   /* .. and KRIECHSTROM's HAPPY ACCIDENT (OOPS, krst_dice.c),
+                                         * G5 (a build with one engine more, FELUCCA_FM4: no key left, none) */
 typedef char ly_init_fits[LY_CLEAN < 16u ? 1 : -1];   /* (a white key: F3 .. G5) */
 #define layer_seen (favorites.factory[15][31])   /* bit l: layer l opened once (a byte no engine uses) */
 static const khint_t FX_LATCH_FOOT[3] = {{KC_KEYS, "ON / OFF"}, {KC_K14, "MACROS"}, {KC_OCTDN, "ALL OFF"}};
@@ -481,9 +483,10 @@ static void rec_key(uint32_t p)
 
 /* FX: the effects' names (the message; NONE: PF_N) and the map's cells' */
 static const char *const PF_NAME[PF_NFX + 1] = {"REPEAT 1/8", "REPEAT 1/16", "REPEAT 1/32", "REVERSE", "LPF", "HPF",
-    "TAPE STOP", "FREEZE", "OCT UP", "OCT DN", "FLANGER", "PHASER", "REV THROW", "ECHO THROW", "NONE"};
+    "TAPE STOP", "FREEZE", "OCT UP", "OCT DN", "FLANGER", "PHASER", "REV THROW", "ECHO THROW",
+    "ROLL", "GATE 1/32", "CRUSH SWEEP", "RANDOM", "NONE"};
 static const char *const PF_CELL[PF_NFX] = {"1/8", "1/16", "1/32", "REV", "LPF", "HPF", "STOP", "FRZ", "OCT+", "OCT-",
-    "FLNG", "PHSR", "VERB", "ECHO"};
+    "FLNG", "PHSR", "VERB", "ECHO", "ROLL", "GATE", "CRSW", "RAND"};
 static const char W_NOTE[16] = {'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G'};
 /* each pass: the map from the settings to the ISR (a change: seq.c makes a key held take its new effect) */
 static void fx_map_sync(void)
@@ -667,6 +670,10 @@ static void layer_key(uint32_t l, uint32_t k)
             ui_message("STOP TO EDIT");
         else if (p == LY_CLEAN)
             confirm_open(CF_CLEAN_SOUND, song.sel);
+        else if (p == LY_OOPS && chain_busy())
+            ui_message("STOP TO EDIT");
+        else if (p == LY_OOPS)
+            ui_message(accident_of(TSEL));
     } else if (l == LAYER_EDIT) {
         eqa_key(k, p);                                  /* (black keys: the engine's quick actions) */
     } else if (l == LAYER_REC) {
@@ -859,7 +866,7 @@ static uint32_t layer_leds(uint32_t *br)
             can = (mask >> e) & 1u;
         } else if (l == LAYER_EDIT && !b) {             /* the engine lit, the others and INIT breathe */
             on = p < NENG_SHOWN && p < LY_INIT && eng_vis(p) == TSEL->eng_req % NENGINES;
-            can = p < NENG_SHOWN && p < LY_INIT ? 1u : (p == LY_INIT || p == LY_CLEAN) && !chain_busy();
+            can = p < NENG_SHOWN && p < LY_INIT ? 1u : (p == LY_INIT || p == LY_CLEAN || p == LY_OOPS) && !chain_busy();
         } else if (l == LAYER_EDIT && (a = eqa_of(TSEL, p)) != 0) {   /* the quick actions: on lit (DRUM: sounding), */
             on = a->on(TSEL, a->arg) != 0u;             /* a HOLD one off breathes, none dark */
             can = a->kind == LK_HOLD;
@@ -1054,7 +1061,7 @@ static void eqa_row(uint32_t n)
 static void layer_edit(void)                            /* the engines from F3, INIT next (LY_INIT), CLEAN INIT after */
 {                                                        /* it (1.5.5), the sound under them (cells show the engine's
                                                          * icon, not the key's note) */
-    uint32_t n = NENG_SHOWN < LY_INIT ? NENG_SHOWN : LY_INIT, cells = n + 2u, i, h = cells > 12u ? 20u : 28u;   /* 4 rows of 20: 8 px clear above the sound row */
+    uint32_t n = NENG_SHOWN < LY_INIT ? NENG_SHOWN : LY_INIT, cells = n + 2u + (LY_OOPS < 16u), i, h = cells > 12u ? 20u : 28u;   /* 4 rows of 20: 8 px clear above the sound row */
     uint32_t na = eqa_count(TSEL);
     for (i = 0; i < cells; i++) {
         int32_t x = LC_X(i % 4u), y = 4 + (int32_t)(h + 4u) * (int32_t)(i / 4u);
@@ -1063,7 +1070,8 @@ static void layer_edit(void)                            /* the engines from F3, 
             lcell(x, y, (int32_t)h, 0, engine_icon(en->name), 0, h > 24u ? en->name : eng_abbr(en->name),
                   eng_vis(i) == TSEL->eng_req % NENGINES ? LS_SEL : LS_OFF, 0);
         else
-            lcell(x, y, (int32_t)h, 0, i == n ? ICON_X_WARN : ICON_COUNT, 0, i == n ? "INIT" : "CLEAN",   /* (CLEAN: no
+            lcell(x, y, (int32_t)h, 0, i == n ? ICON_X_WARN : i == n + 2u ? ICON_PROB : ICON_COUNT, 0,
+                  i == n ? "INIT" : i == n + 2u ? "OOPS" : "CLEAN",   /* (CLEAN: no
                                                                                     * icon, the word fills the cell) */
                   chain_busy() ? LS_DIM : LS_OFF, 0);
     }
@@ -1077,9 +1085,9 @@ static void layer_edit(void)                            /* the engines from F3, 
  * track the lanes of black keys 1..8 under them (the selected one: the selection's fill). A melodic track: the two
  * rows of the sequence's tools only */
 static const uint8_t TL_ICON[TL_N] = {ICON_CLEAR, ICON_X_REVERSE, ICON_X_LEFT, ICON_X_RIGHT, ICON_PROB, ICON_W_SH,
-    ICON_DRUM, ICON_PULSE, ICON_CLEAR, ICON_X_REVERSE, ICON_STEPS, ICON_PROB, ICON_LENGTH, ICON_DIVISION};
+    ICON_DRUM, ICON_PULSE, ICON_CLEAR, ICON_X_REVERSE, ICON_STEPS, ICON_PROB, ICON_SIZE, ICON_DIVISION, ICON_PROB, ICON_W_SH};
 static const char *const TL_NAME[TL_N] = {"CLEAR", "REVERSE", "SHIFT", "SHIFT", "RANDOM", "COOK", "BEAT", "EUCLID",
-    "CLR", "REV", "FILL", "RND", "DOUBLE", "HALF"};
+    "CLR", "REV", "FILL", "RND", "DOUBLE", "HALF", "DICE", "MOOD"};
 /* EUCLID open (1.5.5): its cycle as cells, 16 a row (up to 4 rows), the hits filled; past it, inside LEN, the cells
  * of its repeats faint (DRUM: the lanes' row under them as always) */
 static void layer_euclid(void)
@@ -1095,33 +1103,28 @@ static void layer_seq(void)
 {
     uint32_t p, st = chain_busy() ? LS_DIM : LS_OFF, drum = (uint32_t)drum_track(TSEL);
     char n[3] = {0, 0, 0}, nm[8];
+    /* KRST: a DRUM track fills all 4 rows (26 px), the black keys still pick the lane: its name on G4 .. C5 */
     if (eu.on)
         layer_euclid();
-    for (p = 0; p < TL_DOUBLE && !eu.on; p++) {
+    for (p = 0; p < TL_N && !eu.on; p++) {              /* KRST: 4 rows of 4 (D5 DOUBLE, E5 HALF, F5 DICE, G5 MOOD the last) */
+        uint32_t r = p / 4u;
+        int32_t y = drum ? 4 + 29 * (int32_t)r : 4 + 32 * (int32_t)(r == 3u ? 2u : r), h = 28;
         if (!tl_cell(TSEL, p))
             continue;
         n[0] = W_NOTE[p];
         str_cpy(nm, TL_NAME[p], sizeof nm);
-        if (p >= TL_LCLR) {                             /* the lane's: "CLR BD" */
+        if (p >= TL_LCLR && p < TL_DOUBLE) {            /* the lane's: "CLR BD" */
             str_cpy(nm + str_len(nm), " ", 2);
             str_cpy(nm + str_len(nm), drum_lane_abbr(TSEL, ui.lane), sizeof nm - str_len(nm));
         }
-        lcell(LC_X(p % 4u), 4 + 32 * (int32_t)(p / 4u), 28, n, TL_ICON[p], 0, nm, st, 0);
-    }
-    for (p = 0; drum && p < NLANE; p++) {               /* the lanes (black keys 1..8): 8 cells of 18 px, 2 px apart */
-        int32_t x = 6 + 20 * (int32_t)p;
-        uint16_t ink, fill = lc_box(x, 100, 18, 18, lc_fill(p == ui.lane % NLANE ? LS_SEL : LS_OFF, &ink));
-        GFX_HOOK_ALIGN(x, 100, x + 18, 118, AL_HV, "tools lane cell name centred");
-        cv_text_in(x, 100 + CAP_IN(S, 18), 18, &AF_S, drum_lane_abbr(TSEL, p), ink, fill);
-    }
-    for (p = TL_DOUBLE; !eu.on && p < TL_N; p++) {     /* 1.5.5: D5 DOUBLE (x2), E5 HALF (/2) at the row's end, */
-        int32_t x = 168 + 35 * (int32_t)(p - TL_DOUBLE);   /* 31 px each (the lanes' row: no room for their names) */
-        uint16_t ink, fill = lc_box(x, 100, 31, 18, lc_fill(st, &ink));
-        n[0] = W_NOTE[p];
-        GFX_HOOK_ALIGN(0, 100, 0, 118, AL_V, "tools resize cell on its middle");
-        cv_text_on(x + 5, 100 + CAP_IN(S, 18), &AF_S, n, fill == T_RAISE || fill == T_SURF ? T_MID : ink, fill);
-        GFX_HOOK_ALIGN(0, 100, 0, 118, AL_V, "tools resize cell on its middle");
-        cv_text_r(x + 26, 100 + CAP_IN(S, 18), &AF_S, p == TL_DOUBLE ? "x2" : "/2", ink, fill);
+        if (p == TL_MOOD) {                             /* MOOD: the one DICE rolls ("MARCH 7/8" -> "MARCH") */
+            uint32_t k;
+            str_cpy(nm, MOOD_NAME[dice_mood % MOOD_N], sizeof nm);
+            for (k = 0; nm[k]; k++)
+                if (nm[k] == ' ')
+                    nm[k] = 0;
+        }
+        lcell(LC_X(p % 4u), y, h, n, TL_ICON[p], 0, nm, p == TL_MOOD && st == LS_OFF ? LS_SEL : st, 0);
     }
 }
 

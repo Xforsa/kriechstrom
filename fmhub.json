@@ -1,0 +1,11 @@
+{
+  "what": "Firmware for dark industrial and EBM, built on Felucca. Adds the GLCH distortion engine from Glitchbox, 171 sounds and 13 drum kits, DICE to generate parts in eight styles, random sound variations, tape and digital degradation of the mix, and a manual in English and Russian.",
+  "author": "Xforsa",
+  "kinds": [
+    "groove"
+  ],
+  "editor": "https://Xforsa.github.io/kriechstrom/webapp/editor/",
+  "cheat": "https://Xforsa.github.io/kriechstrom/manual/en.html#cheat",
+  "image": "docs/card.png",
+  "color": "#FF2018"
+}

@@ -1,35 +1,34 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only
      Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments -->
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Felucca</title>
+<title>KRIECHSTROM installer</title>
 <style>
-  :root { --bg: #fff; --fg: #000; --dim: #777; }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #000; --fg: #fff; --dim: #888; }
-  }
-  :root[data-theme="dark"] { --bg: #000; --fg: #fff; --dim: #888; }
+  :root { --bg: #000; --fg: #f2f2f2; --dim: #bdbdc4; --red: #ff2018; color-scheme: dark; }
   body { margin: 0; background: var(--bg); color: var(--fg);
-         font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
-  main { max-width: 520px; margin: 0 auto; padding: 48px 16px; }
-  h1 { font-size: 24px; font-weight: 600; margin: 0 0 24px; }
-  .lang { float: right; font-size: 13px; color: var(--dim); cursor: pointer; text-decoration: underline; background: none; padding: 0; color: var(--dim); }
+         font: 19px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 600px; margin: 0 auto; padding: 40px 16px; }
+  h1 { font: 800 34px/1.1 ui-monospace, "IBM Plex Mono", monospace; letter-spacing: .1em; margin: 0 0 24px; }
+  h1 b { color: var(--red); }
+  a { color: var(--red); }
+  .lang { float: right; font-size: 16px; cursor: pointer; text-decoration: underline; background: none; padding: 0; color: var(--dim); }
   p { margin: 0 0 16px; }
-  button { font: inherit; background: var(--fg); color: var(--bg); border: 0; padding: 8px 20px; cursor: pointer; }
-  button:disabled { opacity: .3; cursor: default; }
-  #status { margin-top: 16px; min-height: 1.6em; }
-  .small { color: var(--dim); font-size: 13px; }
-  progress { width: 100%; height: 4px; margin-top: 16px; }
-  pre { color: var(--dim); font-size: 12px; white-space: pre-wrap; margin-top: 16px; }
+  button { font: inherit; font-weight: 800; background: var(--red); color: #000; border: 0; border-radius: 6px; padding: 12px 26px; cursor: pointer; }
+  button:disabled { opacity: .35; cursor: default; }
+  #status { margin-top: 16px; min-height: 1.6em; font-weight: 600; }
+  .small { color: var(--dim); font-size: 16px; }
+  progress { width: 100%; height: 8px; margin-top: 16px; accent-color: var(--red); }
+  pre { color: var(--dim); font-size: 14px; white-space: pre-wrap; margin-top: 16px; }
+  details summary { cursor: pointer; color: var(--dim); }
 </style>
 </head>
 <body>
 <main>
   <button class="lang" id="lang"></button>
-  <h1>Felucca</h1>
+  <h1>KRIECH<b>STROM</b></h1>
   <p data-t="intro"></p>
   <p data-t="warn"></p>
   <p class="small" data-t="direct"></p>
@@ -49,63 +48,65 @@
   <progress id="bar" max="100" value="0"></progress>
   <p id="status"></p>
   <pre id="log"></pre>
-  <p><a href="../editor/" style="color:inherit" data-t="editor"></a></p>
-  <p class="small">Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener" style="color:inherit">Hügelton Instruments</a>, with its PHASE engine and drum voices, the Hügelton Sample Pack (CC0 1.0) and Fukiai icons (MIT).<br>
+  <p><a href="../editor/" data-t="editor"></a> · <a href="../../index.html" data-t="home"></a></p>
+  <p class="small">KRIECHSTROM is built on Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener" style="color:inherit">Hügelton Instruments</a>, with its PHASE engine and drum voices, the Hügelton Sample Pack (CC0 1.0) and Fukiai icons (MIT). Parts from Glitchbox by erikdevos.<br>
     Font: Inter Tight (The Inter Project Authors, SIL OFL 1.1). Samples: Versilian Studios VSCO-2 Community Edition and VCSL (CC0 1.0).<br>
     FM6 engine: msfa from Dexed (Google Inc., Pascal Gauthier, Apache-2.0). The package also holds three JieLi AC79 SDK files, uboot.boot, cfg_tool.bin and eq_cfg_hw.bin (JieLi Technology, Apache-2.0). <a href="../../firmware/LICENSING.md" style="color:inherit">Licences</a>: <a href="../../firmware/LICENSE" style="color:inherit">GPL-3.0</a>, <a href="../../firmware/LICENSES/Apache-2.0.txt" style="color:inherit">Apache-2.0</a>, <a href="../../firmware/LICENSES/" style="color:inherit">all</a>.<br>
     M-VAVE and FM-1 are trademarks of their respective owners.<br>
-    <span data-t="license"></span> <a href="https://github.com/hugelton/Felucca" target="_blank" rel="noopener" style="color:inherit">github.com/hugelton/Felucca</a></p>
+    <span data-t="license"></span> <a href="../../index.html#source" style="color:inherit">KRIECHSTROM</a>, <a href="https://github.com/hugelton/Felucca" target="_blank" rel="noopener" style="color:inherit">Felucca</a></p>
 </main>
 <script type="module">
 /*LIB*/
 const $ = (id) => document.getElementById(id);
 const TEXT = {
-  ja: {
-    intro: "FM-1 を USB で接続してください。（Chrome か Edge で使えます）",
-    warn: "書き込み中は USB を抜かないでください。",
-    install: "インストール", other: "English",
-    editor: "エディタ（インストール後、パソコンから音色やシーケンスを編集）",
-    direct: "USB ケーブルはパソコンに直接つないでください。Probe や Transporter などの機材は不要です。",
-    brick: "万一インストールに失敗して起動しなくなった場合は、復旧に Transporter が必要です:",
-    beta: "Felucca 1.0 は実地テスト版です。不具合は GitHub で知らせてください。このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
-    back: "M-VAVEから公式FM-1 V15を取得し、未変更のFM-1.fwscを選んでください。ファイルはこのブラウザ内で検証し、サーバーへ送りません。",
-    stockTitle: "公式V15に戻す", stockFile: "公式FM-1.fwsc", stockGo: "バックアップして公式V15へ戻す",
-    stockBackup: "現在の曲・保存曲・音色バンク・サンプル・設定を先に保存します。全体バックアップ非対応版は、Feluccaを更新してから行ってください。復元はFeluccaを再インストールしてエディタから行います。",
-    stockRecovery: "更新中断の再開：全体バックアップはすでにパソコンへ保存済み",
-    stockValid: "公式V15を確認しました", stockConfirm: "全体バックアップファイルをパソコンに保存できましたか？ 続けると公式V15へ戻します。Feluccaの曲は公式V15では開けません。",
-    stockNeedBackup: "書き込みモードからはバックアップできません。保存済みバックアップがある場合だけ、更新中断の再開にチェックしてください。",
-    stockUnsupported: "このFeluccaは全体バックアップに未対応です。先に最新版をインストールしてください。",
-    backup: "全体バックアップ保存中 ", stockError: "公式ファイルを確認できません: ",
-    nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
-    start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
-    reboot: "再起動中", done: "完了しました", stopped: "途中で止まりました。USB を挿し直してもう一度押してください。",
-    error: "エラー: ",
-    denied: "MIDI（SysEx）の使用が許可されませんでした。アドレスバーのサイト設定で MIDI を許可して、もう一度押してください。",
-    notfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
-    model: "接続されている機器は FM-1 ではありません。",
-    lost: "USB の接続が切れました。挿し直してもう一度押してください。",
-    noloader: "書き込みモードの FM-1 が見つかりません。USB を挿し直してもう一度押してください（終わるまで書き込みモードのままです）。",
-    noreturn: "FM-1 が戻ってきません。電源を入れ直してください。",
-    mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
-    badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
-    leave: "書き込み中です。ページを閉じないでください。",
-    license: "GPL-3.0、無保証。ソース:",
+  ru: {
+    intro: "Подключи FM-1 по USB. (Работает в Chrome или Edge.)",
+    warn: "Не выдёргивай USB, пока идёт запись.",
+    install: "Установить", other: "English",
+    editor: "Редактор (после установки: звуки и паттерны с компьютера)",
+    home: "Сайт и мануал",
+    direct: "Кабель USB подключай прямо в компьютер. Ни программатор, ни Transporter не нужны.",
+    brick: "Если установка сорвалась и FM-1 больше не стартует, для восстановления нужен Transporter:",
+    beta: "KRIECHSTROM 0.1 это тестовая версия. Автор не отвечает, если FM-1 сломается или поведёт себя не так из-за этой прошивки. Ставишь на свой риск.",
+    back: "Скачай официальную FM-1 V15 у M-VAVE и выбери нетронутый FM-1.fwsc. Браузер проверяет файл у тебя, на сервер он не уходит.",
+    stockTitle: "Вернуть официальную V15", stockFile: "Официальный FM-1.fwsc", stockGo: "Сделать бэкап и вернуть V15",
+    stockBackup: "Сначала сохраняются текущая музыка, сохранённые проекты, банки звуков, сэмплы и настройки. Чтобы потом всё вернуть, поставь KRIECHSTROM снова и загрузи архив в редакторе.",
+    stockRecovery: "Продолжить прерванное обновление: полный бэкап уже сохранён на компьютере",
+    stockValid: "Официальная V15 проверена", stockConfirm: "Полный бэкап сохранён на компьютере? Дальше FM-1 вернётся на официальную V15. Музыку KRIECHSTROM официальная V15 открыть не сможет.",
+    stockNeedBackup: "Из режима обновления бэкап не сделать. Отметь продолжение, только если бэкап уже сохранён.",
+    stockUnsupported: "Эта версия не умеет полный бэкап. Сначала поставь свежий KRIECHSTROM.",
+    backup: "Сохраняю полный бэкап ", stockError: "Не получилось проверить официальную прошивку: ",
+    nomidi: "Этот браузер не умеет. Открой страницу в Chrome или Edge.", loadfail: "Не загрузилось: ",
+    start: "Начинаю", verify: "Проверяю", loader: "Перевожу в режим обновления", write: "Пишу",
+    reboot: "Перезагрузка", done: "Готово", stopped: "Остановилось. Переподключи USB и нажми Установить ещё раз.",
+    error: "Ошибка: ",
+    denied: "Доступ к MIDI (SysEx) не разрешён. Разреши MIDI в настройках сайта (в адресной строке) и нажми ещё раз.",
+    notfound: "FM-1 не найден. Проверь кабель (нужен кабель с данными), закрой другие программы с MIDI и нажми ещё раз.",
+    model: "Подключено не FM-1.",
+    lost: "USB отключился. Подключи заново и нажми ещё раз.",
+    noloader: "FM-1 в режиме обновления не найден. Переподключи USB и нажми ещё раз (он остаётся в этом режиме, пока запись не закончится).",
+    noreturn: "FM-1 не вернулся. Выключи и включи его.",
+    mismatch: "Записано, но FM-1 сообщает другую версию: ",
+    badpkg: "Файл для установки повреждён. Обнови страницу.",
+    leave: "Идёт запись. Не закрывай страницу.",
+    license: "GPL-3.0, без гарантий. Исходники:",
   },
   en: {
     intro: "Connect the FM-1 by USB. (Works in Chrome or Edge.)",
     warn: "Do not unplug the USB cable while writing.",
-    install: "Install", other: "日本語",
+    install: "Install", other: "Русский",
+    home: "Site and manual",
     editor: "Editor (after installing: edit sounds and sequences from the computer)",
     direct: "Connect the USB cable directly to the computer. No probe or Transporter is needed.",
     brick: "If an install fails and the FM-1 no longer starts, recovering it needs a Transporter:",
-    beta: "Felucca 1.0 is a field-testing release; please report problems on GitHub. The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
+    beta: "KRIECHSTROM 0.1 is a test release. The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
     back: "Get official FM-1 V15 from M-VAVE and select the unmodified FM-1.fwsc. The browser validates it locally; it is not sent to a server.",
     stockTitle: "Return to official V15", stockFile: "Official FM-1.fwsc", stockGo: "Back up and return to official V15",
-    stockBackup: "Current music, saved music, sound banks, samples and settings are saved first. Older firmware needs a Felucca update for complete backups. To restore an archive later, reinstall Felucca and use the editor.",
+    stockBackup: "Current music, saved music, sound banks, samples and settings are saved first. To restore an archive later, install KRIECHSTROM again and use the editor.",
     stockRecovery: "Resume an interrupted update: I already saved a complete backup to this computer",
-    stockValid: "Official V15 verified", stockConfirm: "Has the complete backup file been saved to this computer? Continue to return to official V15. Official V15 cannot open Felucca music.",
+    stockValid: "Official V15 verified", stockConfirm: "Has the complete backup file been saved to this computer? Continue to return to official V15. Official V15 cannot open KRIECHSTROM music.",
     stockNeedBackup: "An update loader cannot export a backup. Only select resume if you already saved a complete backup.",
-    stockUnsupported: "This Felucca does not support complete backups. Install the current Felucca first.",
+    stockUnsupported: "This version does not support complete backups. Install the current KRIECHSTROM first.",
     backup: "Saving complete backup ", stockError: "Cannot validate official firmware: ",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
     start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
@@ -123,7 +124,7 @@ const TEXT = {
     license: "GPL-3.0, no warranty. Source:",
   },
 };
-let lang = (navigator.language || "en").toLowerCase().startsWith("ja") ? "ja" : "en";
+let lang = (navigator.language || "en").toLowerCase().startsWith("ru") ? "ru" : "en";
 const t = (k) => TEXT[lang][k];
 let lastKey = null, lastArg = "";
 function applyLang() {
@@ -132,7 +133,7 @@ function applyLang() {
   $("lang").textContent = t("other");
   if (lastKey) $("status").textContent = t(lastKey) + lastArg;
 }
-$("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
+$("lang").addEventListener("click", () => { lang = lang === "ru" ? "en" : "ru"; applyLang(); });
 applyLang();
 const sayK = (k, arg = "") => { lastKey = k; lastArg = arg; $("status").textContent = t(k) + arg; };
 const say = (txt) => { lastKey = null; $("status").textContent = txt; };
@@ -152,7 +153,7 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
     const pkg = new Uint8Array(await r.arrayBuffer());
     if (productOf(pkg) !== meta.product) { sayK("badpkg"); return; }
     image = logicalImage(pkg);
-    say(`Felucca ${meta.version}`);
+    say(`KRIECHSTROM ${meta.version}`);
     $("go").disabled = false;
   } catch (e) { sayK("loadfail", e.message); }
 })();
@@ -202,7 +203,7 @@ $("stock-file").addEventListener("change", async () => {
 });
 function saveArchive(archive) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(archive)], {type:"application/json"}));
-  const a = document.createElement("a"); a.href = url; a.download = `Felucca-backup-${new Date().toISOString().slice(0,10)}.json`;
+  const a = document.createElement("a"); a.href = url; a.download = `KRIECHSTROM-backup-${new Date().toISOString().slice(0,10)}.json`;
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function archiveInfo(a) {
@@ -211,7 +212,7 @@ function archiveInfo(a) {
   const engines = a[pos]; pos += 5;
   for (let i = 0; i < engines; i++) { const end = a.indexOf(0,pos); if (end < 0) throw new Error("Invalid INFO"); pos = end + 1; }
   const ext = a.slice(pos + 1);
-  const supported = /^FELUCCA /i.test(version) && ext[0] === 16 && ext[1] === 0x55 && ext[2] === 1 &&
+  const supported = /^(FELUCCA|KRIECHSTROM) /i.test(version) && ext[0] === 16 && ext[1] === 0x55 && ext[2] === 1 &&
     ext[4] === 0x4d && ext[5] === 1 && ext[8] === 0x42 && ext[9] === 1 && (ext[10] & 1);
   return {version,supported};
 }

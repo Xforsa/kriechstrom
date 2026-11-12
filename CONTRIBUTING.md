@@ -1,39 +1,29 @@
-# Contributing to Felucca
+# Contributing to KRIECHSTROM
 
-Felucca is maintained for the M-VAVE FM-1 only. Other-device ports and plugin-loading feature requests are outside this project's scope. Contributions may be declined, and no ongoing maintenance is promised.
-
-Thanks for helping! To keep things easy to follow, please use the right place:
+Thanks for wanting to help. KRIECHSTROM is firmware for the M-VAVE FM-1 only; ports to other hardware are out of scope.
 
 | What | Where |
 |---|---|
-| A bug you can reproduce | [Issues](https://github.com/hugelton/Felucca/issues/new/choose): one issue per bug |
-| A feature idea or request | [Discussions › Ideas](https://github.com/hugelton/Felucca/discussions/categories/ideas) (no promise it will be added) |
-| How to use it, or how something works | [Discussions › Q&A](https://github.com/hugelton/Felucca/discussions/categories/q-a) |
-| Forks, mods, music, demos | [Discussions › Show and tell](https://github.com/hugelton/Felucca/discussions/categories/show-and-tell) |
-| Anything else | [Discussions › General](https://github.com/hugelton/Felucca/discussions/categories/general) |
+| A bug you can reproduce | [Issues](https://github.com/Xforsa/kriechstrom/issues/new/choose), one issue per bug |
+| An idea or a request | [Discussions](https://github.com/Xforsa/kriechstrom/discussions) |
+| Music, demos, patches | [Discussions](https://github.com/Xforsa/kriechstrom/discussions) |
 
-Feature requests posted as issues will be moved to Discussions or closed.
+A bug in Felucca itself (it happens with Felucca too) belongs to [Felucca](https://github.com/hugelton/Felucca/issues).
 
 ## Reporting a bug
 
-Please include the Felucca version (hold HOME > ABOUT), your computer's OS and browser if the editor or
-installer is involved, the steps to reproduce it, what you expected and what happened. A photo or a short
-video helps.
+The version (hold HOME, then SYSTEM > ABOUT), the steps that make it happen, what you expected and what happened.
+A photo or a short video helps; so does saying whether MENU > RESTORE LAST was on.
 
 ## Pull requests
 
-Pull requests are welcome, including AI-assisted ones, with the same bar for all:
+- one thing per pull request, small enough to read;
+- explain what and why, and how you tested it on a real FM-1;
+- run `sh tests/run_tests.sh` (about ten minutes, see [BUILDING.md](BUILDING.md)); CI runs it too;
+- a change of the sound updates the golden renders on purpose: `GOLDEN_UPDATE=1 sh tests/run_tests.sh`, and say so;
+- new files carry `SPDX-License-Identifier: GPL-3.0-only`; by contributing you license your work under the GPL-3.0.
 
-- keep it small and focused on one thing;
-- make sure you understand the change and can explain it;
-- test it on a real FM-1;
-- run `tests/run_tests.sh` (see [BUILDING.md](BUILDING.md));
-- new files carry the GPL-3.0-only SPDX header.
+## Style
 
-By contributing you agree that your contribution is licensed under GPL-3.0-only.
-
-The ANALOG, LOFI, TRIO, WHEEL, NOISE and PHASE engines and the code they share (`firmware/engines/`, a git submodule) live in
-[Felucca-Engines](https://github.com/hugelton/Felucca-Engines), under the MIT licence: changes to them go there, as
-pull requests to that repository.
-
-The web editor and installer live in [Felucca-WebApp](https://github.com/hugelton/Felucca-WebApp).
+The code follows Felucca's: C99, integer DSP, comments that say what a thing is. Stored formats are append-only:
+new parameters, presets, patterns and enum values go at the end, never in between.

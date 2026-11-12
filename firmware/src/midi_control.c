@@ -219,8 +219,8 @@ static const uint8_t MIDI_CC_MAP[][2] = {
 };
 /* per engine (ENGINES[] order): CC74's E index + 1 in the high nibble, CC71's in the low one, 0 = none */
 static const uint8_t MIDI_CC_ENG[NENGINES] = {
-    0x56, 0x00, 0x30, 0x80, 0x50, 0x07, 0x67, 0x00,   /* ANALOG CUT RES, -, PHASE DCW, LOFI TONE, SAMPLE CUT, VOICE Q,
-                                                       * TRIO CUT RES, WHEEL - */
+    0x56, 0x00, 0x30, 0x80, 0x50, 0x07, 0x67, 0x23,   /* ANALOG CUT RES, -, PHASE DCW, LOFI TONE, SAMPLE CUT, VOICE Q,
+                                                       * TRIO CUT RES, GLCH CUT RES (KRIECHSTROM) */
     0x80, 0x30, 0x30, 0x34, 0x30,                     /* GRAIN TONE, PHYS BRIT, DRUM TONE, NOISE FREQ RES, FM6 MLVL */
 #if FELUCCA_SLICE
     0x80,                                             /* SLICE TONE */
@@ -291,6 +291,10 @@ static void __attribute__((noinline)) midi_cc_map(track_t *t, uint32_t cc, uint3
     uint32_t i, id = 0xFFFFu, e;
     if (midi_learned(cc, value))                /* (a learned CC is the user's: not the map's) */
         return;
+    if (cc == 85u || cc == 86u) {               /* KRIECHSTROM: CC85 WALL, CC86 the master's DAMAGE (any channel) */
+        song.g[cc == 85u ? G_WALL : G_DMG] = (int16_t)(value & 127u);
+        return;
+    }
     for (i = 0; i < NELEM(MIDI_CC_MAP); i++)
         if (MIDI_CC_MAP[i][0] == cc)
             id = MIDI_CC_MAP[i][1];

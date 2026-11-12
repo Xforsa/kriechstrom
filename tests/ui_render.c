@@ -803,7 +803,8 @@ enum { S_HOME, S_HOME_IDLE, S_MESSAGE, S_MESSAGE_KEY, S_MESSAGE_NOFILE, S_PRESET
        S_DETAIL, S_DETAIL_PLAYING, S_DETAIL_REST, S_DETAIL_DRUM, S_ROLL_MARKS, S_DRUM_MARKS, S_HELP_DETAIL,
        S_DETAIL_COND, S_DETAIL_FILL, S_AUTO_COND, S_GLO_FILL, S_SEQ_EUCLID, S_SEQ_EUCLID_DRUM, S_SEQ_EUCLID_64,
        S_MENU_SELECT, S_PROJECT_ERASE, S_CONFIRM_ERASE_PROJ, S_TOOLS_CLEAN, S_CONFIRM_CLEAN,
-       S_MENU_MIDI_TRACK, S_MENU_MIDI_TCH_UNUSED, S_MENU_MIDI_AUTO, S_HOME_TRACKS_MIDI, S_MIXER_MIDI, S_EDIT_PHASE_FOLD, S_COUNT };
+       S_MENU_MIDI_TRACK, S_MENU_MIDI_TCH_UNUSED, S_MENU_MIDI_AUTO, S_HOME_TRACKS_MIDI, S_MIXER_MIDI, S_EDIT_PHASE_FOLD,
+       S_DAMAGE, S_INSERT_DAMG, S_COUNT };   /* (KRIECHSTROM) */
 static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "message_key", "message_nofile", "presets", "presets_nofav", "user",
     "phrases", "project", "tools", "song_empty", "song", "step", "auto_steps", "auto_add_chance", "automation", "drum",
     "drum_hand", "drum_cym", "mixer", "mixer_from_home", "mixer_pan", "env", "env_dest", "lfo", "mod", "fx", "slicer", "dly", "scl", "chord", "chord_wide", "chord_off", "chord_kit", "arp",
@@ -834,7 +835,8 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "mes
     "detail_cond", "detail_fill", "auto_cond", "layer_glo_fill", "layer_seq_euclid", "layer_seq_euclid_drum",
     "layer_seq_euclid_64",
     "menu_select", "project_erase", "confirm_erase_project", "tools_clean", "confirm_clean",
-    "menu_midi_track", "menu_midi_channels_unused", "menu_midi_auto_select", "home_tracks_midi", "mixer_midi", "edit_phase_fold"};
+    "menu_midi_track", "menu_midi_channels_unused", "menu_midi_auto_select", "home_tracks_midi", "mixer_midi", "edit_phase_fold",
+    "damage", "insert_damg"};
 
 /* the STEP page's piano roll (ui_graph.c graph_roll) on track 1, stopped unless said: an empty pattern; ACID in
  * A minor; POLY chords (Am7 F C G, tied); a line with ties, slides and accents in C major; LEN 32 on its second
@@ -1256,6 +1258,8 @@ static void setup(int s)
     case S_EDIT_GRAIN: eng(8); go_title("EDIT 2"); break;
     case S_EDIT_PHYS: eng(9); go_title("EDIT 1"); break;
     case S_EDIT_PHASE_FOLD: eng(2); TSEL->p[P_E7] = 80; go_title("EDIT 2"); ui.hot_col = 3; ui.hot_t = 30; break;   /* 1.5.5 FOLD (#104) */
+    case S_DAMAGE: song.g[G_DMG] = 90; song.g[G_DMGC] = 40; song.g[G_WALL] = 64; go_title("DAMAGE"); break;   /* KRIECHSTROM */
+    case S_INSERT_DAMG: set_ins_ui(IT_DAMAGE, 100, 30, 96, 127); go_title("INSERT"); break;
     case S_ALG1: case S_ALG2: case S_ALG3: case S_ALG4: case S_ALG5: case S_ALG6: case S_ALG7: case S_ALG8:
         eng(1); TSEL->p[P_E0] = (int16_t)(s - S_ALG1);      /* the 8 DIGITAL charts; FB on the odd ones, IDX high .. 0 */
         TSEL->p[P_E6] = (s - S_ALG1) & 1 ? 40 : 0; TSEL->p[P_E4] = (int16_t)((S_ALG8 - s) * 18);
@@ -1673,33 +1677,23 @@ static void draw(int s)
     }
     if (s == S_SPLASH) {                          /* the power-on splash (main.c, before the UI): its lines, the version
                                                    * shown FELUCCA_VERSION (run_tests.sh: src/felucca.c's) */
-        static const char WANT[] = "Felucca|" FELUCCA_VERSION "|H\xFCgelton Instruments|with community";
+        static const char WANT[] = "KRIECHSTROM|" FELUCCA_VERSION "|built on Felucca";
         splash_seen[0] = 0;
         in_splash = 1;
         draw_splash();
         in_splash = 0;
-        {   /* the square whole on the screen (176 x 176 at 32,32, more than the canvas): its edges and square corners
-             * RAISE, BG just outside; its text's ink 16 px in from the left and the top (the bottom: AL_B, the hook) */
-            const int32_t q0 = 32, q1 = 32 + 176 - 1;
-            uint16_t bg = host_screen[0], ra = host_screen[(uint32_t)(q0 + 1) * 240u + (uint32_t)q0 + 1];
-            int32_t i, x, y, ix = 999, iy = 999, bad = ra == bg;
-            for (i = q0 - 1; i <= q1 + 1; i++) {
-                int32_t in = i >= q0 && i <= q1;
-                bad |= host_screen[(uint32_t)(q0 - 1) * 240u + (uint32_t)i] != bg || host_screen[(uint32_t)(q1 + 1) * 240u + (uint32_t)i] != bg
-                    || host_screen[(uint32_t)i * 240u + (uint32_t)(q0 - 1)] != bg || host_screen[(uint32_t)i * 240u + (uint32_t)(q1 + 1)] != bg;
-                if (in)
-                    bad |= host_screen[(uint32_t)q0 * 240u + (uint32_t)i] != ra || host_screen[(uint32_t)q1 * 240u + (uint32_t)i] != ra
-                        || host_screen[(uint32_t)i * 240u + (uint32_t)q0] != ra || host_screen[(uint32_t)i * 240u + (uint32_t)q1] != ra;
-            }
-            for (y = q0; y <= q1; y++)
-                for (x = q0; x <= q1; x++)
-                    if (host_screen[(uint32_t)y * 240u + (uint32_t)x] != ra) {
-                        if (x - q0 < ix) ix = x - q0;
-                        if (y - q0 < iy) iy = y - q0;
-                    }
-            if (bad || ix != 16 || iy != 16) {
-                if (rep) fprintf(rep, "FIND %-26s the splash square not whole (edges %s) or its text not 16 px in (left %d, top %d)\n",
-                                 cur_name, bad ? "off" : "ok", (int)ix, (int)iy);
+        {   /* KRIECHSTROM: the picture across the top (some of its rows not BG, red and white in it), the text band
+             * under it BG at its edges */
+            uint16_t bg = host_screen[239u * 240u];
+            uint32_t x, y, art = 0, txt = 0;
+            for (y = 0; y < KRST_ART_H; y++)
+                for (x = 0; x < 240u; x++)
+                    art += host_screen[y * 240u + x] != bg;
+            for (y = KRST_ART_H; y < 240u; y++)
+                txt += host_screen[y * 240u] != bg || host_screen[y * 240u + 239u] != bg;
+            if (art < 240u * KRST_ART_H / 8u || txt) {
+                if (rep) fprintf(rep, "FIND %-26s the splash picture missing (%u px) or the text band's edges not BG (%u)\n",
+                                 cur_name, (unsigned)art, (unsigned)txt);
                 nfind++;
             }
         }
@@ -2261,7 +2255,7 @@ int main(int argc, char **argv)
     const char *out = argc > 1 ? argv[1] : "build/ui_new";
     char path[600];
     uint32_t p, s;
-    static const char *const SHOW[] = {"GREY", "MONO", "GREEN", "PAPER", "NIGHT"};   /* (NIGHT: #50, to review) */
+    static const char *const SHOW[] = {"STROM", "GREY", "MONO", "GREEN", "PAPER", "NIGHT"};   /* (NIGHT: #50, to review) */
     snprintf(path, sizeof path, "%s/report.txt", out);
     rep = fopen(path, "w");
     if (!rep) { fprintf(stderr, "cannot write %s\n", path); return 1; }
@@ -2390,7 +2384,7 @@ int main(int argc, char **argv)
                     lint();
                     if (!st && p == UI_GREY_INDEX) font_scene("LARGE", S_NAME[s]);
                     mono_check();
-                    if ((p == UI_GREY_INDEX || (!st && p == UI_BW_INDEX)))
+                    if ((p == UI_GREY_INDEX || (!st && p == UI_BW_INDEX) || (!st && !strcmp(UI_PALETTES[p].name, "STROM"))))   /* (KRIECHSTROM: its manual's screens) */
                         write_ppm(out, tag, S_NAME[s]);
                 }
         ui_style = ST_FLAT; style_apply();

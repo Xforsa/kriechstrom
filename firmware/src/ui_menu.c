@@ -122,8 +122,8 @@ static int32_t menu_document(int32_t y, int draw)
 {
     uint32_t i;
     if (draw) {
-        cv_text(6, y + 2, &AF_L, "FELUCCA", T_THEME);
-        cv_text(6, y + 38, &AF_S, "Multi-engine synthesizer", T_TEXT);
+        cv_text(6, y + 2, &AF_L, "KRST", T_THEME);
+        cv_text(6, y + 38, &AF_S, "KRIECHSTROM on Felucca 1.8.2", T_TEXT);
         cv_text(6, y + 58, &AF_M, FELUCCA_VERSION, T_THEME);
         cv_text_r(232, y + 61, &AF_S, __DATE__, T_MID, T_BG);
         cv_text(6, y + 82, &AF_S, "(C) 2026 Leo Kuroshita", T_TEXT);
@@ -215,7 +215,7 @@ static const uint16_t MTAB_ICON[MTAB_COUNT] = {ICON_X_EYE, ICON_X_KNOB, ICON_X_S
 #define MR_LX 16                                       /* its label */
 #define MR_VR 224                                      /* its value's right edge */
 #define MK_Y 224                                       /* the key hints */
-static int menu_large(void) { return (ui_prefs & PREF_LARGE) != 0u; }
+static int menu_large(void) { return large_on(); }
 static uint32_t menu_tab(void) { return MI_TAB[ui.menu_sel % MI_COUNT]; }
 /* the shown tab's rows: 24 px (LARGE 28, a tab of up to 5 rows), 2 px apart (a tab of 6: 1 px, its panel then ends
  * 6 px above the key hints as the others do; the rule between two rows is that gap row; 1.2, a tab of 7: 21 px rows

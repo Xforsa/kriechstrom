@@ -201,9 +201,10 @@ OUT=build/host
 mkdir -p "$OUT"
 # the hardware layer: firmware/hal, then felucca-bsp (firmware/bsp: chip/, boards/fm1/), as tools/build.py
 HALI="-Ifirmware/hal -Ifirmware/bsp/chip -Ifirmware/bsp/boards/fm1 -Ifirmware/src"   # (src: uac_fir.h, which bsp/chip/usb.c includes)
-CC="${CC:-cc} -O1 -Wall -Wno-unused-function $HALI"
+KRSTD="-DKRST_PALETTE=0 -DKRST_LARGE_DEF=0 -DKRST_PANEL_DEF=0 -DKRST_DEMO_DEF=0"   # KRIECHSTROM: the tests build with Felucca's first-start settings
+CC="${CC:-cc} -O1 -Wall -Wno-unused-function $KRSTD $HALI"   # (the tests start in GREY, as Felucca: KRIECHSTROM's first start is STROM)
 fail=0
-run() { echo "== $1"; shift; "$@" || fail=1; }
+run() { name="$1"; echo "== $1"; shift; "$@" || { fail=1; echo "!! FAILED: $name"; }; }   # (KRIECHSTROM: names what failed)
 
 $CC -o "$OUT/storage_test" tests/storage_test.c
 $CC -Ibuild/gen -Ifirmware/src -o "$OUT/signed_audio_scaling_test" tests/signed_audio_scaling_test.c -lm
@@ -379,6 +380,14 @@ if [ -f build/gen/felucca_tables.h ]; then
     mkdir -p build/insert_demo
     run "INSERT (1.5): OFF / MIX 0 bit for bit, each TYPE (no DC, bounded, dry / wet), MIX glide, automation, stored, cost, demos" \
         "$OUT/insert_test" build/insert_demo
+    $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_damage_test" tests/krst_damage_test.c -lm
+    mkdir -p build/damage_demo
+    run "KRIECHSTROM DAMAGE and WALL: off bit for bit, TAPE / DIGITAL, dropouts, WALL's sends and FILL, the page, demos" \
+        "$OUT/krst_damage_test" build/damage_demo
+    $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_poweron_test" tests/krst_poweron_test.c -lm
+    mkdir -p build/poweron_demo
+    run "KRIECHSTROM power-on: its four sounds and patterns, PLAY sounds at once on every track" \
+        "$OUT/krst_poweron_test" build/poweron_demo/poweron.wav
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/sound15_test" tests/sound15_test.c -lm
     mkdir -p build/sound15_demo
     run "1.5 sound items: ANALOG filter TYPE LP / BP / HP (responses, LP and other engines bit for bit), ENV SYNC (times at several tempi), cost, demos" \
@@ -412,7 +421,7 @@ if [ -f build/gen/felucca_tables.h ]; then
     run "second core: 4 parts of every preset, mixes: bit for bit on one core and on two, every split" \
         "$OUT/dualcore_test"
     if [ -n "$TSAN" ]; then                     # TSAN=1: the same under ThreadSanitizer (~6 min): shared state
-        TSAN_CC="cc -O1 -g -w -Ibuild/gen -Ifirmware/src -fsanitize=thread -pthread"
+        TSAN_CC="cc -O1 -g -w $KRSTD -Ibuild/gen -Ifirmware/src -fsanitize=thread -pthread"
         $TSAN_CC -o "$OUT/dualcore_tsan" tests/dualcore_test.c -lm
         run "second core under ThreadSanitizer: 4 parts of every preset, mixes" \
             env TSAN_OPTIONS=halt_on_error=1 "$OUT/dualcore_tsan"
@@ -507,10 +516,10 @@ elif ! san_ok; then
 else
     mkdir -p "$OUT/asan"
     A="$OUT/asan"
-    SCC="${CC%% *} $SAN $HALI -Ibuild/gen -Ifirmware/src"
+    SCC="${CC%% *} $SAN $KRSTD $HALI -Ibuild/gen -Ifirmware/src"
     export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=0}"
     # This regression uses strict ASan/UBSan, without the broad DSP exclusions.
-    STRICT_CC="${CC%% *} -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -w $HALI -Ibuild/gen -Ifirmware/src"
+    STRICT_CC="${CC%% *} -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -w $KRSTD $HALI -Ibuild/gen -Ifirmware/src"
     $STRICT_CC -o "$A/signed_audio_scaling_test_strict" tests/signed_audio_scaling_test.c -lm
     run "Strict ASan/UBSan (no exclusions): signed_audio_scaling_test" "$A/signed_audio_scaling_test_strict"
     $STRICT_CC -o "$A/phys_signed_test_strict" tests/phys_signed_test.c -lm

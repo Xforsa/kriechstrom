@@ -149,7 +149,7 @@ static void test_param(void)
 {
     const param_desc_t *d = &ENG_PHASE.edit[7];
     uint32_t k, zero = 1;
-    for (k = 0; k < ENG_PHASE.npresets; k++)
+    for (k = 0; k < ENG_PHASE.npresets && k < 6u; k++)   /* (Felucca's six; KRIECHSTROM's after them may fold) */
         zero &= ENG_PHASE.presets[k].e[7] == 0;
     check("E7 is FOLD: 0..127 (%), default 0", str_eq(d->label, "FOLD") && d->fmt == F_PCT && d->min == 0 &&
           d->max == 127 && d->def == 0);

@@ -54,7 +54,7 @@ async function editorMock() {
   const rq = async (r, o) => link.request(r, o);
   const info = E.parse[E.CMD.INFO](await rq(E.req.info()));
   ok(info.nengines === 14 && info.engines[1] === "-" && info.engines[12] === "FM6" && info.engines[13] === "SLICE"
- && info.engines[5] === "VOICE" && info.engines[6] === "TRIO" && info.engines[7] === "WHEEL" && info.engines[8] === "GRAIN" && info.engines[9] === "PHYS" && info.engines[10] === "DRUM" && info.engines[11] === "NOISE" && info.pcount === 114 && info.pe0 === 106 && info.engines[4] === "SAMPLE",
+ && info.engines[5] === "VOICE" && info.engines[6] === "TRIO" && info.engines[7] === "GLCH" && info.engines[8] === "GRAIN" && info.engines[9] === "PHYS" && info.engines[10] === "DRUM" && info.engines[11] === "NOISE" && info.pcount === 114 && info.pe0 === 106 && info.engines[4] === "SAMPLE",
     "editor: INFO");
   let descs = 0;
   for (let i = 0; i < info.pcount; i++) if (E.parse[E.CMD.DESC](await rq(E.req.desc(0, i))).label) descs++;
@@ -158,7 +158,7 @@ async function editorMock() {
   ok(!prefs.favorites[info.nengines][31] && !E.devicePresetRows(info, names, prefs).some((r) => r.user), "editor: erased slot disappears and loses star");
   {   /* the lists in the device's order (engines.c ENGINE_ORDER): FM6 second, DRUM last, "-" never; the numbers stay */
     const shown = E.engineOrder(info.engines).map((i) => info.engines[i]);
-    ok(shown.join() === "ANALOG,FM6,PHASE,LOFI,SAMPLE,VOICE,TRIO,WHEEL,GRAIN,PHYS,NOISE,SLICE,DRUM" &&
+    ok(shown.join() === "ANALOG,FM6,PHASE,LOFI,SAMPLE,VOICE,TRIO,GLCH,GRAIN,PHYS,NOISE,SLICE,DRUM" &&
        E.engineOrder(info.engines)[1] === 12 && E.engineOrder(info.engines)[12] === 10,
        "editor: engines listed FM6 second, DRUM last (indices kept)");
     ok(E.engineOrder(["ANALOG", "X", "-", "DRUM", "FM6"]).join() === "0,4,3,1", "editor: an unknown engine follows the known ones");
@@ -295,8 +295,8 @@ async function editorMock() {
     const inert = [25, 26].map(async (id) => E.parse[E.CMD.DESC](await rq(E.req.desc(1, id))));
     const [d25, d26] = await Promise.all(inert);
     ok(rd.label === "TYPE" && rd.def === 2 && eq(rd.names, ["ROOM", "SPRING", "HALL"]) && r1.value === 2 && r0.value === 0 &&
-       d25.label === "-" && d26.label === "-" && d25.max === 0 && info.gcount === 27,
-      "editor: REVERB TYPE (ROOM / SPRING / HALL, global id 24; 25, 26 still inert)");
+       d25.label === "DMG" && d26.label === "CHAR" && d25.max === 127 && info.gcount === 27,
+      "editor: REVERB TYPE (ROOM / SPRING / HALL, global id 24); KRIECHSTROM: 25 DMG, 26 CHAR (DAMAGE)");
   }
   const st = E.parse[E.CMD.STEP_SET](await rq(E.req.stepSet(5, { n: 2, notes: [60, 64], time: 0, flags: 1, vel: 100 })));
   ok(st.n === 2 && st.notes[1] === 64 && st.vel === 100, "editor: STEP_SET");
@@ -341,9 +341,9 @@ async function editorSamplePresets() {
   const kitD = E.parse[C.DESC](await rq(E.req.desc(0, info.pe0)));
   const kitSet = [];
   for (const v of [1, 2, 3]) kitSet.push(E.parse[C.SET](await rq(E.req.set(0, info.pe0, v))).value);
-  ok(eq(kitD.names, ["STD", "66", "10", "77", "80", "10", "66", "55", "77", "DEEP", "TIGHT", "PERC"]) &&   /* (1.5.6: DEEP TIGHT PERC) */
-     eq([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((v) => E.aliasOf(kitD.names, v)), [0, 6, 5, 8, 4, 5, 6, 7, 8, 9, 10, 11]) &&
-     eq(E.enumShown(kitD).filter((v) => E.aliasOf(kitD.names, v) === v).map((v) => kitD.names[v]), ["STD", "80", "10", "66", "55", "77", "DEEP", "TIGHT", "PERC"]) &&
+  ok(eq(kitD.names, ["STD", "66", "10", "77", "80", "10", "66", "55", "77", "DEEP", "TIGHT", "PERC", "DSTR"]) &&   /* (1.5.6: DEEP TIGHT PERC; KRIECHSTROM: DSTR) */
+     eq([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((v) => E.aliasOf(kitD.names, v)), [0, 6, 5, 8, 4, 5, 6, 7, 8, 9, 10, 11, 12]) &&
+     eq(E.enumShown(kitD).filter((v) => E.aliasOf(kitD.names, v) === v).map((v) => kitD.names[v]), ["STD", "80", "10", "66", "55", "77", "DEEP", "TIGHT", "PERC", "DSTR"]) &&
      eq(kitSet, [6, 5, 8]),
     "DRUM: KIT 1..3 (once HAND CYM H+CYM) named 66 10 77, aliases of 6 5 8: hidden, a SET lands there");
   const removed = E.parse[C.PRESET](await rq(E.req.preset(4, 4)));
@@ -391,7 +391,8 @@ function mockTables() {
        ph.presets.length === 9 && !ph.presets.some((p) => p.name === "RAIN" || p.name === "DRUM KIT"),
        "editor: PHYS models MODAL STRNG MEMB SYMP (no DUST, no DRUM), 9 presets");
     ok(dr.name === "DRUM" && dr.edit.map((d) => d.label).join() === "KIT,TUNE,TONE,DECY,SNAP,ACC,KICK,DRV" &&
-       dr.presets.length === 4 && dr.presets.every((p) => p.pat === 12) && dr.presets[0].name === "DRUM KIT",
+       dr.presets.length === 13 && dr.presets.slice(0, 4).every((p) => p.pat === 12) && dr.presets[4].name === "DESTROY" && dr.presets[12].name === "DRY BONES" &&
+       dr.presets[4].pat === 14 && dr.presets[0].name === "DRUM KIT",   /* (KRIECHSTROM: DESTROY, its own beat) */
        "editor: DRUM engine 10 (KIT TUNE TONE DECY SNAP ACC KICK DRV), four kits (1.5.6: DEEP TIGHT PERC) suggesting BEAT");
   }
   const dj = DESC;
@@ -1389,8 +1390,8 @@ function fm6TabNoBank() {
     && !["fm6store", "fm6erase", "fm6bankexp"].some((id) => html.includes(`"${id}"`)), "FM6 tab: import, voices, send, factory load and the hint; no store / erase / bank export");
   ok(!/TARGET\.BANK|fm6Erase|fm6Store|defaultSlot/.test(code), "FM6 tab: no bank requests");
   const tb = html.slice(html.indexOf("const TEXT = {"), html.indexOf("\n};", html.indexOf("const TEXT = {")) + 2);
-  const T = vm.runInNewContext(tb.replace("const TEXT =", "(") + ")"), en = T.en, ja = T.ja;
-  ok(/send it to a track, then save a user preset \(SAVE\) or a project/.test(en.fm6Keep) && ja.fm6Keep && !/B1|B27|bank/i.test(en.fm6Help + en.fm6NeedDevice),
+  const T = vm.runInNewContext(tb.replace("const TEXT =", "(") + ")"), en = T.en, ru = T.ru;
+  ok(/send it to a track, then save a user preset \(SAVE\) or a project/.test(en.fm6Keep) && ru.fm6Keep && !/B1|B27|bank/i.test(en.fm6Help + en.fm6NeedDevice),
     "FM6 tab: the hint (send to a track, then SAVE on the device), no B slots in the help");
 }
 
@@ -1522,12 +1523,12 @@ function editorTabs() {
   /* every string key in both languages */
   const tb = html.slice(html.indexOf("const TEXT = {"), html.indexOf("\n};", html.indexOf("const TEXT = {")) + 2);
   const TEXT = vm.runInNewContext(tb.replace("const TEXT =", "(") + ")");
-  const ja = new Set(Object.keys(TEXT.ja)), en = new Set(Object.keys(TEXT.en));
+  const ru = new Set(Object.keys(TEXT.ru)), en = new Set(Object.keys(TEXT.en));
   const used = new Set([...html.matchAll(/data-t="(\w+)"|\bt\("(\w+)"\)|sayK\("(\w+)"|hint = "(\w+)"/g)].map((x) => x[1] || x[2] || x[3] || x[4]));
   for (const k of ["needDevice", "smpNone", "bankConnect", "bankNone", "selectedTrack", "selectTrack", "notesHelp", "live", "polling"]) used.add(k);
-  const miss = [...used].filter((k) => !ja.has(k) || !en.has(k));
-  const odd = [...ja].filter((k) => !en.has(k)).concat([...en].filter((k) => !ja.has(k)));
-  ok(!miss.length && !odd.length, `editor: every string in ja and en (${used.size} used${miss.length ? ", missing " + miss : ""}${odd.length ? ", one language only " + odd : ""})`);
+  const miss = [...used].filter((k) => !ru.has(k) || !en.has(k));
+  const odd = [...ru].filter((k) => !en.has(k)).concat([...en].filter((k) => !ru.has(k)));
+  ok(!miss.length && !odd.length, `editor: every string in ru and en (${used.size} used${miss.length ? ", missing " + miss : ""}${odd.length ? ", one language only " + odd : ""})`);
   /* the page script parses (the browser's view of it) */
   const script = html.slice(html.indexOf("<script>") + 8, html.lastIndexOf("</script>"));
   let err = null;

@@ -122,7 +122,10 @@ static void settings_init(void)
     }
     if (settings.magic != SETTINGS_MAGIC || settings.palette >= NPALETTES) {
         settings.magic = SETTINGS_MAGIC;
-        settings.palette = UI_GREY_INDEX;      /* GREY (default; named MONO before 1.0.2) */
+#ifndef KRST_PALETTE
+#define KRST_PALETTE 5u      /* (a unit built without core.h) */
+#endif
+        settings.palette = KRST_PALETTE;       /* KRIECHSTROM: STROM (Felucca: GREY) */
         settings.lowcut = 0;
         settings.zoom = 0;                     /* (retired: the LEDS setting, settings_persist.c) */
     }

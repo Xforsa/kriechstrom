@@ -46,7 +46,8 @@ PALETTES = [
     ("AMBER",  (18, 14, 8),     (255, 168, 40),  (246, 236, 216), RED,       (96, 214, 230)),
     ("ICE",    (8, 16, 24),     (80, 184, 236),  (228, 240, 248), RED,       (255, 140, 100)),
     ("VIOLET", (16, 12, 28),    (178, 136, 246), (240, 232, 252), RED,       (110, 228, 168)),
-    ("ROSE",   (24, 10, 18),    (244, 114, 182), (252, 232, 242), RED,       (255, 214, 110)),
+    # KRIECHSTROM: STROM in ROSE's place (id 5): true black, blood red, white text, steel grey as the second accent; its default
+    ("STROM",  (0, 0, 0),       (255, 32, 24),   (255, 255, 255), RED,       (190, 190, 196)),
     ("PAPER",  (244, 239, 228), (10, 84, 70),    (34, 30, 24),    RED_LIGHT, (172, 56, 8)),
     ("HI-CON", (0, 0, 0),       (255, 232, 0),   (255, 255, 255), RED,       (0, 230, 255)),
     # appended (saved ids are indices: append only). #50, the 0.9 look: true black, green-tinted text and lines
@@ -61,8 +62,8 @@ BW_GREY = (82, 82, 82)             # MONO's one mid grey (RGB565 10/20/10): DIM 
 # the 20 palettes of the earlier firmware (index order) -> the new palette
 OLD = ["GREEN", "AMBER", "CYAN", "RED", "MONO", "VIOLET", "PINK", "ICE", "WARM", "OCEAN", "DUSK", "HI-CON",
        "LIGHT", "PAPER", "SKY", "MINT", "LILAC", "ROSE", "SAND", "L-HICON"]
-OLD_TO_NEW = {"GREEN": "GREEN", "AMBER": "AMBER", "CYAN": "ICE", "RED": "ROSE", "MONO": "GREY", "VIOLET": "VIOLET",
-              "PINK": "ROSE", "ICE": "ICE", "WARM": "AMBER", "OCEAN": "ICE", "DUSK": "VIOLET", "HI-CON": "HI-CON",
+OLD_TO_NEW = {"GREEN": "GREEN", "AMBER": "AMBER", "CYAN": "ICE", "RED": "STROM", "MONO": "GREY", "VIOLET": "VIOLET",
+              "PINK": "STROM", "ICE": "ICE", "WARM": "AMBER", "OCEAN": "ICE", "DUSK": "VIOLET", "HI-CON": "HI-CON",
               "LIGHT": "PAPER", "PAPER": "PAPER", "SKY": "PAPER", "MINT": "PAPER", "LILAC": "PAPER", "ROSE": "PAPER",
               "SAND": "PAPER", "L-HICON": "HI-CON"}
 PAL_TAG = 64                       # stored id = PAL_TAG + index; below 20: an old id
@@ -71,6 +72,8 @@ REC_DARK, REC_LIGHT = RED, RED_LIGHT        # (CUSTOM migrated from the five of 
 QR_LIGHT, QR_DARK, CRASH_BG, CRASH_INK = (255, 255, 255), (0, 0, 0), (160, 0, 0), (255, 255, 255)
 PCT = {"MID": 70, "DIM": 42, "LINE": 18, "SEL": 80, "TINT": 12, "KEY": 78, "SURF": 12}
 RAISE_PCT = 12                     # SURF -> TEXT
+SURF_PCT = {}                      # (KRIECHSTROM: STROM's cards are set in src/gfx.c palette_set: a grey of the text, 7 %)
+SEL_PCT = {"STROM": 100}           # KRIECHSTROM: STROM's selection the full red (80 % of it on black is too dark for its ink)
 
 
 def to565(c, exact=False):
@@ -127,10 +130,10 @@ def derive(p):
     c1, c2, c3, pri, sec = (to565(c, name == BW) for c in cols)
     mono = name == "GREY"
     bg, text, theme = c1, c3, c2
-    surf = bg if name == BW else mix(c1, c2, PCT["SURF"], mono)
+    surf = bg if name == BW else mix(c1, c3, 7, mono) if name == "STROM" else mix(c1, c2, PCT["SURF"], mono)
     d = dict(bg=bg, surf=surf, text=text, theme=theme, accent=sec, rec=pri,
              mid=mix(bg, text, PCT["MID"], mono), dim=mix(bg, text, PCT["DIM"], mono),
-             line=mix(bg, text, PCT["LINE"], mono), sel=mix(bg, theme, PCT["SEL"], mono),
+             line=mix(bg, text, PCT["LINE"], mono), sel=mix(bg, theme, SEL_PCT.get(name, PCT["SEL"]), mono),
              tint=mix(bg, theme, PCT["TINT"], mono), raise_=mix(surf, text, RAISE_PCT, mono),
              key=mix(bg, text, PCT["KEY"], mono))
     d["ink"] = bg
@@ -194,7 +197,7 @@ def main():
         for p in PALETTES:
             v = [to565(c, p[0] == BW) for c in p[1:]]
             out.append(f'    {{"{p[0]}", ' + ", ".join(f"0x{x:04x}" for x in v) + "},")
-        out += ["};", f"#define UI_NPALETTES {len(PALETTES)}u", "#define UI_GREY_INDEX 0u",
+        out += ["};", f"#define UI_NPALETTES {len(PALETTES)}u", "#define UI_GREY_INDEX 0u", f"#define UI_STROM_INDEX {[q[0] for q in PALETTES].index('STROM')}u",
                 f"#define UI_BW_INDEX {names.index(BW)}u          /* MONO: black and white (src/gfx.c palette_set) */",
                 f"#define UI_BW_GREY 0x{to565(BW_GREY):04x}u          /* MONO's one grey: DIM LINE RAISE LANE */",
                 f"#define UI_PAL_TAG {PAL_TAG}u          /* stored id = UI_PAL_TAG + index; below 20: an old id */"]

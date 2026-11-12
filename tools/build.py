@@ -49,7 +49,8 @@ SDK_SHA256 = {
     "cfg/eq_cfg_hw.bin": "41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d",
 }
 
-PRODUCT = "FM-1_900"                # package identity; release builds are FM-1_9XY
+PRODUCT = "FM-1_57810000"           # KRIECHSTROM: FM-1_5781XXYY (X.Y; 0000 a development build), free on thefirmwarehub.com
+                                    # (FM-1_93x is inside the range of sloopDX); Felucca is FM-1_9XY
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/felucca.c)
 # FELUCCA_CPU2 (firmware/src/felucca.c), unset or 1, the default (1.6.1): the second core is built in, its entry and
 # stacks (firmware/bsp/chip/fm1_cpu1.S) linked and its waiting loop (.c1_text) checked; MENU > SYSTEM > 2ND CORE starts it
@@ -213,6 +214,7 @@ def build_app():
     if v in ("0", "1", "2", "3"):
         flags.append(f"-DFELUCCA_USB_LAYOUT={v}")
     flags.append(f'-DFELUCCA_ID="{PRODUCT}"')
+    flags += ['-DFELUCCA_USB_MANUFACTURER="KRIECHSTROM"', '-DFELUCCA_USB_PRODUCT="KRIECHSTROM"']   # the name a computer shows
     if VERSION:
         flags.append(f'-DFELUCCA_VERSION="{VERSION}"')
     # felucca.c goes to LLVM IR without the optimizer, the main-loop functions (UI, stores, editor) are
@@ -387,7 +389,7 @@ def mmio_check():
 def main():
     global PRODUCT, VERSION
     ap = argparse.ArgumentParser()
-    ap.add_argument("--release", metavar="X.Y", help="release build: identity FM-1_9XY, version string vX.Y")
+    ap.add_argument("--release", metavar="X.Y", help="release build: identity FM-1_5781XXYY, version string vX.Y")
     ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
     a = ap.parse_args()
     name = "felucca.fwsc"
@@ -395,15 +397,14 @@ def main():
         m = re.fullmatch(r"(\d)\.(\d)(?:\.\d){0,2}(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y, X.Y.Z, X.Y.Z.W or X.Y-suffix, one digit each")
-        PRODUCT = "FM-1_9" + m[1] + m[2]
+        PRODUCT = f"FM-1_5781{int(m[1]):02d}{int(m[2]):02d}"   # KRIECHSTROM: 0.1 -> FM-1_57810001
         VERSION = "v" + a.release.lower()      # e.g. v1.0, v1.1-rc1
         name = f"felucca-{a.release}.fwsc"
     if not (FW / "engines" / "src" / "felucca_engine.h").exists():
-        raise SystemExit("firmware/engines is empty: the Felucca-Engines submodule "
-                         "(git submodule update --init, or clone with --recurse-submodules)")
+        raise SystemExit("firmware/engines is empty: KRIECHSTROM keeps Felucca-Engines in the tree; the checkout is "
+                         "incomplete")
     if not (FW / "bsp" / "chip" / "fm1_cc.h").exists():
-        raise SystemExit("firmware/bsp is empty: the felucca-bsp submodule "
-                         "(git submodule update --init, or clone with --recurse-submodules)")
+        raise SystemExit("firmware/bsp is empty: KRIECHSTROM keeps felucca-bsp in the tree; the checkout is incomplete")
     fm1pkg_make.SDK = a.sdk
     for rel, sha in SDK_SHA256.items():          # fail early without the SDK
         if hashlib.sha256(fm1pkg_make.sdk_file(rel)).hexdigest() != sha:
@@ -427,17 +428,20 @@ def main():
         raise SystemExit("build: checks failed")
     pkg = fm1pkg_make.ufw(fm1pkg_make.flash_image(img, fm1pkg_make.KEY), ota, PRODUCT)
     (OUT / name).write_bytes(pkg)
+    krst = name.replace("felucca", "kriechstrom")   # KRIECHSTROM's name for the same package (the tests read felucca.fwsc)
+    (OUT / krst).write_bytes(pkg)
     att = SRC / "assets" / "samples-cc0" / "ATTRIBUTION.txt"
     if att.exists():
         shutil.copy(att, OUT / "ATTRIBUTION.txt")
     print(f"app      {OUT / 'felucca.bin'}  {len(img)} B")
     print(f"loader   {LDR / 'ota.bin'}  {len(ota)} B")
-    print(f"package  {OUT / name}  {len(pkg)} B, identity {PRODUCT}")
+    print(f"package  {OUT / krst}  {len(pkg)} B, identity {PRODUCT}")
     if a.release:                   # what a release carries: the package, the app and every licence they need
         rel = OUT / f"release-{a.release}"
         shutil.rmtree(rel, ignore_errors=True)
         (rel / "LICENSES").mkdir(parents=True)
-        app = f"felucca-{a.release}-app.bin"
+        app = f"kriechstrom-{a.release}-app.bin"
+        name = krst
         (rel / name).write_bytes(pkg)
         (rel / app).write_bytes(img)
         (rel / "SHA256SUMS").write_text("".join(f"{hashlib.sha256(b).hexdigest()}  {n}\n"

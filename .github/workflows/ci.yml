@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# KRIECHSTROM: build the firmware and run every host test on each push and pull request.
+name: build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      AC79_SDK: ${{ github.workspace }}/../ac79-sdk
+      JIELI_TOOLCHAIN: /home/runner/.jieli/toolchain
+      # three Apache-2.0 files of JieLi's AC79 SDK, at the commit KRIECHSTROM is built with (build.py checks their SHA-256)
+      SDK_RAW: https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK/raw/d179b4484759423312073f5fbb232501aa491047
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Python packages
+        run: pip install Pillow fonttools
+
+      - name: JieLi toolchain
+        run: sh tools/get_toolchain.sh
+
+      - name: AC79 SDK files
+        run: |
+          for f in cpu/wl82/tools/uboot.boot cpu/wl82/tools/cfg_tool.bin cpu/wl82/tools/cfg/eq_cfg_hw.bin; do
+            mkdir -p "$AC79_SDK/$(dirname "$f")"
+            curl -fsSL --retry 3 "$SDK_RAW/$f" -o "$AC79_SDK/$f"
+          done
+
+      - name: Build the firmware
+        run: python3 tools/build.py
+
+      - name: Host tests
+        run: sh tests/run_tests.sh
+
+      - name: Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: kriechstrom-${{ github.sha }}
+          path: |
+            build/kriechstrom.fwsc
+            build/felucca.bin

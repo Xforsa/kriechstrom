@@ -1,5 +1,11 @@
 # Credits
 
+**KRIECHSTROM** is a fork of Felucca. What it adds: the GLCH engine, the DESTROY kit, the MUFF / BASS / SMASH inserts
+and the ROLL / GATE effects from [Glitchbox](https://github.com/erikdevos/glitchbox) by
+[erikdevos](https://github.com/erikdevos) (GPL-3.0-only); ideas from [DIRGE](https://github.com/sinscum/DIRGE) by sinscum;
+DICE, OOPS, DAMAGE / WALL / HISS, the new sounds, the STROM theme, the pictures, the site and the manual
+by the KRIECHSTROM contributors. Felucca and everything it credits:
+
 Felucca is Leo Kuroshita's ([@kurogedelic](https://github.com/kurogedelic), [Hügelton Instruments](https://hugelton.com)). It uses and
 thanks the work below; each keeps its own licence (see [LICENSE](LICENSE), [LICENSING.md](LICENSING.md) and [LICENSES/](LICENSES/)).
 
