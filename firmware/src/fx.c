@@ -1213,7 +1213,7 @@ static void mix_block(int32_t *out, uint32_t n)
     fx_buses(send_c, send_d, send_r, wet, n);
     if (hl.side)
         rev_side_mix(mix_l, mix_r, n);                  /* HALL: stereo */
-    if (dmg_master_on() || wall_master_on() || krst_level_on() || song.g[G_HISS] > 0) {   /* KRIECHSTROM: DAMAGE, WALL,
+    if (dmg_master_on() || wall_master_on() || krst_level_on() || hiss_on()) {   /* KRIECHSTROM: DAMAGE, WALL,
                                                          * HISS on the master */
         uint32_t ein;
         int act = dmg_master_on() || wall_master_on();
@@ -1229,7 +1229,7 @@ static void mix_block(int32_t *out, uint32_t n)
             wall_master(mix_l, mix_r, n);
         if (act || krst_level_on())
             krst_level(mix_l, mix_r, n, ein, act);      /* (denser, not louder) */
-        if (song.g[G_HISS] > 0)
+        if (hiss_on())
             hiss_master(mix_l, mix_r, n);
     }
     if (scope_mix)

@@ -3,6 +3,12 @@
 All notable changes to KRIECHSTROM. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions are `X.Y`, the package identity `FM-1_5781XXYY`.
 
+## [Unreleased]
+
+### Changed
+- HISS hisses only while the tape runs: while PLAY plays, and when stopped while notes sound and a second after;
+  stopped and silent it is quiet (it opens in ~50 ms, closes over 0.6 s)
+
 ## [0.1] - 2026-11-12
 
 The first release, built on Felucca 1.8.2.

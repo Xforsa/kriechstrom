@@ -82,6 +82,7 @@ static void loop_fresh(void)
     song.g[G_DMGC] = 32;
     wl_env = wl_w = 0;
     wl_g = 4096;
+    hs_g = hs_hold = 0;
     kl_in = kl_out = 0;
     kl_g = 4096;
     seq_fill = 0;
@@ -317,8 +318,9 @@ static int demos(const char *dir)
     return (int)n;
 }
 
-/* the peak of the master with nothing playing, after a second */
-static int32_t silent_peak(int32_t dmg, int32_t chr, int32_t wall, int32_t hiss)
+/* the peak of the master after a second of a mode: 0 stopped and silent, 1 PLAY with every track empty (the tape runs,
+ * nothing on it), 2 stopped, a note held on T1 */
+static int32_t mode_peak(int32_t dmg, int32_t chr, int32_t wall, int32_t hiss, int mode)
 {
     int32_t pk = 0;
     uint32_t k;
@@ -327,8 +329,36 @@ static int32_t silent_peak(int32_t dmg, int32_t chr, int32_t wall, int32_t hiss)
     song.g[G_DMGC] = (int16_t)chr;
     song.g[G_WALL] = (int16_t)wall;
     song.g[G_HISS] = (int16_t)hiss;
+    if (mode == 1) {
+        for (k = 0; k < NPART; k++)
+            track_defaults_steps(&trk[k]);
+        seq_start();
+    }
+    if (mode == 2)
+        trk_note_on(&trk[0], 40, 100);
     mixb(FS / CTL);
     for (k = 0; k < FS / CTL; k++) {
+        mixb(1);
+        if (blk_peak > pk)
+            pk = blk_peak;
+    }
+    if (mode == 1)
+        seq_stop();
+    return pk;
+}
+static int32_t silent_peak(int32_t dmg, int32_t chr, int32_t wall, int32_t hiss) { return mode_peak(dmg, chr, wall, hiss, 0); }
+/* HISS: the peak a second after the last note let go (stopped): the tape stopped by then */
+static int32_t after_note_peak(int32_t hiss)
+{
+    int32_t pk = 0;
+    uint32_t k;
+    loop_fresh();
+    song.g[G_HISS] = (int16_t)hiss;
+    trk_note_on(&trk[0], 40, 100);
+    mixb(FS / 4u / CTL);
+    trk_note_off(&trk[0], 40);
+    mixb(3u * FS / CTL);                                /* (the release, the 1 s hold, the 0.6 s close) */
+    for (k = 0; k < FS / 4u / CTL; k++) {
         mixb(1);
         if (blk_peak > pk)
             pk = blk_peak;
@@ -338,11 +368,15 @@ static int32_t silent_peak(int32_t dmg, int32_t chr, int32_t wall, int32_t hiss)
 static void test_apart(void)
 {
     int32_t a = silent_peak(127, 0, 0, 0), b = silent_peak(127, 127, 0, 0), c = silent_peak(0, 0, 127, 0),
-            h = silent_peak(0, 0, 0, 64), h2 = silent_peak(0, 0, 0, 127);
+            h = mode_peak(0, 0, 0, 64, 1), h2 = mode_peak(0, 0, 0, 127, 1), hs = silent_peak(0, 0, 0, 127),
+            hn = mode_peak(0, 0, 0, 127, 2), ha = after_note_peak(127), ha0 = after_note_peak(0);
     project_t q;
-    printf("damage:   silence: DMG TAPE %d, DMG DIGITAL %d, WALL %d | HISS 64 %d, HISS 127 %d\n", a, b, c, h, h2);
-    ck("DAMAGE and WALL add nothing to silence (no hiss of their own); HISS does, louder at 127, under -24 dB",
-       a == 0 && b == 0 && c == 0 && h > 20 && h2 > h && h2 < 2100);
+    printf("damage:   silence: DMG TAPE %d, DMG DIGITAL %d, WALL %d | HISS while PLAY plays (empty): 64 %d, 127 %d | HISS "
+           "127 stopped and silent %d, a note held %d, 3 s after it %d (without HISS %d)\n", a, b, c, h, h2, hs, hn, ha, ha0);
+    ck("DAMAGE and WALL add nothing to silence (no hiss of their own); HISS does while PLAY plays, louder at 127, "
+       "under -24 dB", a == 0 && b == 0 && c == 0 && h > 20 && h2 > h && h2 < 2100);
+    ck("  HISS is a running tape's: stopped and silent none, with a note held it hisses, 3 s after the note none again "
+       "(only the note's own reverb tail, as without HISS)", hs == 0 && hn > 0 && ha <= ha0 + 2);
     ck("  DAMAGE and WALL are different sounds (the loop at DMG 127 against WALL 127)",
        run_hash(127, 0, 0, 2) != run_hash(0, 0, 127, 2) && run_hash(0, 0, 127, 2) != run_hash(127, 0, 127, 2));
     {   /* by what they do: WALL has none of DAMAGE's marks (no dropouts, no held samples); DMG and HISS follow their knob */
@@ -365,7 +399,7 @@ static void test_apart(void)
                lt < 1.5 && ld < 1.5 && lw < 1.5 && lt > -6 && ld > -6 && lw > -6);
         }
         ck("  DMG follows its knob (40 and 90 differ), HISS too (64 < 127, 0 silent)",
-           d40.rms != d90.rms && silent_peak(0, 0, 0, 32) < silent_peak(0, 0, 0, 64) && silent_peak(0, 0, 0, 0) == 0);
+           d40.rms != d90.rms && mode_peak(0, 0, 0, 32, 1) < mode_peak(0, 0, 0, 64, 1) && mode_peak(0, 0, 0, 0, 1) == 0);
     }
     loop_fresh();
     song.g[G_HISS] = 77;

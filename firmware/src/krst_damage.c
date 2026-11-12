@@ -288,13 +288,38 @@ static __attribute__((noinline)) void krst_level(int32_t *l, int32_t *r, uint32_
         kl_in = kl_out = 0;
 }
 
-/* ---- HISS: a tape's noise floor on the master, on its own knob (it runs while stopped too, as a tape would) ---- */
+/* ---- HISS: a tape's noise floor on the master, on its own knob. The tape runs while PLAY plays; stopped, it runs
+ * while a note sounds and for ~1 s after the last (a voice active anywhere), then stops: no hiss in silence. Opening
+ * takes ~50 ms, closing ~0.6 s (no click, no breathing between notes) ---- */
 static uint32_t hs_st = 0x9E3779B9u;
-static int32_t hs_lp[2];
+static int32_t hs_lp[2], hs_g, hs_hold;                 /* the gate's gain (Q15), blocks of the hold left */
+static int hiss_tape_runs(void)
+{
+    uint32_t k, i;
+    if (song.playing)
+        return 1;
+    for (k = 0; k < NPART; k++)
+        for (i = 0; i < NVOICE; i++)
+            if (trk[k].v[i].active)
+                return 1;
+    return 0;
+}
+static inline int hiss_on(void) { return song.g[G_HISS] > 0 && (hs_g > 0 || hiss_tape_runs()); }
 static __attribute__((noinline)) void hiss_master(int32_t *l, int32_t *r, uint32_t n)
 {
-    int32_t h = clamp(song.g[G_HISS], 0, 127), lv = (h * h) >> 4;   /* (up to ~1000: about -30 dB under the mix) */
+    int32_t h = clamp(song.g[G_HISS], 0, 127), lv, tgt;
     uint32_t i;
+    if (hiss_tape_runs())
+        hs_hold = 1378;                                 /* (1 s of blocks after the last sign of a running tape) */
+    else if (hs_hold > 0)
+        hs_hold--;
+    tgt = hs_hold > 0 ? 32768 : 0;
+    hs_g += tgt > hs_g ? (tgt - hs_g + 63) >> 6 : -40;  /* (up ~50 ms, down in a line over 0.6 s) */
+    if (hs_g <= 0) {
+        hs_g = 0;
+        return;
+    }
+    lv = ((h * h) >> 4) * hs_g >> 15;                   /* (up to ~1000: about -30 dB under the mix) */
     for (i = 0; i < n; i++) {
         int32_t a, b;
         hs_st = hs_st * 1664525u + 1013904223u;
