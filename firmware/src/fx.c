@@ -647,7 +647,7 @@ static __attribute__((noinline)) void rev_side_mix(int32_t *l, int32_t *r, uint3
  * repeats the processed sound. State in the pool, per track (ins[], 580 B each); noinline, its own loops: the audio
  * ISR's inlined path gains one test per part (track_t ins_run) */
 enum { IT_OFF, IT_SOFT, IT_HARD, IT_FOLD, IT_FUZZ, IT_CRUSH, IT_PHASER, IT_FLANGER, IT_CHORUS,
-       IT_MUFF, IT_BASS, IT_SMASH, IT_DAMAGE, IT_N };   /* KRIECHSTROM: DAMG (krst_damage.c) */   /* Glitchbox's three: MUFF, BASS, SMASH (ins_wreck) */
+       IT_MUFF, IT_BASS, IT_SMASH, IT_DAMAGE, IT_INFECT, IT_N };   /* KRIECHSTROM: DAMG (krst_damage.c), INFCT (krst_infect.c) */   /* Glitchbox's three: MUFF, BASS, SMASH (ins_wreck) */
 _Static_assert(IT_FOLD == INS_FOLD && IT_FUZZ == INS_FUZZ && IT_CRUSH == INS_CRUSH && IT_MUFF == INS_MUFF &&
                IT_BASS == INS_BASS && IT_SMASH == INS_SMASH && IT_DAMAGE == INS_DAMG, "core.h INS_* follow fx.c IT_*");
 #define IL_LEN 256u                     /* FLANG / CHOR: the line, samples (a power of 2: masked) */
@@ -910,6 +910,7 @@ static __attribute__((noinline)) void ins_wreck(ins_t *s, const track_t *t, int3
 }
 
 #include "krst_damage.c"                               /* KRIECHSTROM: DAMAGE (INSERT DAMG, the master's, WALL) */
+#include "krst_infect.c"                               /* KRIECHSTROM: INFECT (INSERT INFCT: a track driven by another) */
 
 /* the INSERT at rest at once (mix_part: TYPE turned OFF while the part was silent, its fade never ran) */
 static __attribute__((noinline)) void ins_rest(track_t *t)
@@ -936,6 +937,8 @@ static __attribute__((noinline)) void track_insert(track_t *t, int32_t *b, uint3
     }
     if (s->type == IT_DAMAGE)
         ins_damage(s, t, b, n, tw);
+    else if (s->type == IT_INFECT)
+        ins_infect(s, t, b, n, tw);
     else if (s->type >= IT_MUFF)
         ins_wreck(s, t, b, n, tw);
     else if (s->type >= IT_PHASER)
@@ -1039,6 +1042,7 @@ static void mix_part(track_t *t, uint32_t n SM_DECL)
                                                          * voice (the INSERT's: 46 ms, a flanger's feedback) */
     else if ((!t->tail || !(t->p[P_DIST] | t->p[P_ITYPE]) || !--t->tail) && !slicer_busy(t)) {
         slicer_track(t, 0, n);                          /* (the SLICER's step clock runs on) */
+        ifx_feed(t, 0, n);                              /* KRIECHSTROM: a silent INFECT source */
         if (t->ins_run && !t->p[P_ITYPE])
             ins_rest(t);                                /* TYPE OFF while silent: no fade-out left for the next note */
         if (MOD(t).on)
@@ -1055,6 +1059,7 @@ static void mix_part(track_t *t, uint32_t n SM_DECL)
         if ((pf.mute >> (t - trk)) & 1u)
             perf_mute((uint32_t)(t - trk), b, n);       /* perform.c: a black key in the FX layer */
     }
+    ifx_feed(t, b, n);                                  /* KRIECHSTROM: INFECT hears it (before LEVEL) */
     if (!T_SPREAD(t)) {                                /* (the mix's values read after the calls: none is held over
                                                          * them, no spill in the loop: the ISR's cost as before 1.5) */
         int32_t lvl = LEVEL_Q12[t->p[P_LEVEL] & 127], pan = t->p[P_PAN];
@@ -1181,6 +1186,7 @@ static void mix_block(int32_t *out, uint32_t n)
     for (i = 0; i < n; i++)
         send_c[i] = send_d[i] = send_r[i] = mix_l[i] = mix_r[i] = 0;
     events_block(n);
+    ifx_begin();                                        /* KRIECHSTROM: INFECT's sources, a new half */
     perf = perf_begin(n);                               /* the FX hold layer at work (perform.c) */
 #if FELUCCA_CPU2
     uint32_t m = C1_ON() ? C1_SPLIT() & ((1u << NPART) - 1u) : 0u;

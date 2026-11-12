@@ -59,9 +59,11 @@ static const char *const N_SLCR[] = {"OFF", "GATE", "STUT"};             /* SL_O
 static const char *const N_SLDIV[] = {"1/8", "1/16", "1/32", "8T", "16T", "32T"};   /* SL_DEN */
 /* the INSERT's types (1.5, fx.c IT_*; append-only: stored). Its three values A B C mean what the type says (ins_desc) */
 static const char *const N_ITYPE[] = {"OFF", "SOFT", "HARD", "FOLD", "FUZZ", "CRUSH", "PHASR", "FLANG", "CHOR",
-                                      "MUFF", "BASS", "SMASH", "DAMG"};   /* (Glitchbox: fx.c ins_wreck; KRIECHSTROM:
+                                      "MUFF", "BASS", "SMASH", "DAMG", "INFCT"};   /* (Glitchbox: fx.c ins_wreck; KRIECHSTROM:
                                                                            * DAMG, krst_damage.c) */
 /* CRUSH: BITS 1..16 and RATE (the held sample's rate, fx.c INS_HOLD) over the range in 16 even parts (0-terminated) */
+static const char *const N_ISRC[] = {"T1", "T2", "T3", "T4"};   /* KRIECHSTROM: INFCT's source, its MODE */
+static const char *const N_IMODE[] = {"GATE", "DUCK", "CRUSH", "FOLD", "RING"};
 static const char *const N_IBITS[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
                                       "16", 0};
 static const char *const N_IRATE[] = {"689", "919", "1.1k", "1.4k", "1.8k", "2.2k", "2.8k", "3.7k", "4.4k", "5.5k",
@@ -184,7 +186,7 @@ static const param_desc_t TP[P_COUNT] = {
 /* the INSERT's A B C as its TYPE means them (TP's ranges and defaults): the drives DRIVE TONE LEVEL, CRUSH BITS RATE
  * LPF, the swept ones RATE DEPTH FDBK; OFF TP's own */
 #define PU(l, f, df, n, u) {l, f, 0, 127, df, n, u}
-static const param_desc_t INS_DESC[7][3] = {
+static const param_desc_t INS_DESC[8][3] = {
     {PU("DRIVE", F_PCT, 64, 0, 0), PU("TONE", F_CUTOFF, 96, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
     {PU("BITS", F_INT, 64, N_IBITS, 0), PU("RATE", F_INT, 96, N_IRATE, "Hz"), PU("LPF", F_CUTOFF, 96, 0, 0)},
     {PU("RATE", F_LFOHZ, 64, 0, 0), PU("DEPTH", F_PCT, 96, 0, 0), PU("FDBK", F_PCT, 96, 0, 0)},
@@ -194,11 +196,13 @@ static const param_desc_t INS_DESC[7][3] = {
     {PU("AMT", F_PCT, 90, 0, 0), PU("REL", F_PCT, 50, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
     /* KRIECHSTROM: DAMG (CHAR: 0 TAPE .. 127 DIGITAL) */
     {PU("AMT", F_PCT, 80, 0, 0), PU("CHAR", F_PCT, 32, 0, 0), PU("LEVEL", F_DB, 96, 0, 0)},
+    /* KRIECHSTROM: INFCT (krst_infect.c): the track it listens to, how, how deep */
+    {{"SRC", F_ENUM, 0, 3, 0, N_ISRC, 0}, {"MODE", F_ENUM, 0, 4, 0, N_IMODE, 0}, PU("DEPTH", F_PCT, 127, 0, 0)},
 };
 #undef PU
 static const param_desc_t *ins_desc(int32_t type, uint32_t k)
 {
-    static const uint8_t GRP[13] = {0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 4, 5, 6};   /* by TYPE (fx.c IT_*) */
+    static const uint8_t GRP[14] = {0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 4, 5, 6, 7};   /* by TYPE (fx.c IT_*) */
     if (type <= 0 || type >= (int32_t)NELEM(N_ITYPE))
         return &TP[P_IA + k];
     return &INS_DESC[GRP[type]][k];

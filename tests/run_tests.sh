@@ -384,6 +384,10 @@ if [ -f build/gen/felucca_tables.h ]; then
     mkdir -p build/damage_demo
     run "KRIECHSTROM DAMAGE and WALL: off bit for bit, TAPE / DIGITAL, dropouts, WALL's sends and FILL, the page, demos" \
         "$OUT/krst_damage_test" build/damage_demo
+    $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_infect_test" tests/krst_infect_test.c -lm
+    mkdir -p build/infect_demo
+    run "KRIECHSTROM INFECT (INSERT INFCT): off bit for bit, GATE DUCK CRUSH FOLD RING driven by a silent DRUM track, the page, demos" \
+        "$OUT/krst_infect_test" build/infect_demo
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_poweron_test" tests/krst_poweron_test.c -lm
     mkdir -p build/poweron_demo
     run "KRIECHSTROM power-on: its four sounds and patterns, PLAY sounds at once on every track" \

@@ -462,6 +462,16 @@ static void graph_insert(const track_t *t, uint16_t c)
         cv_line(PANEL_X0 + PANEL_W / 6, cy + a, PANEL_X0 + PANEL_W * 5 / 6, cy - a, ty ? T_RAISE : T_DIM);
     if (ty == IT_OFF)
         return;
+    if (ty == IT_INFECT) {                           /* KRIECHSTROM: INFCT: what it hears, the source's last block */
+        const int32_t *b = ifx_buf[ifx_half ^ 1u][clamp(t->p[P_IA], 0, NTRK - 1)];
+        for (x = 0; x < PANEL_W; x++) {
+            int32_t y = cy - clamp(b[(uint32_t)x * CTL / PANEL_W], -32767, 32767) * a / 32768;
+            if (x)
+                cv_line_t(PANEL_X0 + x - 1, py, PANEL_X0 + x, y, c, 2);
+            py = y;
+        }
+        return;
+    }
     for (x = 0; x < PANEL_W; x++) {
         int32_t y, w;
         if (ty >= IT_PHASER && ty <= IT_CHORUS) {   /* the sweep, two cycles */
