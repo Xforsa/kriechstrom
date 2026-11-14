@@ -75,3 +75,5 @@ from **DIRGE** by sinscum. Everything Felucca credits is in [CREDITS.md](CREDITS
 
 Free software under the [GPL-3.0-only](LICENSE): if you share builds, share the source. Not affiliated with M-VAVE or
 Hügelton Instruments. M-VAVE and FM-1 are trademarks of their owners.
+
+You can also try KRIECHSTROM in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
