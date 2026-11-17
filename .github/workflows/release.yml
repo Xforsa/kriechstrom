@@ -20,5 +20,7 @@ jobs:
       id-token: write          # the signing certificate
       attestations: write      # the attestation
     with:
-      build: ./build.sh --release "${GITHUB_REF_NAME#v}"
+      # (the shared workflow brings Pillow only: the font tools too, both at the versions the releases are built with,
+      # so a release here is the same package as one built at home)
+      build: python3 -m pip install Pillow==13.0.0 fonttools==4.68.0 && ./build.sh --release "${GITHUB_REF_NAME#v}"
       packages: build/kriechstrom-*.fwsc   # (build/felucca-*.fwsc is the same package under Felucca's name, for the tests)
