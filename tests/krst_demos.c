@@ -12,6 +12,8 @@
  *             GLCH FEEDBACK (bar 3), then SCREAMER (bar 6)
  *   resonate  A minor, 100 BPM: sparse: plucked stabs, a marimba, metal drums and silence between; RESONATE in A minor
  *             from bar 3
+ *   splice    E minor, 130 BPM: a grit bass in sixteenths, screaming stabs, busy drums; SPLICE at 90 from bar 3, at its
+ *             top from bar 6
  *   dry       the damage piece without DAMAGE (a reference for the measurements)
  * Each file is brought to the same loudness as a whole (one gain: -14 dBFS RMS, its peak at most -1 dBFS), so the
  * demos play at one level and each keeps its before and after as they are.
@@ -142,6 +144,40 @@ static void wall_song(void)
 }
 static void wall_at(uint32_t b) { if (b == 2u) song.g[G_WALL] = 127; }
 
+/* ---- splice: E minor, 130 BPM: a grit bass in sixteenths, screaming stabs, busy drums ---- */
+static void splice_song(void)
+{
+    static const uint8_t RIFF[16] = {28, 28, 40, 28, 31, 28, 40, 33, 28, 28, 40, 28, 35, 33, 31, 26};
+    static const uint8_t STAB[4] = {64, 67, 62, 59};
+    uint32_t b, s;
+    song.g[G_BPM] = 130;
+    sound(0, 7, "GRIT BASS", 100);
+    sound(1, 2, "SCREAM LEAD", 80);
+    sound(2, 0, "SOFT PAD", 0);
+    sound(3, 10, "RIOT", 105);
+    clear_all();
+    for (b = 0; b < 4u; b++) {
+        for (s = 0; s < 16u; s++) {
+            note(0, b * 16u + s, 1, 1, &RIFF[s], s % 4u == 0u);
+            {
+                uint32_t h = 8u;
+                if (s == 0u || s == 3u || s == 8u || s == 11u) h |= 1u;
+                if (s == 4u || s == 12u) h |= 2u;
+                if (b == 3u && s >= 13u) h |= 32u;
+                hit(b * 16u + s, h, (h & 3u) ? 120 : s % 2u ? 65 : 85);
+            }
+        }
+        note1(1, b * 16u + 2u, 2, STAB[b]);
+        note1(1, b * 16u + 10u, 1, STAB[b]);
+        note1(1, b * 16u + 14u, 1, (uint8_t)(STAB[b] + 12u));
+    }
+}
+static void splice_at(uint32_t b)
+{
+    if (b == 2u) song.g[G_SPLICE] = 90;
+    if (b == 5u) song.g[G_SPLICE] = 127;
+}
+
 /* ---- infect: A minor; a sidechain: a silent kick on track 2 pumps the pad, the drums crush the bass ---- */
 static void infect_song(void)
 {
@@ -269,7 +305,7 @@ static void resonate_at(uint32_t b)
 static const struct { const char *name; void (*song)(void); void (*at)(uint32_t); } DEMO[] = {
     {"dry", damage_song, dry_at}, {"damage", damage_song, damage_at}, {"wall", wall_song, wall_at},
     {"infect", infect_song, infect_at}, {"vox", vox_song, vox_at}, {"howl", howl_song, howl_at},
-    {"resonate", resonate_song, resonate_at},
+    {"resonate", resonate_song, resonate_at}, {"splice", splice_song, splice_at},
 };
 
 int main(int argc, char **argv)

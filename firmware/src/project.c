@@ -174,6 +174,9 @@ _Static_assert(sizeof(project_v5_t) == 3352u && sizeof(project_v6_t) == 3388u, "
  * 64 full steps reach it) */
 #define PROJ_RES_OFF 65u
 #define PROJ_RKEY_OFF 67u
+/* .. SPLICE (core.h G_SPLICE): G_SAVE's word, as 0x4000 | AMT (G_SAVE itself is a button no load reads: 0 or 1 there in
+ * every project before, so no marker, SPLICE off) */
+#define PROJ_SPLICE 0x4000
 typedef union { uint32_t align; uint8_t raw[PROJ_STORE_SIZE]; } project_store_t;
 _Static_assert(G_COUNT == 27u, "FUN7 globals retain original IDs");
 _Static_assert(sizeof(project_store_t) == 3840u && PROJ_STORE_V7 == sizeof(project_v6_t), "FUN10 / FUN7 sizes");
@@ -880,6 +883,7 @@ static void project_capture(project_t *p)
     p->size = sizeof *p;
     for (i = 0; i < G_COUNT; i++)
         p->g[i] = song.g[i];
+    p->g[G_SAVE] = (int16_t)(PROJ_SPLICE | clamp(song.g[G_SPLICE], 0, 127));   /* (KRIECHSTROM) */
     p->sel = song.sel;
     p->parts = NPART;
     p->phys = PROJ_PHYS;
@@ -1103,6 +1107,7 @@ static int project_restore_runtime(const project_t *input)
     song.g[G_RES] = (int16_t)(p->res & 127u);
     song.g[G_RKEY] = (int16_t)((p->rkey & 15u) < 12u ? p->rkey & 15u : 0u);
     song.g[G_RCHD] = (int16_t)(p->rkey >> 4 & 7u);
+    song.g[G_SPLICE] = (int16_t)(p->g[G_SAVE] & PROJ_SPLICE ? p->g[G_SAVE] & 127 : 0);
     midi_route = MIDI_ROUTE_AGAIN;                      /* (events_block: what the channels no longer hear let go) */
     for (k = 0; k < NTRK; k++) {
         track_t *t = &trk[k];
@@ -1387,7 +1392,7 @@ static uint32_t autosave_sig(void)
             h = as_mix(h, &song.g[i], sizeof song.g[i]);
     h = as_mix(h, song.mch, sizeof song.mch);           /* (1.5.5: MIDI IN TRACK's channels, the project's) */
     h = as_mix(h, &song.g[G_HISS], sizeof song.g[G_HISS]);   /* (KRIECHSTROM) */
-    h = as_mix(h, &song.g[G_RES], 3u * sizeof song.g[G_RES]);   /* (G_RES G_RKEY G_RCHD) */
+    h = as_mix(h, &song.g[G_RES], 4u * sizeof song.g[G_RES]);   /* (G_RES G_RKEY G_RCHD G_SPLICE) */
     h = as_mix(h, &motion, sizeof motion);
     h = as_mix(h, &chain_config, sizeof chain_config);
     return as_mix(h, proj_name, sizeof proj_name);

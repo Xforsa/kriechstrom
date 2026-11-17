@@ -10,6 +10,8 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
   VOX (an 8-band vocoder) by the source track's sound, which drives even at LEVEL 0
 - GLCH HOWL and MIC, a feedback family: no oscillator, a loop that feeds itself (GAIN CHAOS BITE BLOOM); eight sounds
 - RESONATE (FX > RESONATE): four strings on the master tuned to a chord (AMT, KEY, CHORD), rung by the mix
+- SPLICE (FX > SPLICE): the tape cut and glued back wrong; on the sixteenths a piece replaces the mix (a repeat, a
+  reverse, a piece from a beat ago, half speed, a cut to silence), as often and as hard as AMT says
 - sound demos on the site, a short piece for each of DAMAGE, INFECT, VOX, HOWL and RESONATE (tools/krst_demos.sh)
 
 ### Changed

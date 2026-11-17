@@ -915,6 +915,7 @@ static __attribute__((noinline)) void ins_wreck(ins_t *s, const track_t *t, int3
 #include "krst_damage.c"                               /* KRIECHSTROM: DAMAGE (INSERT DAMG, the master's, WALL) */
 #include "krst_infect.c"                               /* KRIECHSTROM: INFECT (INSERT INFCT: a track driven by another) */
 #include "krst_resonate.c"                             /* KRIECHSTROM: RESONATE (the mix rings strings in a key) */
+#include "krst_splice.c"                               /* KRIECHSTROM: SPLICE (the tape cut and glued) */
 
 /* the INSERT at rest at once (mix_part: TYPE turned OFF while the part was silent, its fade never ran) */
 static __attribute__((noinline)) void ins_rest(track_t *t)
@@ -1243,6 +1244,14 @@ static void mix_block(int32_t *out, uint32_t n)
             krst_level(mix_l, mix_r, n, ein, act);      /* (denser, not louder) */
         if (hiss_on())
             hiss_master(mix_l, mix_r, n);
+    }
+    if (splice_on()) {                                  /* KRIECHSTROM: SPLICE, the whole tape (the buses in first: */
+        for (i = 0; i < n; i++) {                       /* nothing left there if the master's chain above ran) */
+            mix_l[i] += wet[i];
+            mix_r[i] += wet[i];
+            wet[i] = 0;
+        }
+        splice_master(mix_l, mix_r, n);
     }
     if (scope_mix)
         scope_take_mix(n);

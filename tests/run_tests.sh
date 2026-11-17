@@ -396,6 +396,9 @@ if [ -f build/gen/felucca_tables.h ]; then
     mkdir -p build/resonate_demo
     run "KRIECHSTROM RESONATE: off bit for bit, the strings in tune with the chord, AMT the ring's length, stored, the page, demo" \
         "$OUT/krst_resonate_test" build/resonate_demo
+    $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_splice_test" tests/krst_splice_test.c -lm
+    run "KRIECHSTROM SPLICE: off bit for bit, pieces by AMT (never on a bar's first), every kind, the same cut each time, stored, the page" \
+        "$OUT/krst_splice_test"
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_poweron_test" tests/krst_poweron_test.c -lm
     mkdir -p build/poweron_demo
     run "KRIECHSTROM power-on: its four sounds and patterns, PLAY sounds at once on every track" \

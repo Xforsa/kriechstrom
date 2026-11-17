@@ -251,6 +251,7 @@ static const param_desc_t GP[G_ALL] = {
     [G_RES] = PD("AMT", F_PCT, 0, 127, 0),       /* KRIECHSTROM: RESONATE (krst_resonate.c): how much the strings ring, */
     [G_RKEY] = PE("KEY", N_RKEY, 9),             /* .. their key (A: the factory sounds' minor), */
     [G_RCHD] = PE("CHORD", N_RCHD, 2),           /* .. their chord */
+    [G_SPLICE] = PD("AMT", F_PCT, 0, 127, 0),    /* KRIECHSTROM: SPLICE (krst_splice.c): how often the tape is cut */
 };
 
 static const param_desc_t *track_desc(const track_t *t, uint32_t id)
@@ -357,7 +358,7 @@ static int off_at_zero(const param_desc_t *d)
 {
     return d == &TP[P_DIST] || d == &TP[P_CHOR] || d == &TP[P_DLY] || d == &TP[P_REV] || d == &TP[P_IMIX] ||
            d == &GP[G_DMIX] || d == &GP[G_DMG] || d == &GP[G_WALL] || d == &GP[G_HISS] ||
-           d == &GP[G_RES] || d == &INS_DESC[6][0];
+           d == &GP[G_RES] || d == &GP[G_SPLICE] || d == &INS_DESC[6][0];
 }
 static void param_format(const param_desc_t *d, int32_t v, char *val, const char **unit)
 {
@@ -503,6 +504,7 @@ static const page_t PAGES[] = {
     {"CHORUS", FAM_FX, SC_GLOBAL, GR_NONE, {G_CRATE, G_CDEPTH, 0xFF, 0xFF}},
     {"DAMAGE", FAM_FX, SC_GLOBAL, GR_NONE, {G_DMG, G_DMGC, G_WALL, G_HISS}},   /* KRIECHSTROM: the master's wear, WALL */
     {"RESONATE", FAM_FX, SC_GLOBAL, GR_NONE, {G_RES, G_RKEY, G_RCHD, 0xFF}},   /* KRIECHSTROM: the mix rings strings */
+    {"SPLICE", FAM_FX, SC_GLOBAL, GR_NONE, {G_SPLICE, 0xFF, 0xFF, 0xFF}},     /* KRIECHSTROM: the tape cut and glued */
     {"SCL", FAM_SCL, SC_TRACK, GR_SCALE, {P_ROOT, P_SCALE, P_QUANT, P_TRANS}},
     {"CHORD", FAM_SCL, SC_TRACK, GR_CHORD, {P_CHRD, P_VOIC, 0xFF, 0xFF}},   /* SCL again: the chord keys (chord.c) */
     {"EDIT 1", FAM_EDIT, SC_ENGINE, GR_NONE, {P_E0, P_E1, P_E2, P_E3}},
@@ -556,6 +558,7 @@ static const struct { const char *title, *name, *what; } PAGE_SAY[] = {
     {"CHORUS", "CHORUS", "SHARED BY ALL TRACKS"},
     {"DAMAGE", "DAMAGE", "THE WHOLE MIX WEARS OUT"},
     {"RESONATE", "RESONATE", "THE MIX RINGS IN A KEY"},
+    {"SPLICE", "SPLICE", "THE TAPE CUT AND GLUED"},
     {"ENV DEST", "ENV DEST", "WHERE THE ENVELOPE GOES"},
     {"LFO DEST", "LFO DEST", "WHERE THE LFO GOES"},
     {"VOICE", "VOICE", "POLY, MONO, GLIDE"},

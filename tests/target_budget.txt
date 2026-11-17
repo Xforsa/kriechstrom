@@ -38,7 +38,7 @@ dv_metal_mix 16
 slicer_track 556
 slice_render 436
 slc_rev 120
-fm1_alnk0_irq 4422
+fm1_alnk0_irq 4629
 fm1_timer5_irq 14871
 click_render 30
 mod_begin 170
@@ -69,5 +69,6 @@ res_master 275
 dmg_master 60
 wall_master 102
 wall_layers 214
+splice_master 236
 krst_level 33
 hiss_master 23

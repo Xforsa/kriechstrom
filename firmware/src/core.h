@@ -122,7 +122,10 @@ enum {                          /* global parameters */
 #define G_RES (G_COUNT + 1)
 #define G_RKEY (G_COUNT + 2)
 #define G_RCHD (G_COUNT + 3)
-#define G_ALL (G_COUNT + 4)
+/* .. and SPLICE (krst_splice.c: the tape cut and glued), its amount; in the project in G_SAVE's word, which no load
+ * reads (project.c PROJ_SPLICE: 0x4000 marks it, so a project before has it off) */
+#define G_SPLICE (G_COUNT + 4)
+#define G_ALL (G_COUNT + 5)
 
 /* stored parameters of an older layout -> today's P_* order. A store keeps np = the P_COUNT it was
  * written with; common parameters are only ever added just before P_E0, so the first np - 8 are
@@ -365,7 +368,7 @@ typedef struct track {
 _Static_assert(sizeof(track_t) % 16u == 0, "track_t: a multiple of 16 bytes (a cheap trk[] index on the target)");
 
 typedef struct {
-    int16_t g[G_ALL];                         /* (KRIECHSTROM: G_HISS, G_RES G_RKEY G_RCHD past G_COUNT) */
+    int16_t g[G_ALL];                         /* (KRIECHSTROM: G_HISS, G_RES G_RKEY G_RCHD, G_SPLICE past G_COUNT) */
     uint8_t playing, seq_mode;
     uint8_t grid;                /* 1: the keys are the DRUM grid (ui.c grid_on): only the lane keys play (seq.c);
                                   * 2: NAME (ui_name.c): no key plays; 3: SONG, A..D are its (seq.c song_key) */
