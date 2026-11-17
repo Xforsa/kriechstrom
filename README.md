@@ -22,20 +22,28 @@ needed.
 
 ## What it adds to Felucca
 
-- **GLCH** engine (from Glitchbox): clipping, wavefolding, a resonant filter, bit crushing and micro-stutter; 48 sounds,
+- **GLCH** engine (from Glitchbox): clipping, wavefolding, a resonant filter, bit crushing and micro-stutter; 56 sounds,
   most with a distortion pedal set
-- **171 sounds** in 13 engines, 13 drum kits including DESTROY
+- **HOWL** and **MIC** in GLCH: no oscillator, a loop that feeds itself; HOWL a string in overdrive that sustains and
+  screams in tune, MIC a microphone in front of a speaker that howls at the note
+- **179 sounds** in 13 engines, 13 drum kits including DESTROY
 - **DICE**: hold SEQ, press F5, the track gets a new part in one of eight moods (MACHINE, GRIND, MARCH 7/8, GLITCH,
   SPIRAL, GHOST, SURGE, HUSH); G5 picks the mood
 - **HAPPY ACCIDENT**: hold EDIT, press G5, two or three parameters of the sound change at random; hold SAVE to undo
 - **DAMAGE** on the master: tape (darker, wobbling, sagging) to digital (bits, lower rate, hard cuts), its level kept;
   the same as the **DAMG** pedal on one track
-- **WALL**: one knob from quiet to a wall (sends, distortion, a squeezed and wider mix, the FILL steps); FX + SELECT
+- **WALL**: one knob from quiet to a wall of sound (the mix double-tracked, an octave added under its low end, squeezed
+  hard, the sends and distortion pushed, the FILL steps), its level kept; FX + SELECT
 - **HISS**: a tape's noise floor on its own knob
+- **INFECT**: a sidechain pedal; one track drives another (GATE, DUCK, CRUSH, FOLD, RING) or talks through it (VOX, an
+  8-band vocoder); the source may sit at LEVEL 0
+- **RESONATE**: four strings on the master tuned to a chord, rung by everything that plays
+- **SPLICE**: the tape of the whole mix cut and glued back wrong on the sixteenths (repeats, reverses, misplaced pieces,
+  half speed, dropouts), one knob
 - MUFF, BASS and SMASH pedals, ROLL and GATE live effects (from Glitchbox)
 - power-on sounds and patterns that play when PLAY is pressed
 - the STROM theme (black and red), large values and hints on screen, effects that toggle with a tap
-- its own USB name and identity `FM-1_57810001`; works with the newer FM-1 flash (`0xB36014`)
+- its own USB name and identity `FM-1_57810002`; works with the newer FM-1 flash (`0xB36014`)
 
 **Projects and sounds:** KRIECHSTROM reads Felucca's projects, user presets and samples as they are. Projects of
 other firmwares are not read; back them up before installing.
@@ -48,7 +56,7 @@ the FX layer, chord keys, the arpeggiator, MIDI in over USB and TRS, MIDI learn,
 Connect the FM-1 by USB and open the web installer in Chrome or Edge:
 https://xforsa.github.io/kriechstrom/webapp/installer/ (or the `.fwsc` from the
 [releases](https://github.com/Xforsa/kriechstrom/releases) with `tools/fm1_install.py`). The installer can take you
-back to the official V15. Back up your projects first.
+back to the official V15 or V16. Back up your projects first.
 
 ## Manual
 

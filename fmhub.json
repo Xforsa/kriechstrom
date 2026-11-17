@@ -1,5 +1,5 @@
 {
-  "what": "Firmware for dark industrial and EBM, built on Felucca. Adds the GLCH distortion engine from Glitchbox, 171 sounds and 13 drum kits, DICE to generate parts in eight styles, random sound variations, tape and digital degradation of the mix, and a manual in English and Russian.",
+  "what": "Firmware for dark industrial and EBM, built on Felucca. Adds the GLCH distortion engine, feedback sounds that howl, a sidechain pedal with a vocoder, strings that ring with the mix, tape cut and glued back wrong, 179 sounds, DICE to generate parts and a manual in English and Russian.",
   "author": "Grigorii Bezborodov",
   "kinds": [
     "groove"

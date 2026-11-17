@@ -8,7 +8,7 @@
   audio/*.m4a                        the sound demos the pages use, from tools/krst_demos.sh (build/demos)
   webapp/installer, webapp/editor    web/make_site.py
   firmware/kriechstrom-VER.fwsc      the package
-  src/kriechstrom-VER-src.tar.gz     the source of this build (GPL-3.0)
+  src/kriechstrom-VER-src.tar.gz     the source of this build (GPL-3.0): the files git tracks
 
   python3 site/build.py build/kriechstrom-0.1.fwsc 0.1 [OUT]
 
@@ -89,16 +89,16 @@ def sound_list(lang):
 
 
 def source_tarball(dst, version):
+    """the source of this build: the files git tracks, as they are in the tree (nothing local or untracked: build
+    output, notes, editor files); a new file goes in once it is added to git"""
     name = f"kriechstrom-{version}-src"
     path = dst / f"{name}.tar.gz"
-    skip = {"build", "node_modules", ".DS_Store", "__pycache__", ".git"}
-
-    def keep(ti):
-        parts = Path(ti.name).parts
-        return None if any(p in skip for p in parts) or ti.name.endswith(".fwsc") else ti
-
+    files = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z"], check=True,
+                           capture_output=True).stdout.decode().split("\0")
     with tarfile.open(path, "w:gz") as tar:
-        tar.add(ROOT, arcname=name, filter=keep)
+        for f in sorted(x for x in files if x):
+            if (ROOT / f).is_file() and not f.endswith(".fwsc"):
+                tar.add(ROOT / f, arcname=f"{name}/{f}", recursive=False)
     return path
 
 

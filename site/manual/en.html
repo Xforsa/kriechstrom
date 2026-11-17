@@ -53,6 +53,10 @@ units. Everything Felucca does still works: this manual covers what you need to 
 <tr><td><kbd>SCL</kbd> hold + key</td><td>the root note</td></tr>
 <tr><td><kbd>LFO</kbd> hold + knob</td><td>MOMENTARY: let go, the value jumps back (<kbd>OCT+</kbd> keeps it)</td></tr>
 <tr><td>FX &gt; DAMAGE, K1-K4</td><td>DMG (wear), CHAR (tape to digital), WALL (quiet to wall), HISS (tape noise)</td></tr>
+<tr><td>FX &gt; RESONATE, K1-K3</td><td>AMT, KEY, CHORD: the mix rings four strings tuned to a chord</td></tr>
+<tr><td>FX &gt; SPLICE, K1</td><td>how often and how hard the tape is cut and glued back wrong</td></tr>
+<tr><td>FX &gt; PEDAL, INFCT</td><td>sidechain: SRC (the track it listens to), MODE (GATE DUCK CRUSH FOLD RING VOX), DEPTH</td></tr>
+<tr><td>GLCH, WAVE HOWL / MIC</td><td>feedback: GAIN (under ~45 % a pluck, over it a howl), CHAOS, BITE, BLOOM</td></tr>
 <tr><td>MIDI CC85 / CC86</td><td>WALL / DAMAGE</td></tr>
 </table></div>
 
@@ -63,6 +67,7 @@ units. Everything Felucca does still works: this manual covers what you need to 
   <li><a href="#first">First five minutes</a></li>
   <li><a href="#sounds">Changing sounds</a></li>
   <li><a href="#glch">The GLCH engine</a></li>
+  <li><a href="#howl">HOWL and MIC: feedback</a></li>
   <li><a href="#oops">HAPPY ACCIDENT (OOPS)</a></li>
   <li><a href="#seq">The sequencer</a></li>
   <li><a href="#drums">Drums</a></li>
@@ -72,6 +77,9 @@ units. Everything Felucca does still works: this manual covers what you need to 
   <li><a href="#glo">Mutes, solos, fills, songs</a></li>
   <li><a href="#fx">Effects: what is what</a></li>
   <li><a href="#damage">DAMAGE and WALL</a></li>
+  <li><a href="#infect">INFECT: the sidechain pedal</a></li>
+  <li><a href="#resonate">RESONATE</a></li>
+  <li><a href="#splice">SPLICE</a></li>
   <li><a href="#save">Saving and undo</a></li>
   <li><a href="#midi">MIDI and USB audio</a></li>
   <li><a href="#menu">Menu and screen</a></li>
@@ -161,8 +169,8 @@ glide), and the engine's own pages. <kbd>ENV</kbd> is the envelope, <kbd>LFO</kb
 <p>Hold <kbd>LFO</kbd> and turn a knob for a MOMENTARY move: let go of LFO and the value jumps back.</p>
 
 <h2 id="glch">The GLCH engine</h2>
-<p>GLCH is an oscillator (15 waves: SAW, SQR, DUAL, RING, NOIS, FAT, FM, FMX, FUZZ, REES,
-808, GRIT, GROW, SYNC, SUPR) into a resonant filter, a clipper and folder, a bit crusher and a micro-stutter that
+<p>GLCH is an oscillator (17 waves: SAW, SQR, DUAL, RING, NOIS, FAT, FM, FMX, FUZZ, REES,
+808, GRIT, GROW, SYNC, SUPR, and the feedback waves HOWL and MIC, below) into a resonant filter, a clipper and folder, a bit crusher and a micro-stutter that
 chops the note into pieces. Most of its @NGLCH@ sounds come with a PEDAL already set (MUFF, BASS, SMASH, FUZZ, FOLD,
 CRUSH).</p>
 <div class="tw"><table>
@@ -172,6 +180,27 @@ CRUSH).</p>
 <tr><td>K3</td><td>RES: resonance, up to self-oscillation</td><td>SIZE: the stutter's slice length</td></tr>
 <tr><td>K4</td><td>DRV: drive into the clipper</td><td>PJMP: pitch jumps between slices</td></tr>
 </table></div>
+
+<h2 id="howl">HOWL and MIC: feedback</h2>
+<p>Two GLCH waves with no oscillator at all: a loop that feeds itself, like a guitar too close to its amp. A note
+starts it with a burst of noise; what comes round goes through the filter and a drive and back in.</p>
+<ul>
+<li><b>HOWL</b>: the loop is as long as the note, so it plays in tune. With GAIN low a note is plucked and dies away;
+past about 45 % it sustains by itself and screams as you turn it up.</li>
+<li><b>MIC</b>: a microphone in front of a speaker in a room. The key picks what rings; the howl locks onto the room
+and CHAOS moves the microphone, so it jumps and wanders.</li>
+</ul>
+<div class="tw"><table>
+<tr><th>Knob</th><th>On HOWL and MIC</th></tr>
+<tr><td>CUT, RES</td><td>the tone in the loop (the filter envelope moves it as usual); on MIC, RES is how narrow the ring is</td></tr>
+<tr><td>GAIN (EDIT 1, K4)</td><td>how close the loop is to running away: a pluck, a sustain, a scream</td></tr>
+<tr><td>CRSH</td><td>bits lost inside the loop: the grit goes round and round</td></tr>
+<tr><td>CHAOS</td><td>the loop's length wanders: the pitch drifts and slips</td></tr>
+<tr><td>BITE</td><td>the noise burst that starts each note</td></tr>
+<tr><td>BLOOM</td><td>how slowly the howl swells in, up to about 3 seconds</td></tr>
+</table></div>
+<p>Sounds: FEEDBACK, STRUNG OUT, SCREAMER, SWELL, WOUNDED (HOWL), PA HOWL, WRONG ROOM, STAGE FRIGHT (MIC).</p>
+<figure><img src="../shots/edit_howl.png" alt="GLCH HOWL"><figcaption>GLCH with WAVE HOWL: K4 is GAIN.</figcaption></figure>
 
 <h2 id="oops">HAPPY ACCIDENT (OOPS)</h2>
 <p>Hold <kbd>EDIT</kbd> and press <kbd>G5</kbd>. Two or three of the sound's parameters jump somewhere else, sometimes an
@@ -293,12 +322,15 @@ Every value that turns an effect off reads <b>OFF</b> at zero.</p>
 <tr><td>SENDS</td><td>how much of <b>this track</b> goes into distortion, chorus, delay and reverb (K1-K4)</td><td>a knob at OFF</td></tr>
 <tr><td>SLICER</td><td>chops this track in time: GATE or STUTTER, in time with the tempo</td><td>K1 OFF</td></tr>
 <tr><td>PEDAL</td><td>one effect only on this track, like a pedal in front of an amp: SOFT, HARD, FOLD, FUZZ, CRUSH,
-PHASR, FLANG, CHOR, MUFF (fuzz pedal), BASS (bass amp drive), SMASH (heavy compression and clipping), DAMG (wear, see below)</td><td>K1 OFF</td></tr>
+PHASR, FLANG, CHOR, MUFF (fuzz pedal), BASS (bass amp drive), SMASH (heavy compression and clipping), DAMG (wear, see below),
+INFCT (the sidechain, see INFECT)</td><td>K1 OFF</td></tr>
 <tr><td>PEDAL MIX</td><td>how much of the pedal you hear, dry to wet</td><td>OFF</td></tr>
 <tr><td>DELAY</td><td>one delay shared by all tracks: TIME, FEEDBACK, COLOUR, MIX</td><td>MIX OFF (all tracks), or a track's DLY send</td></tr>
 <tr><td>REVERB</td><td>one reverb for all tracks: ROOM, SPRING, HALL, size, damping</td><td>a track's REV send</td></tr>
 <tr><td>CHORUS</td><td>one chorus for all tracks</td><td>a track's CHO send</td></tr>
 <tr><td>DAMAGE</td><td>tape or digital degradation of the whole mix, WALL, HISS</td><td>DMG OFF, WALL OFF</td></tr>
+<tr><td>RESONATE</td><td>four strings tuned to a chord, rung by the whole mix</td><td>AMT OFF</td></tr>
+<tr><td>SPLICE</td><td>the tape of the whole mix cut and glued back wrong</td><td>AMT OFF</td></tr>
 </table></div>
 <p>Delay, reverb and chorus are shared: a track gets them through its SENDS. That is why the delay "does not turn off"
 when you change the sound: the preset's sound has its own DLY send. Set DELAY &gt; MIX to OFF to silence the delay for
@@ -309,13 +341,15 @@ everyone, or SENDS &gt; DLY to OFF for one track.</p>
 </div>
 
 <h2 id="damage">DAMAGE and WALL</h2>
-<p>The last FX page, four separate things:</p>
+<p>FX &gt; DAMAGE, four separate things:</p>
 <ul>
 <li><b>DMG</b> (K1) degrades the whole mix: drive, then, as <b>CHAR</b> (K2) goes from tape to digital, a
 darker tone, the pitch wobbling and dips like a stretched tape, or lost bits, a dropped sample rate and hard cuts.</li>
-<li><b>WALL</b> (K3) is one knob from quiet to wall, with no wear in it: it pushes every track's distortion and effect
-sends up, adds a heavily compressed copy of the mix under it and widens the stereo, and from 80 % on it
-plays the FILL steps. Turn it while playing: hold <kbd>FX</kbd> and turn <b>SELECT</b>.</li>
+<li><b>WALL</b> (K3) is one knob from quiet to a wall of sound, with no wear in it. A wall is layers: it adds two
+more takes of the whole mix (copies 13 and 21 ms late that drift, one left, one right, like a double-tracked guitar)
+and an octave below the low end, squeezes it all hard under the dry, pushes every track's distortion and effect sends
+up, and from 80 % on plays the FILL steps. The level stays where it was: bigger, not louder. Turn it while playing:
+hold <kbd>FX</kbd> and turn <b>SELECT</b>.</li>
 <li><b>HISS</b> (K4) is a tape's noise floor, on its own: it hisses while the tape runs, that is while PLAY plays, and when stopped while you play and for a second after. Stopped and silent: none. OFF: never.</li>
 </ul>
 <p>From a controller: CC85 is WALL, CC86 DMG. The pedal <b>DAMG</b> does the same wear on one track (AMT, CHAR, LEVEL).</p>
@@ -323,6 +357,38 @@ plays the FILL steps. Turn it while playing: hold <kbd>FX</kbd> and turn <b>SELE
 <figure><img src="../shots/damage.png" alt="DAMAGE"><figcaption>FX &gt; DAMAGE.</figcaption></figure>
 <figure><img src="../shots/insert_damg.png" alt="DAMG pedal"><figcaption>PEDAL DAMG on one track.</figcaption></figure>
 </div>
+
+<h2 id="infect">INFECT: the sidechain pedal</h2>
+<p>On FX &gt; PEDAL set INSRT to <b>INFCT</b>. Now this track reacts to another one: K2 <b>SRC</b> picks the source
+track (T1-T4), K3 <b>MODE</b> what happens, K4 <b>DEPTH</b> how much. PEDAL MIX blends it as on any pedal.</p>
+<div class="tw"><table>
+<tr><th>MODE</th><th>What you hear</th></tr>
+<tr><td>GATE</td><td>the track plays only while the source hits: a choppy gate from your kick</td></tr>
+<tr><td>DUCK</td><td>it dips on every hit and swells back: the pumping pad</td></tr>
+<tr><td>CRUSH</td><td>every hit crushes it to fewer bits</td></tr>
+<tr><td>FOLD</td><td>every hit folds it into a scream</td></tr>
+<tr><td>RING</td><td>the two tracks multiplied: a metallic ring, the drums through the synth</td></tr>
+<tr><td>VOX</td><td>a vocoder: the source talks through this track (drums through a pad). The same sidechain, in 8
+frequency bands</td></tr>
+</table></div>
+<p>The source can sit at LEVEL 0: you do not hear it, only what it does. A hidden kick on its own track is the classic
+sidechain trigger. Put a bright, held sound (a pad, a saw) on the track for VOX: it has to have something to shape.</p>
+<figure><img src="../shots/insert_infect.png" alt="PEDAL INFCT"><figcaption>PEDAL INFCT: this track ducks under track 4.</figcaption></figure>
+
+<h2 id="resonate">RESONATE</h2>
+<p>FX &gt; RESONATE puts four strings on the whole mix, tuned to a chord: K1 <b>AMT</b>, K2 <b>KEY</b> (C to B), K3
+<b>CHORD</b> (OCT, 5TH, MIN, MAJ, SUS, MIN7, DIM, CLST). Everything that plays makes them ring, like a piano with the
+pedal down or a sheet of metal: a kick rings the root, a snare the whole chord, a note out of the key beats against
+them. You hear it most in the gaps. AMT sets how long they ring, from a short buzz to seconds.</p>
+<figure><img src="../shots/resonate.png" alt="RESONATE"><figcaption>FX &gt; RESONATE in A minor.</figcaption></figure>
+
+<h2 id="splice">SPLICE</h2>
+<p>FX &gt; SPLICE cuts the tape of the whole mix and glues it back wrong. It keeps the last moment of the mix; on the
+sixteenths (never on the first of a bar) a piece is glued in instead of what plays: the last sixteenth again or
+backwards, a piece from a beat ago, the tape dragged an octave down, or nothing at all. One knob, <b>AMT</b>: low, a
+cut now and then; at the top, one sixteenth in two, longer and harsher. The same project is cut the same way each time
+you press PLAY.</p>
+<figure><img src="../shots/splice.png" alt="SPLICE"><figcaption>FX &gt; SPLICE.</figcaption></figure>
 
 <h2 id="save">Saving and undo</h2>
 <ul>

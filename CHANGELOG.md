@@ -5,6 +5,8 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 
 ## [Unreleased]
 
+## [0.3] - 2026-11-17
+
 ### Added
 - INFECT: a sidechain pedal (INSERT INFCT) through which one track drives another: GATE, DUCK, CRUSH, FOLD, RING or
   VOX (an 8-band vocoder) by the source track's sound, which drives even at LEVEL 0
@@ -12,7 +14,8 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 - RESONATE (FX > RESONATE): four strings on the master tuned to a chord (AMT, KEY, CHORD), rung by the mix
 - SPLICE (FX > SPLICE): the tape cut and glued back wrong; on the sixteenths a piece replaces the mix (a repeat, a
   reverse, a piece from a beat ago, half speed, a cut to silence), as often and as hard as AMT says
-- sound demos on the site, a short piece for each of DAMAGE, INFECT, VOX, HOWL and RESONATE (tools/krst_demos.sh)
+- sound demos on the site, a short piece for each of DAMAGE, WALL, INFECT, VOX, HOWL, RESONATE and SPLICE
+  (tools/krst_demos.sh)
 
 ### Changed
 - WALL is a wall of sound now: the mix double-tracked (two drifting copies, 13 and 21 ms, left and right) and an
@@ -24,7 +27,8 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
   the technical log is folded under Details
 - release builds keep the identity `FM-1_57810002` instead of taking a new one per version
 - the power-on screen shows the name as the site does: KRIECH in white, STROM in red
-- the site shows six screens, with the sound list and DAMAGE
+- the site shows nine screens, with the sound list, DAMAGE, INFECT, HOWL and RESONATE; the manual covers the new
+  features
 
 ## [0.2] - 2026-11-12
 
@@ -55,5 +59,6 @@ The first release, built on Felucca 1.8.2.
 - the USB device name and the identity: KRIECHSTROM, `FM-1_57810001`
 - Felucca-Engines and felucca-bsp are kept in the tree instead of submodules
 
+[0.3]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.3
 [0.2]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.2
 [0.1]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.1
