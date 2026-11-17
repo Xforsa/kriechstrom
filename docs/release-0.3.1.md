@@ -20,9 +20,12 @@ on will ring louder and brighter than it did.
 
 | File | What |
 | --- | --- |
-| `kriechstrom-0.3.1.fwsc` | the package: the app and the update loader |
-| `kriechstrom-0.3.1-src.tar.gz` | the complete source of this build (GPL-3.0) |
-| `SHA256SUMS` | checksums |
+| `kriechstrom-0.3.1.fwsc` | the package: the app and the update loader, built and signed by GitHub from this tag |
+| `SHA256SUMS` | its checksum |
+
+The source is this tag (GitHub's source archives below); the site has it as a tarball too. The package is built from
+it on GitHub by the Firmware Hub's shared workflow and attested; check it with
+`gh attestation verify kriechstrom-0.3.1.fwsc --repo Xforsa/kriechstrom --signer-workflow zvenson/fm1-build/.github/workflows/build.yml`.
 
 Built on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita, Hügelton Instruments, with parts of
 [Glitchbox](https://github.com/erikdevos/glitchbox) by erikdevos. GPL-3.0-only. Full history:
