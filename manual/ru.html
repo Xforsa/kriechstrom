@@ -16,7 +16,7 @@
 </header>
 <main>
 <img class="band" style="margin-top:0" src="../art/band.jpg" alt="" width="1600" height="360">
-<h1>МАНУАЛ <span class="red">/</span> <span class="red">0.3</span></h1>
+<h1>МАНУАЛ <span class="red">/</span> <span class="red">0.3.1</span></h1>
 <p class="lead">Прошивка для M-VAVE FM-1 под мрачный индастриал и EBM: четыре дорожки, секвенсор с локами, драмы,
 перегруз и живые эффекты.</p>
 
@@ -199,6 +199,7 @@ GROW, SYNC, SUPR и волны обратной связи HOWL и MIC, о ни�
 <tr><td>BLOOM</td><td>как медленно разгорается вой, до 3 секунд</td></tr>
 </table></div>
 <p>Звуки: FEEDBACK, STRUNG OUT, SCREAMER, SWELL, WOUNDED (HOWL), PA HOWL, WRONG ROOM, STAGE FRIGHT (MIC).</p>
+<audio controls preload="none" src="../audio/howl.m4a"></audio><span class="demo">Два такта сухо, потом мелодия превращается в FEEDBACK, а позже в SCREAMER.</span>
 <figure><img src="../shots/edit_howl.png" alt="GLCH HOWL"><figcaption>GLCH с WAVE HOWL: K4 это GAIN.</figcaption></figure>
 
 <h2 id="oops">HAPPY ACCIDENT (OOPS)</h2>
@@ -353,6 +354,8 @@ INFCT (сайдчейн, см. INFECT)</td><td>K1 OFF</td></tr>
 <b>SELECT</b>.</li>
 <li><b>HISS</b> (K4) это шум плёнки отдельно от всего: шипит, пока крутится лента, то есть пока нажат PLAY, а в стопе пока ты играешь и ещё секунду после. В стопе и тишине молчит. OFF: никогда.</li>
 </ul>
+<audio controls preload="none" src="../audio/damage.m4a"></audio><span class="demo">Два такта сухо, потом DAMAGE на ленте, потом цифровой.</span>
+<audio controls preload="none" src="../audio/wall.m4a"></audio><span class="demo">Два такта сухо, потом WALL.</span>
 <p>С контроллера: CC85 это WALL, CC86 это DMG. Педаль <b>DAMG</b> делает тот же износ на одной дорожке (AMT, CHAR, LEVEL).</p>
 <div class="shots">
 <figure><img src="../shots/damage.png" alt="DAMAGE"><figcaption>FX &gt; DAMAGE.</figcaption></figure>
@@ -376,13 +379,16 @@ INFCT (сайдчейн, см. INFECT)</td><td>K1 OFF</td></tr>
 <p>Источник можно убрать в LEVEL 0: его не слышно, слышно только, что он делает. Спрятанная бочка на своей дорожке
 это классический триггер для сайдчейна. Для VOX поставь на дорожку яркий тянущийся звук (пэд, пилу): вокодеру нужно,
 из чего лепить.</p>
+<audio controls preload="none" src="../audio/infect.m4a"></audio><span class="demo">Два такта сухо, потом немая бочка качает пэд (DUCK), потом драмы крошат бас.</span>
+<audio controls preload="none" src="../audio/vox.m4a"></audio><span class="demo">Два такта сухо, потом драмы говорят через пэд (VOX).</span>
 <figure><img src="../shots/insert_infect.png" alt="PEDAL INFCT"><figcaption>PEDAL INFCT: дорожка проседает под дорожкой 4.</figcaption></figure>
 
 <h2 id="resonate">RESONATE</h2>
 <p>FX &gt; RESONATE ставит на весь микс четыре струны, настроенные на аккорд: K1 <b>AMT</b>, K2 <b>KEY</b> (от C до B),
 K3 <b>CHORD</b> (OCT, 5TH, MIN, MAJ, SUS, MIN7, DIM, CLST). Всё, что играет, заставляет их звенеть, как пианино с
 зажатой педалью или металлический лист: бочка звенит тоникой, снейр всем аккордом, нота не из тональности бьётся с
-ними. Лучше всего слышно в паузах. AMT задаёт, как долго звенят, от короткого гула до секунд.</p>
+ними. Лучше всего слышно в паузах. AMT задаёт, как долго звенят, от полусекунды до двух секунд.</p>
+<audio controls preload="none" src="../audio/resonate.m4a"></audio><span class="demo">Два такта сухо, потом RESONATE в ля миноре: слушай паузы.</span>
 <figure><img src="../shots/resonate.png" alt="RESONATE"><figcaption>FX &gt; RESONATE в ля миноре.</figcaption></figure>
 
 <h2 id="splice">SPLICE</h2>
@@ -391,6 +397,7 @@ K3 <b>CHORD</b> (OCT, 5TH, MIN, MAJ, SUS, MIN7, DIM, CLST). Всё, что иг�
 задом наперёд, кусок из прошлой доли, плёнка, затянутая на октаву вниз, или просто обрыв. Одна ручка, <b>AMT</b>: мало
 значит редкие склейки, на максимуме склеена каждая вторая шестнадцатая, длиннее и злее. Один и тот же проект режется
 одинаково при каждом PLAY.</p>
+<audio controls preload="none" src="../audio/splice.m4a"></audio><span class="demo">Два такта сухо, потом SPLICE, с 6-го такта злее.</span>
 <figure><img src="../shots/splice.png" alt="SPLICE"><figcaption>FX &gt; SPLICE.</figcaption></figure>
 
 <h2 id="save">Сохранение и отмена</h2>
@@ -454,6 +461,6 @@ GPL-3.0, движки под MIT). Из <b>Glitchbox</b> (erikdevos): движо
 ROLL и GATE. Идеи из <b>DIRGE</b> (sinscum). Исходники именно этой сборки лежат на
 <a href="../ru.html#source">главной</a>.</p>
 </main>
-<footer>KRIECHSTROM 0.3 · на основе Felucca 1.8.2 · GPL-3.0</footer>
+<footer>KRIECHSTROM 0.3.1 · на основе Felucca 1.8.2 · GPL-3.0</footer>
 </body>
 </html>
