@@ -20,7 +20,7 @@ static void ck(const char *what, int ok)
 }
 #define RN (5u * FS)
 static float buf[RN];
-/* the strings' answer to 20 ms of noise: buf (left + right), its peak, its level 4.5 s on against 0.1 s on */
+/* the strings' answer to 20 ms of noise: buf (left + right), its peak, its level 1 s on against 0.1 s on */
 static void ring(int amt, int key, int chord, int32_t *peak, double *tail)
 {
     int32_t l[CTL], r[CTL], st = 0x12345;
@@ -45,7 +45,7 @@ static void ring(int amt, int key, int chord, int32_t *peak, double *tail)
             *peak = a > *peak ? a : *peak;
             if (t > FS / 10u && t < FS / 10u + FS / 10u)
                 e1 += (double)v * v;
-            if (t > 9u * FS / 2u && t < 9u * FS / 2u + FS / 10u)
+            if (t > FS && t < FS + FS / 10u)
                 e2 += (double)v * v;
         }
     }
@@ -115,10 +115,10 @@ int main(int argc, char **argv)
         printf("resonate:   A OCT string %u: %.2f Hz rings at %.2f\n", (unsigned)k + 1u, OCT[k], f);
         tune &= fabs(f / OCT[k] - 1.0) < 0.01;
     }
-    printf("resonate:   after 4.5 s against 0.1 s: AMT 40 %.1f dB, AMT 127 %.1f dB; peaks %d %d\n", t40, t127, (int)pk40, (int)pk127);
+    printf("resonate:   after 1 s against 0.1 s: AMT 40 %.1f dB, AMT 127 %.1f dB; peaks %d %d\n", t40, t127, (int)pk40, (int)pk127);
     ck("the strings ring at the chord's notes (within 1 %: A MIN, A OCT)", tune);
-    ck("AMT 40 dies away (under -40 dB at 4.5 s), 127 rings on longer but dies too (under -12 dB), bounded",
-       t40 < -40 && t127 > t40 + 20 && t127 < -12 && pk127 < 32768);
+    ck("AMT 40 dies away within a second (under -40 dB), 127 rings on (a pedal: still there, under 0 dB), bounded",
+       t40 < -40 && t127 > -20 && t127 < 0 && pk127 < 32768);
     {
         static project_store_t st;
         project_t q, r;

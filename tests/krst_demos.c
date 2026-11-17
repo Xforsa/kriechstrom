@@ -10,8 +10,8 @@
  *   vox       A minor, 110 BPM: a bright pad and metal drums; from bar 3 the drums speak through the pad (VOX)
  *   howl      C minor, 90 BPM: a slow melody in long notes over a sub and a half-time beat; the melody turns into
  *             GLCH FEEDBACK (bar 3), then SCREAMER (bar 6)
- *   resonate  A minor, 100 BPM: sparse: plucked stabs, a marimba, metal drums and silence between; RESONATE in A minor
- *             from bar 3
+ *   resonate  A minor, 80 BPM: mostly silence: a few short plucks, a marimba note, a kick, a rim, a clap; RESONATE in
+ *             A minor from bar 3 (the silence fills with the ring)
  *   splice    E minor, 130 BPM: a grit bass in sixteenths, screaming stabs, busy drums; SPLICE at 90 from bar 3, at its
  *             top from bar 6
  *   dry       the damage piece without DAMAGE (a reference for the measurements)
@@ -274,32 +274,30 @@ static void howl_at(uint32_t b)
     if (b == 5u) sound(1, 7, "SCREAMER", 90);
 }
 
-/* ---- resonate: A minor, sparse ---- */
+/* ---- resonate: A minor, 80 BPM, mostly silence: a few short hits and plucks, so the strings have room to ring ---- */
 static void resonate_song(void)
 {
-    static const struct { uint8_t s, n; } STAB[] = {{0, 45}, {3, 45}, {16, 45}, {22, 48}, {32, 41}, {35, 41}, {48, 40}, {54, 43}};
-    static const struct { uint8_t s, n; } MAR[] = {{6, 69}, {10, 72}, {26, 76}, {38, 72}, {42, 69}, {58, 71}};
-    uint32_t b, i;
-    song.g[G_BPM] = 100;
-    sound(0, 0, "PLUCK", 105);
+    static const struct { uint8_t s, n; } PL[] = {{0, 45}, {22, 48}, {32, 41}, {56, 40}};      /* A2 C3 F2 E2, short */
+    static const struct { uint8_t s, n; } MAR[] = {{12, 76}, {44, 72}};                       /* E5 C5 */
+    uint32_t i;
+    song.g[G_BPM] = 80;
+    sound(0, 0, "PLUCK", 110);
     sound(1, 12, "MARIMBA", 95);
     sound(2, 0, "SOFT PAD", 0);
-    sound(3, 10, "METAL SHOP", 105);
+    sound(3, 10, "METAL SHOP", 110);
     clear_all();
-    for (i = 0; i < NELEM(STAB); i++)
-        note1(0, STAB[i].s, 1, STAB[i].n);
+    for (i = 0; i < NELEM(PL); i++)
+        note1(0, PL[i].s, 1, PL[i].n);
     for (i = 0; i < NELEM(MAR); i++)
         note1(1, MAR[i].s, 1, MAR[i].n);
-    for (b = 0; b < 4u; b++) {
-        hit(b * 16u, 1, 120);
-        hit(b * 16u + 8u, b % 2u ? 4u : 64u, 105);
-        if (b == 1u || b == 3u)
-            hit(b * 16u + 11u, 1, 95);
-    }
+    hit(0, 1, 125);                                              /* a kick, a rim, a clap: far apart */
+    hit(24, 64, 110);
+    hit(32, 1, 120);
+    hit(52, 4, 115);
 }
 static void resonate_at(uint32_t b)
 {
-    if (b == 2u) { song.g[G_RES] = 110; song.g[G_RKEY] = 9; song.g[G_RCHD] = 2; }   /* A MIN */
+    if (b == 2u) { song.g[G_RES] = 127; song.g[G_RKEY] = 9; song.g[G_RCHD] = 2; }   /* A MIN, its longest ring */
 }
 
 static const struct { const char *name; void (*song)(void); void (*at)(uint32_t); } DEMO[] = {

@@ -5,6 +5,13 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-17
+
+### Changed
+- RESONATE rings out: the strings are brighter (metal, not felt) and come back at the level of what struck them, so
+  you hear them clearly in every gap; AMT sets the ring from half a second to about two
+- its demo is a sparse piece with room to ring; the manual has the sound demos too, under each feature
+
 ## [0.3] - 2026-11-17
 
 ### Added
@@ -59,6 +66,7 @@ The first release, built on Felucca 1.8.2.
 - the USB device name and the identity: KRIECHSTROM, `FM-1_57810001`
 - Felucca-Engines and felucca-bsp are kept in the tree instead of submodules
 
+[0.3.1]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.3.1
 [0.3]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.3
 [0.2]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.2
 [0.1]: https://github.com/Xforsa/kriechstrom/releases/tag/v0.1

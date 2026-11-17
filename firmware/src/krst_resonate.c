@@ -3,10 +3,12 @@
  * after the INSERTs; mix_block calls it on the master, the buses in, before DAMAGE (the strings wear with the mix).
  * Each string a comb: a line as long as its period (the KEY's root in the third octave, C3 131 Hz .. B3 247 Hz, and the
  * CHORD's intervals over it, up to two octaves), fed with the mix, a one-pole damping in its loop, fed back (0.90 ..
- * 0.997 by AMT: from a short buzz to a ring of seconds). Its harmonics are all of the root's: the kick rings the root, a snare the whole chord,
+ * 0.997 by AMT). Its harmonics are all of the root's: the kick rings the root, a snare the whole chord,
  * a held note in the key makes the strings sing and one out of it beats against them. Strings 1 and 3 to the left,
- * 2 and 4 to the right. The strings' sum, scaled by 4 (1 - feedback) (a comb peaks at 1 / (1 - fb): the notes in the key
- * come out 12 dB up, into a tanh), comes in up to the dry's level by AMT. AMT 0: nothing runs (faded out over 2.9 ms, then the lines cleared at the next start). */
+ * 2 and 4 to the right. The damping is light (three quarters of each new sample kept): they ring as metal does, bright.
+ * The strings' sum comes back at about the level of what struck them, whatever AMT (a hit rings at its own level; a
+ * held note in the key builds up into a tanh), up to the dry's level by AMT; AMT sets how long they ring, from half a
+ * second to about two. AMT 0: nothing runs (faded out over 2.9 ms, then the lines cleared at the next start). */
 
 #define RS_N 4u
 #define RS_LEN 512u                                     /* a line (a power of 2: masked; C3's period is 337 samples) */
@@ -29,7 +31,7 @@ static const uint32_t RS_PERIOD[48] = {   /* C2 .. B5's periods, Q8 (44.1 kHz) *
 static __attribute__((noinline)) void res_master(int32_t *l, int32_t *r, uint32_t n)
 {
     int32_t a = clamp(song.g[G_RES], 0, 127), tw = a ? 8192 + a * 192 : 0;  /* the wet: up to ~1 */
-    int32_t fb = 29491 + a * 25, norm = (32768 - fb) * 8;                    /* Q15: 0.90 .. 0.997 */
+    int32_t fb = 29491 + a * 25;                                             /* Q15: 0.90 .. 0.997 */
     uint32_t key = (uint32_t)clamp(song.g[G_RKEY], 0, 11), ch = (uint32_t)clamp(song.g[G_RCHD], 0, 7), k, i;
     uint32_t len[RS_N];
     if (!a && !rs_w)
@@ -39,8 +41,8 @@ static __attribute__((noinline)) void res_master(int32_t *l, int32_t *r, uint32_
         memset(rs_lp, 0, sizeof rs_lp);
     }
     for (k = 0; k < RS_N; k++)
-        len[k] = RS_PERIOD[12u + key + (uint32_t)RS_CHORD[ch][k]] - 256u;   /* (C3 up; 12 + 11 + 24: 47 at most; less the
-                                                         * damping's one sample of delay, so it rings in tune) */
+        len[k] = RS_PERIOD[12u + key + (uint32_t)RS_CHORD[ch][k]] - 85u;   /* (C3 up; 12 + 11 + 24: 47 at most; less the
+                                                         * damping's third of a sample of delay, so it rings in tune) */
     for (i = 0; i < n; i++) {
         int32_t x = (clamp(l[i] + r[i], -262143, 262143)) >> 3, sl = 0, sr = 0;   /* the mix, mono, at a quarter */
         rs_w += clamp(tw - rs_w, -SL_SLOPE, SL_SLOPE);
@@ -49,7 +51,7 @@ static __attribute__((noinline)) void res_master(int32_t *l, int32_t *r, uint32_
             int32_t a0 = rs_line[k][ri & (RS_LEN - 1u)], a1 = rs_line[k][(ri - 1u) & (RS_LEN - 1u)];
             int32_t y = a0 + (((a1 - a0) * (int32_t)fr) >> 8);
             int32_t d = y - rs_lp[k], f;
-            rs_lp[k] += (d + (d < 0)) >> 1;             /* the damping: highs die first, as on a string */
+            rs_lp[k] += (d * 3 + (d < 0 ? 3 : 0)) >> 2;  /* the damping: highs die first, but slowly: metal, not felt */
             f = rs_lp[k] * fb;
             y = x + ((f + (f < 0 ? 32767 : 0)) >> 15);   /* (both towards zero: no offset rings on by itself) */
             y = clamp(y, -32767, 32767);
@@ -60,8 +62,9 @@ static __attribute__((noinline)) void res_master(int32_t *l, int32_t *r, uint32_
                 sl += y;
         }
         rs_wp++;
-        sl = softclip((sl * norm) >> 15);               /* (x 4 over the comb's peak: they ring out; the tanh keeps it) */
-        sr = softclip((sr * norm) >> 15);
+        sl = softclip(sl >> 1);                         /* (a hit rings back at about its own level, whatever AMT: a
+                                                         * held note in the key would build up, the tanh keeps it) */
+        sr = softclip(sr >> 1);
         l[i] += ((sl << 2) * (rs_w >> 3)) >> 12;        /* (x 4: back from the quarter; the wet Q15) */
         r[i] += ((sr << 2) * (rs_w >> 3)) >> 12;
     }
