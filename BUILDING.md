@@ -73,6 +73,13 @@ On Linux x86-64 the toolchain runs natively and Docker is not needed.
 `JIELI_TOOLCHAIN` and `AC79_SDK` override the default locations
 (`~/.jieli/toolchain`, `~/fw-AC79_AIoT_SDK`).
 
+Releases are built and signed by GitHub: push a version tag (`git tag v0.3.1 && git push origin v0.3.1`) and
+`.github/workflows/release.yml` runs the Firmware Hub's shared workflow (`zvenson/fm1-build@v1`): it builds the package
+from that commit with `./build.sh --release`, attests it and publishes it as the tag's release, so the hub shows
+"Built from source on GitHub". Do not upload or replace the `.fwsc` by hand afterwards. Check a package with
+`gh attestation verify kriechstrom-X.Y.fwsc --repo Xforsa/kriechstrom --signer-workflow zvenson/fm1-build/.github/workflows/build.yml`.
+`tools/krst_release.sh X.Y` makes the same build locally, with the site (`build/site`) and the source tarball.
+
 `./build.sh --release 0.3` makes a release build: the package identity becomes `FM-1_57810002`
 and the version string `v0.3`; the package is `build/felucca-0.3.fwsc`, and
 `build/release-0.3/` holds what a release ships: the package, the app
