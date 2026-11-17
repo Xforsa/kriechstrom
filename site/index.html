@@ -44,9 +44,16 @@ synths, drums and live effects.</p>
   <li><b>DAMAGE</b>, <b>WALL</b> and <b>HISS</b> on the whole mix (FX &gt; DAMAGE): tape or digital wear with dropouts, a
     dense wall that pushes the sends and the drive, tape hiss while the tape runs. The level stays where it was.
     <audio controls preload="none" src="audio/damage.m4a"></audio><span class="demo">Two bars dry, then DAMAGE on tape, then digital.</span></li>
-  <li><b>INFECT</b>, a sidechain pedal (INFCT): one track drives another. GATE and DUCK are the classic sidechain (the
-    kick chops or pumps the pad); CRUSH, FOLD and RING let the hits distort the track; VOX is a vocoder (the drums speak
-    through the pad). A track at LEVEL 0 still drives: a silent trigger.
+  <li><b>INFECT</b>, a sidechain pedal (PEDAL &gt; INFCT): choose another track as the source (SRC) and this track
+    reacts to it. MODE:
+    <ul>
+      <li>GATE: the track plays only while the source hits, a choppy gate from your kick;</li>
+      <li>DUCK: it dips on every hit and swells back, the pumping pad;</li>
+      <li>CRUSH and FOLD: every hit distorts it;</li>
+      <li>RING: the two tracks multiplied, a metallic ring;</li>
+      <li>VOX: a vocoder, the drums (or any track) talk through the pad. The same sidechain, in 8 frequency bands.</li>
+    </ul>
+    The source can sit at LEVEL 0: you hear only what it does to the other track, like a hidden kick for sidechain.
     <audio controls preload="none" src="audio/infect.m4a"></audio><span class="demo">Two bars dry, then a silent kick pumps the pad (DUCK), then the drums crush the bass.</span>
     <audio controls preload="none" src="audio/vox.m4a"></audio><span class="demo">Two bars dry, then the drums speak through the pad (VOX).</span></li>
   <li><b>HOWL</b> and <b>MIC</b> in GLCH: no oscillator, a loop that feeds itself. HOWL is a string in overdrive that
