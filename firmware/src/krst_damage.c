@@ -180,16 +180,65 @@ static __attribute__((noinline)) void dmg_master(int32_t *l, int32_t *r, uint32_
     }
 }
 
-/* ---- WALL (QUIET .. WALL) on the master: the New York trick. The mix squeezed hard (a peak compressor, ~90 ms release,
- * up to x8 of make-up) and into a soft clip, then mixed in with the dry a little under it (at the top -2.6 dB, so the
- * limiter after it has nothing to pump): the body comes up, the hits stay. With the
- * sends and DIST pushed (fx.c wall_push) and the FILL steps from 100 (seq.c) it is the wall; no wear, no tape ---- */
+/* ---- WALL (QUIET .. WALL) on the master: a wall of sound is layers, as a record double-tracks its guitars. The knob
+ * brings in, together (wall_layers):
+ *   doubles   the mix twice again, 13 and 21 ms late, each drifting (+-1.5 ms at 0.3 and 0.23 Hz), the early one to the
+ *             right, the late one to the left: two more takes of everything, the stereo filled
+ *   octave    an octaver on the band 100 .. 400 Hz (the bass' second harmonic, the low strings, the toms): a flip-flop
+ *             at its rising zero crossings, at its level, smoothed to a round tone an octave below (50 .. 200 Hz)
+ * and then the New York trick: the mix squeezed hard (a peak compressor, ~90 ms release, up to x8 of make-up) and into a
+ * soft clip, mixed in with the dry a little under it (at the top -2.6 dB, so the limiter after it has nothing to pump):
+ * the body comes up, the hits stay. With the sends and DIST pushed (fx.c wall_push) and the FILL steps from 100
+ * (seq.c). The level keeper (krst_level) after it: bigger, not louder. No wear, no tape ---- */
+#define WL_LEN 1024u                                    /* the doubles' line (a power of 2; 21 + 1.5 ms is 993 samples) */
+static int16_t wl_line[WL_LEN] __attribute__((section(".pool")));   /* the mix, mono, at half scale (2 KB) */
+static uint32_t wl_wp, wl_ph[2];                        /* the line's write; the drifts' phases */
+static int32_t wl_lp[4], wl_hp, wl_prev, wl_ff, wl_e;   /* the octaver: its filters, the last sample, the flip-flop,
+                                                         * the low end's level */
+static const int32_t WL_D[2] = {573 << 8, 926 << 8};   /* 13 and 21 ms, Q8 */
+static __attribute__((noinline)) void wall_layers(int32_t *l, int32_t *r, uint32_t n, int32_t wq)
+{
+    int32_t dq[2], dd[2], gd = wq >> 1, gs = wq;         /* the doubles at 0.5, the octave at 1 (Q15) */
+    uint32_t i, k;
+    for (k = 0; k < 2u; k++) {                          /* the drifts: a triangle over the block, a line between */
+        uint32_t p0 = wl_ph[k], p1 = p0 + (k ? 22420u : 29230u) * n;   /* (0.23 / 0.3 Hz of 2^32 at 44.1 kHz) */
+        dq[k] = WL_D[k] + ((dmg_tri(p0) * 66) >> 7);    /* (+-66 samples: 1.5 ms) */
+        dd[k] = (WL_D[k] + ((dmg_tri(p1) * 66) >> 7) - dq[k]) / (int32_t)n;
+        wl_ph[k] = p1;
+    }
+    for (i = 0; i < n; i++) {
+        int32_t m = clamp((l[i] + r[i]) >> 2, -32767, 32767), o[2], sub, a;
+        wl_line[wl_wp & (WL_LEN - 1u)] = (int16_t)m;
+        for (k = 0; k < 2u; k++) {                      /* the doubles */
+            uint32_t ri = wl_wp - (uint32_t)(dq[k] >> 8), fr = (uint32_t)dq[k] & 255u;
+            int32_t a0 = wl_line[ri & (WL_LEN - 1u)], a1 = wl_line[(ri - 1u) & (WL_LEN - 1u)];
+            o[k] = a0 + (((a1 - a0) * (int32_t)fr) >> 8);
+            dq[k] += dd[k];
+        }
+        wl_wp++;
+        wl_hp += ((m - wl_hp) * 467) >> 15;             /* the octaver: the band 100 .. 400 Hz (a pole's low cut, two
+                                                         * poles' high cut) .. */
+        wl_lp[0] += ((m - wl_hp - wl_lp[0]) * 1867) >> 15;
+        wl_lp[1] += ((wl_lp[0] - wl_lp[1]) * 1867) >> 15;
+        if (wl_prev < 0 && wl_lp[1] >= 0)               /* .. a flip-flop at each rising zero crossing .. */
+            wl_ff ^= 1;
+        wl_prev = wl_lp[1];
+        a = wl_lp[1] < 0 ? -wl_lp[1] : wl_lp[1];
+        wl_e += (a - wl_e) >> 8;                        /* .. at the low end's level .. */
+        sub = wl_ff ? wl_e : -wl_e;
+        wl_lp[2] += ((sub - wl_lp[2]) * 934) >> 15;     /* .. rounded by two poles at ~200 Hz */
+        wl_lp[3] += ((wl_lp[2] - wl_lp[3]) * 934) >> 15;
+        sub = (wl_lp[3] * 3) >> 1;                      /* (x 1.5: the square's fundamental under its level) */
+        l[i] += ((((o[1] * gd) >> 15) + ((sub * gs) >> 15)) << 1);   /* (x 2: back from the half scale) */
+        r[i] += ((((o[0] * gd) >> 15) + ((sub * gs) >> 15)) << 1);
+    }
+}
 static int32_t wl_env, wl_g = 4096, wl_w;
 static inline int wall_master_on(void) { return song.g[G_WALL] > 0 || wl_w; }
 static __attribute__((noinline)) void wall_master(int32_t *l, int32_t *r, uint32_t n)
 {
     int32_t w = clamp(song.g[G_WALL], 0, 127), tw = w * 200, pk = 0, gt, dg;   /* (the wet: up to ~0.78) */
-    int32_t trim = 32768 - w * 112;                     /* (-4.9 dB at the top: what the pushed sends and DIST add before
+    int32_t trim = 32768 - w * 136;                     /* (-6.3 dB at the top: what the pushed sends, DIST and the layers add before
                                                          * the level keeper sees the mix) */
     uint32_t i;
     if (!w && !wl_w) {
@@ -197,6 +246,12 @@ static __attribute__((noinline)) void wall_master(int32_t *l, int32_t *r, uint32
         wl_g = 4096;
         return;
     }
+    if (!wl_w) {                                        /* starting: no stale doubles or octave */
+        memset(wl_line, 0, sizeof wl_line);
+        memset(wl_lp, 0, sizeof wl_lp);
+        wl_hp = wl_prev = wl_ff = wl_e = 0;
+    }
+    wall_layers(l, r, n, wl_w < 0x8000 ? (wl_w * 21) >> 4 : 32768);   /* (the layers by the wet now: full at ~0.76) */
     for (i = 0; i < n; i++) {
         int32_t a = l[i] < 0 ? -l[i] : l[i], b = r[i] < 0 ? -r[i] : r[i];
         a = a > b ? a : b;

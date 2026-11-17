@@ -13,6 +13,8 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 - sound demos on the site, a short piece for each of DAMAGE, INFECT, VOX, HOWL and RESONATE (tools/krst_demos.sh)
 
 ### Changed
+- WALL is a wall of sound now: the mix double-tracked (two drifting copies, 13 and 21 ms, left and right) and an
+  octave added under its low end, before the squeeze it had
 - the installer returns to the official firmware from V16 as well as V15 (newer FM-1s ship with V16)
 - the installer and the editor find an FM-1 whose MIDI port macOS still calls Clipper or SLOOP; the installer says it is
   looking for the FM-1 at once

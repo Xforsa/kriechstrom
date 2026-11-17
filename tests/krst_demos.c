@@ -4,6 +4,7 @@
  * then the feature comes in. Each piece is a phrase of 4 bars (64 steps on every track) played twice.
  *   damage    D minor, 84 BPM: a broken piano's arpeggios over a sub bass and a half-time beat; DAMAGE on tape
  *             from bar 3, digital from bar 6
+ *   wall      E minor, 100 BPM: a fuzz bass riff, fuzz fifths as guitars, a pad, big drums; WALL at its top from bar 3
  *   infect    A minor, 120 BPM: a sidechain: a kick on a silent track pumps the pad (DUCK, bar 3), the drums crush
  *             the bass (bar 5)
  *   vox       A minor, 110 BPM: a bright pad and metal drums; from bar 3 the drums speak through the pad (VOX)
@@ -105,6 +106,41 @@ static void damage_at(uint32_t b)
     if (b == 5u) { song.g[G_DMG] = 110; song.g[G_DMGC] = 127; }
 }
 static void dry_at(uint32_t b) { (void)b; }
+
+/* ---- wall: E minor, 100 BPM, heavy: a fuzz bass riff, fuzz fifths as guitars, a pad, big drums ---- */
+static void wall_song(void)
+{
+    static const uint8_t RIFF[16] = {28, 0, 28, 31, 28, 0, 33, 31, 28, 0, 28, 35, 33, 31, 26, 0};   /* E1 .. (eighths) */
+    static const uint8_t PWR[4][2] = {{52, 59}, {48, 55}, {50, 57}, {47, 54}};   /* E5 C5 D5 B5 (fifths) */
+    uint32_t b, s;
+    song.g[G_BPM] = 100;
+    sound(0, 7, "FUZZ BASS", 100);
+    sound(1, 7, "SQR FUZZ", 80);
+    sound(2, 2, "VAULT", 70);
+    sound(3, 10, "RIOT", 105);
+    clear_all();
+    for (b = 0; b < 4u; b++) {
+        for (s = 0; s < 16u; s += 2u)
+            if (RIFF[(b % 2u) * 8u + s / 2u])
+                note1(0, b * 16u + s, 2, RIFF[(b % 2u) * 8u + s / 2u]);
+        note(1, b * 16u, 8, 2, PWR[b], 0);
+        note(1, b * 16u + 8u, 6, 2, PWR[b], 0);
+        if (b % 2u == 0u)
+            note(2, b * 16u, 32, 2, PWR[b], 0);
+        hit(b * 16u, 1, 125);
+        hit(b * 16u + 6u, 1, 110);
+        hit(b * 16u + 4u, 2, 120);
+        hit(b * 16u + 12u, 2, 120);
+        for (s = 0; s < 16u; s += 2u)
+            hit(b * 16u + s, 8, s % 4u ? 75 : 95);
+        if (b == 3u) {
+            hit(b * 16u + 13u, 32, 110);
+            hit(b * 16u + 14u, 32, 115);
+            hit(b * 16u + 15u, 32, 120);
+        }
+    }
+}
+static void wall_at(uint32_t b) { if (b == 2u) song.g[G_WALL] = 127; }
 
 /* ---- infect: A minor; a sidechain: a silent kick on track 2 pumps the pad, the drums crush the bass ---- */
 static void infect_song(void)
@@ -231,7 +267,7 @@ static void resonate_at(uint32_t b)
 }
 
 static const struct { const char *name; void (*song)(void); void (*at)(uint32_t); } DEMO[] = {
-    {"dry", damage_song, dry_at}, {"damage", damage_song, damage_at},
+    {"dry", damage_song, dry_at}, {"damage", damage_song, damage_at}, {"wall", wall_song, wall_at},
     {"infect", infect_song, infect_at}, {"vox", vox_song, vox_at}, {"howl", howl_song, howl_at},
     {"resonate", resonate_song, resonate_at},
 };
