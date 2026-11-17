@@ -23,13 +23,16 @@
   <a class="btn" href="webapp/installer/">Поставить на FM-1</a>
   <a class="btn ghost" href="manual/ru.html">Читать мануал</a>
   <a class="btn ghost" href="manual/ru.html#cheat">Шпаргалка</a>
-  <a class="btn ghost" href="firmware/kriechstrom-0.2.fwsc">Скачать kriechstrom-0.2.fwsc</a>
+  <a class="btn ghost" href="firmware/kriechstrom-0.3.fwsc">Скачать kriechstrom-0.3.fwsc</a>
 </p>
 
 <div class="shots">
   <figure><img src="shots/home.png" alt="HOME"><figcaption>HOME</figcaption></figure>
   <figure><img src="shots/presets.png" alt="PRESETS"><figcaption>Звуки по движкам и категориям</figcaption></figure>
   <figure><img src="shots/damage.png" alt="DAMAGE"><figcaption>DAMAGE: износ всего микса</figcaption></figure>
+  <figure><img src="shots/insert_infect.png" alt="PEDAL INFCT"><figcaption>INFECT: педаль-сайдчейн</figcaption></figure>
+  <figure><img src="shots/edit_howl.png" alt="GLCH HOWL"><figcaption>GLCH HOWL: обратная связь</figcaption></figure>
+  <figure><img src="shots/resonate.png" alt="RESONATE"><figcaption>RESONATE: микс звенит в тональности</figcaption></figure>
   <figure><img src="shots/layer_seq_tools_drum.png" alt="SEQ TOOLS"><figcaption>SEQ TOOLS с DICE и MOOD</figcaption></figure>
   <figure><img src="shots/drum.png" alt="драм-сетка"><figcaption>Драм-сетка</figcaption></figure>
   <figure><img src="shots/perform_held.png" alt="слой FX"><figcaption>Живые эффекты</figcaption></figure>
@@ -37,10 +40,37 @@
 
 <h2>Что внутри</h2>
 <ul>
-  <li><b>GLCH</b>, движок из Glitchbox: клиппинг, фолдер, резонансный фильтр, понижение разрядности и микрозаикание; 48 звуков, у большинства уже стоит педаль перегруза.</li>
-  <li><b>171 звуков</b> в 13 движках, готовых к игре: перегруженные басы, холодные лиды, расстроенные клавиши, пэды, шумы и текстуры, плюс 13 драм-китов. Список можно фильтровать по категориям.</li>
+  <li><b>GLCH</b>, движок из Glitchbox: клиппинг, фолдер, резонансный фильтр, понижение разрядности и микрозаикание; 56 звуков, у большинства уже стоит педаль перегруза.</li>
+  <li><b>179 звуков</b> в 13 движках, готовых к игре: перегруженные басы, холодные лиды, расстроенные клавиши, пэды, шумы и текстуры, плюс 13 драм-китов. Список можно фильтровать по категориям.</li>
   <li><b>DICE</b>: держи SEQ, жми F5, и у дорожки новая партия в одном из восьми настроений, от MACHINE до HUSH.</li>
   <li><b>HAPPY ACCIDENT</b>: держи EDIT, жми G5, и два-три параметра звука случайно меняются. Удержание SAVE отменяет.</li>
+  <li><b>DAMAGE</b>, <b>WALL</b> и <b>HISS</b> на весь микс (FX &gt; DAMAGE): износ ленты или цифры с выпадениями;
+    стена звука (всё записано как будто трижды, под низом добавлена октава, всё сильно сжато); шипение ленты, пока она
+    крутится. Громкость остаётся прежней.
+    <audio controls preload="none" src="audio/damage.m4a"></audio><span class="demo">Два такта сухо, потом DAMAGE на ленте, потом цифровой.</span>
+    <audio controls preload="none" src="audio/wall.m4a"></audio><span class="demo">Два такта сухо, потом WALL.</span></li>
+  <li><b>INFECT</b>, педаль-сайдчейн (PEDAL &gt; INFCT): выбираешь другую дорожку источником (SRC), и эта дорожка
+    на неё реагирует. MODE:
+    <ul>
+      <li>GATE: дорожка звучит только на ударах источника, рубленый гейт от бочки;</li>
+      <li>DUCK: проседает на каждом ударе и снова поднимается, та самая «качка» пэда;</li>
+      <li>CRUSH и FOLD: каждый удар её искажает;</li>
+      <li>RING: две дорожки перемножаются, металлический звон;</li>
+      <li>VOX: вокодер, драмы (или любая дорожка) говорят через пэд. Тот же сайдчейн, только по 8 частотным полосам.</li>
+    </ul>
+    Источник можно убрать в LEVEL 0: его не слышно, слышно только, что он делает с другой дорожкой. Как спрятанная
+    бочка для сайдчейна.
+    <audio controls preload="none" src="audio/infect.m4a"></audio><span class="demo">Два такта сухо, потом немая бочка качает пэд (DUCK), потом драмы крошат бас.</span>
+    <audio controls preload="none" src="audio/vox.m4a"></audio><span class="demo">Два такта сухо, потом драмы говорят через пэд (VOX).</span></li>
+  <li><b>HOWL</b> и <b>MIC</b> в GLCH: без генератора, петля, которая кормит сама себя. HOWL это струна в перегрузе,
+    которая тянется и воет в строй; MIC это микрофон перед колонкой, который воет на ноте.
+    <audio controls preload="none" src="audio/howl.m4a"></audio><span class="demo">Два такта сухо, потом мелодия превращается в FEEDBACK, а позже в SCREAMER.</span></li>
+  <li><b>RESONATE</b> на весь микс: четыре струны, настроенные на аккорд (KEY, CHORD), звенят от всего, что играет.
+    <audio controls preload="none" src="audio/resonate.m4a"></audio><span class="demo">Два такта сухо, потом RESONATE в ля миноре.</span></li>
+  <li><b>SPLICE</b> на весь микс: плёнку режут и склеивают неправильно. На шестнадцатых вместо того, что играет,
+    вклеивается кусок: последняя шестнадцатая ещё раз или задом наперёд, кусок из прошлой доли, плёнка, затянутая на
+    октаву вниз, или просто обрыв. Одна ручка: как часто и как злобно.
+    <audio controls preload="none" src="audio/splice.m4a"></audio><span class="demo">Два такта сухо, потом SPLICE, с 6-го такта злее.</span></li>
   <li>Секвенсор на 64 шага на каждой дорожке: локи, условия, рэтчеты, автоматизация, песни.</li>
   <li>Драмы: 13 китов, включая DESTROY, восемь линий, сетка на клавишах.</li>
   <li>Живые эффекты на клавишах: повторы, остановка ленты, фриз, свипы фильтра, ROLL, GATE, броски в ревер и дилей.</li>
@@ -59,9 +89,9 @@
 <h2 id="source">На чём сделано</h2>
 <p>KRIECHSTROM сделан на основе <a href="https://github.com/hugelton/Felucca"><b>Felucca 1.8.2</b></a> (Leo Kuroshita, Hügelton Instruments), с частями <a href="https://github.com/erikdevos/glitchbox"><b>Glitchbox</b></a>
 (erikdevos) и идеями из <a href="https://github.com/sinscum/DIRGE"><b>DIRGE</b></a> (sinscum). Спасибо всем троим за вдохновение. Свободная программа под GNU GPL 3.0:
-<a href="src/kriechstrom-0.2-src.tar.gz">исходники этой сборки</a> (6.9 MB).</p>
+<a href="src/kriechstrom-0.3-src.tar.gz">исходники этой сборки</a> (6.9 MB).</p>
 <img class="band" src="art/band.jpg" alt="" width="1600" height="360">
 </main>
-<footer>KRIECHSTROM 0.2, Григорий Безбородов · на основе Felucca 1.8.2 · GPL-3.0</footer>
+<footer>KRIECHSTROM 0.3, Григорий Безбородов · на основе Felucca 1.8.2 · GPL-3.0</footer>
 </body>
 </html>

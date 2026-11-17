@@ -56,6 +56,8 @@ th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom
 th { color: var(--red); font-weight: 700; }
 .tw { overflow-x: auto; }
 figure { margin: 18px 0; }
+audio { display: block; width: 100%; max-width: 440px; height: 36px; margin: 10px 0 2px; color-scheme: dark; }
+.demo { display: block; font-size: 15px; color: var(--mid); margin-bottom: 6px; }
 figure img {
   width: 100%;
   max-width: 480px;
