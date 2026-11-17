@@ -1,9 +1,10 @@
 {
-  "what": "Firmware for dark industrial and EBM, built on Felucca. Adds the GLCH distortion engine, feedback sounds that howl, a sidechain pedal with a vocoder, strings that ring with the mix, tape cut and glued back wrong, 179 sounds and DICE to generate whole parts.",
+  "what": "Dark industrial and EBM on the FM-1. Feedback that howls in tune, a sidechain pedal that pumps, crushes or talks through a vocoder, strings that ring with the mix, tape cut and glued back wrong, the GLCH distortion engine and 179 sounds.",
   "author": "Grigorii Bezborodov",
   "kinds": [
     "groove"
   ],
+  "play": "https://fm1-emulator.atst.tools/?firmware=kriechstrom",
   "editor": "https://xforsa.github.io/kriechstrom/webapp/editor/",
   "cheat": "https://xforsa.github.io/kriechstrom/manual/en.html#cheat",
   "image": "docs/card.png",
