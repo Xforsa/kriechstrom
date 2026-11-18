@@ -3,6 +3,7 @@
 """Build the KRIECHSTROM site into OUT (default build/site):
 
   index.html, ru.html, style.css     the landing pages (EN, RU)
+  krst.js                            the demo player: the demo's waveform by bars, its parts, a live scope
   manual/en.html, manual/ru.html     the manual, the sound list filled in from the firmware's own tables
   shots/*.png                        the screens the pages use, from tests/ui_render (build/ui_new/LARGE_STROM)
   audio/*.m4a                        the sound demos the pages use, from tools/krst_demos.sh (build/demos)
@@ -16,8 +17,11 @@
 
 The pages, the sound list and the counts come from the tree as it is: build the site from the release's commit.
 """
+import array
+import math
 import re
 import shutil
+import wave
 import subprocess
 import sys
 import tarfile
@@ -90,6 +94,70 @@ def sound_list(lang):
     return head + "\n" + "\n".join(out), total
 
 
+# the demos' parts for the player (site/krst.js): (bar it starts on, label EN, label RU); every demo is 8 bars
+DRY = (1, "DRY", "СУХО")
+KIT = [(1, "BEAT", "БИТ"), (3, "+ BASS, SYNTH", "+ БАС, СИНТ")]
+PARTS = {
+    "damage": [DRY, (3, "TAPE", "ЛЕНТА"), (6, "DIGITAL", "ЦИФРА")],
+    "wall": [DRY, (3, "WALL", "WALL")],
+    "infect": [DRY, (3, "DUCK", "DUCK"), (5, "CRUSH", "CRUSH")],
+    "vox": [DRY, (3, "VOX", "VOX")],
+    "howl": [DRY, (3, "FEEDBACK", "FEEDBACK"), (6, "SCREAMER", "SCREAMER")],
+    "resonate": [DRY, (3, "RESONATE", "RESONATE")],
+    "splice": [DRY, (3, "SPLICE", "SPLICE"), (6, "SPLICE MAX", "SPLICE MAX")],
+    "suck": [DRY, (3, "SUCK", "SUCK")],
+    "drag": [DRY, (3, "DRAG", "DRAG")],
+}
+B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+
+def demo_peaks(path, cols=240):
+    """the demo's overview for the player: per column its peak, its RMS and how bright it is (the energy of the
+    first difference against the signal's: high for hats and noise, low for a sub), 0..63 each, 3 characters"""
+    with wave.open(str(path)) as w:
+        ch, n = w.getnchannels(), w.getnframes()
+        a = array.array("h", w.readframes(n))
+    out = []
+    for c in range(cols):
+        i0, i1 = c * n // cols, (c + 1) * n // cols
+        pk = e = d = 0.0
+        prev = None
+        for i in range(i0, i1, 2):
+            x = (a[i * ch] + a[i * ch + ch - 1]) / 65536.0
+            ax = abs(x)
+            if ax > pk:
+                pk = ax
+            e += x * x
+            if prev is not None:
+                d += (x - prev) * (x - prev)
+            prev = x
+        m = max(1, (i1 - i0 + 1) // 2)
+        rms = math.sqrt(e / m)
+        br = 0.0 if e <= 1e-9 else min(1.0, max(0.0, (math.log10(d / e + 1e-9) + 2.5) / 2.5))
+        out.append(B64[min(63, int(pk * 63.99))] + B64[min(63, int(min(1.0, rms * 2.2) * 63.99))]
+                   + B64[min(63, int(br * 63.99))])
+    return "".join(out), n / 44100.0
+
+
+def demo_player(s, lang, cache):
+    """the player's data on every demo: data-name, data-parts, data-dur and data-peaks (no wav: a plain player)"""
+    def one(m):
+        src, name = m.group(1), m.group(2)
+        wav = DEMOS / f"{name}.wav"
+        if not wav.exists():
+            return m.group(0)
+        if name not in cache:
+            cache[name] = demo_peaks(wav)
+        peaks, dur = cache[name]
+        kit = name.startswith("kit_")
+        title = name[4:].replace("_track", "").upper() if kit else name.upper()
+        parts = KIT if kit else PARTS.get(name, [DRY])
+        ps = "|".join(f"{b}:{ru if lang == 'ru' else en}" for b, en, ru in parts)
+        return (f'<audio controls preload="none" src="{src}" data-name="{title}" data-bars="8" data-parts="{ps}" '
+                f'data-dur="{dur:.3f}" data-peaks="{peaks}"></audio>')
+    return re.sub(r'<audio controls preload="none" src="((?:\.\./)?audio/([a-z0-9_]+)\.m4a)"></audio>', one, s)
+
+
 def source_tarball(dst, version):
     """the source of this build: the files git tracks, as they are in the tree (nothing local or untracked: build
     output, notes, editor files); a new file goes in once it is added to git"""
@@ -120,13 +188,16 @@ def main(pkg, version, out):
     used = set()
     sounds = set()
     total = 0
-    for rel in ("index.html", "ru.html", "style.css", "manual/en.html", "manual/ru.html"):
+    peaks = {}
+    for rel in ("index.html", "ru.html", "style.css", "krst.js", "manual/en.html", "manual/ru.html"):
         s = (SITE / rel).read_text(encoding="utf-8")
         if "<!--SOUNDS-->" in s:
             lst, total = sound_list("ru" if rel.endswith("ru.html") else "en")
             s = s.replace("<!--SOUNDS-->", lst)
         used |= set(re.findall(r'shots/([a-z0-9_]+\.png)', s))
         sounds |= set(re.findall(r'audio/([a-z0-9_]+\.m4a)', s))
+        if rel.endswith(".html"):
+            s = demo_player(s, "ru" if rel.endswith("ru.html") else "en", peaks)
         (out / rel).parent.mkdir(parents=True, exist_ok=True)
         (out / rel).write_text(s, encoding="utf-8")
     if not total:
