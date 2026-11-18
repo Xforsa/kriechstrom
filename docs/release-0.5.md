@@ -31,7 +31,7 @@ PRINT, SUCK and DRAG on the [site](https://xforsa.github.io/kriechstrom/) and re
 | File | What |
 | --- | --- |
 | `kriechstrom-0.5.fwsc` | the package: the app and the update loader |
-| `kriechstrom-0.5-src.tar.gz` | the complete source of this build (GPL-3.0) |
+| Source code (zip, tar.gz) | the complete source of this build (GPL-3.0): GitHub's archive of the tag |
 | `SHA256SUMS` | checksums |
 
 Built on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita, Hügelton Instruments, with parts of

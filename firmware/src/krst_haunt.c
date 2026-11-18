@@ -132,7 +132,7 @@ static __attribute__((noinline)) void haunt_master(int32_t *l, int32_t *r, uint3
     hn.live = 1;
     if (mode == HN_PRINT) {                             /* the ghost: three beats back, dark, wobbling */
         uint32_t size = HN_BYTES, d = 3u * 60u * (FS / HN_PR_DEC) / bpm;
-        int32_t g = amt * 90;                           /* (Q15 of x 0.35 at the top) */
+        int32_t g = amt * 240;                          /* (Q15 of x 0.93 at the top: as loud as the mix) */
         if (d > size - 64u)
             d = size - 64u;
         for (i = 0; i < n; i++) {
@@ -154,7 +154,7 @@ static __attribute__((noinline)) void haunt_master(int32_t *l, int32_t *r, uint3
                 y = hn_ring8(0, size, (int32_t)k * 256 + (int32_t)hn.cnt * 16 - (wob >> 7));   /* (cnt x 256 / 16) */
             }
             hn.hz1 += ((y - hn.hz1) * 700) >> 15;       /* (a high-pass at about 150 Hz) */
-            y = softclip(((y - hn.hz1) * 9) >> 2);       /* (x 2.2, saturated) */
+            y = softclip((y - hn.hz1) * 4);              /* (x 4, saturated: the grit brings back a top) */
             y = (y * g) >> 14;                          /* (x 2: the mix's level) */
             l[i] += y;
             r[i] += y;
@@ -164,12 +164,12 @@ static __attribute__((noinline)) void haunt_master(int32_t *l, int32_t *r, uint3
     if (mode == HN_SUCK) {                              /* a reversed reverb rising into the next snare */
         int16_t *line = hn_buf.b16;
         uint32_t base = 2u * HN_SK_LINES, ring = HN_SK_RING, ahead = 4u;
-        int32_t g = amt * 260;                          /* (Q12: x 8 at the top) */
+        int32_t g = amt * 1400;                         /* (Q12: x 43 at the top) */
         if (ahead * st / HN_SK_DEC + 8u > ring)          /* (slow: half a beat, the ring holds 0.88 s) */
             ahead = 2u;
         for (i = 0; i < n; i++) {
             int32_t m = (l[i] + r[i]) >> 2, hp = m - hn.hp1;
-            hn.hp1 += ((m - hn.hp1) * 3260) >> 15;       /* (the top, from about 700 Hz) */
+            hn.hp1 += ((m - hn.hp1) * 1400) >> 15;       /* (from about 300 Hz) */
             hn.acc += hp;
             if (++hn.cnt >= HN_SK_DEC) {                /* the reverb, at 8.8 kHz */
                 int32_t in = hn.acc / (int32_t)HN_SK_DEC, o[4], y = 0, h0, h1, h2, h3, mm[4];
@@ -209,7 +209,7 @@ static __attribute__((noinline)) void haunt_master(int32_t *l, int32_t *r, uint3
             if (hn.sw_left > 0) {
                 int32_t u = hn.sw_len - hn.sw_left, e, y;   /* rising: (u / len)^3, cut 40 samples before the hit */
                 uint32_t q = ((uint32_t)u << 13) / ((uint32_t)hn.sw_len >> 2 | 1u);   /* Q15 */
-                e = (int32_t)((((q * q) >> 15) * q) >> 15);
+                e = (int32_t)((q * q) >> 15);            /* (u^2: it is heard sooner) */
                 if (hn.sw_left < 40)
                     e = (e * hn.sw_left) / 40;
                 hn.sw_rp -= 256 / (int32_t)HN_SK_DEC;

@@ -36,6 +36,14 @@ static hrun_t run_in(int mode, int amt)
     song.g[G_BPM] = 120;
     song.g[G_HAUNT] = (int16_t)mode;
     song.g[G_HAMT] = (int16_t)amt;
+    for (k = 0; k < 16u; k++) {                         /* the drums: a kick on the beats, a snare on 2 and 4 (no
+                                                         * other hits: the swells stand apart) */
+        step_t *sp = &trk[3].step[k];
+        sp->hit = (uint8_t)((k % 4u == 0u ? 1u << DV_KICK : 0u) | (k == 4u || k == 12u ? 1u << DV_SNARE : 0u));
+        sp->n = 0;
+        sp->time = sp->hit ? ST_NOTE : ST_REST;
+    }
+    trk[3].p[P_SLEN] = 16;
     seq_start();
     for (k = 0; k < nb; k++) {
         mix_block(out, CTL);
@@ -139,7 +147,7 @@ int main(void)
         }
         c3 /= sqrt(v_d * v3 + 1e-9), c0 /= sqrt(v_d * v0 + 1e-9);
         printf("haunt:   PRINT: the change's loudness against the mix 3 beats back %.2f, the mix now %.2f\n", c3, c0);
-        ck("PRINT: the ghost follows the mix of three beats back", c3 > 0.5 && pr.h != off.h);
+        ck("PRINT: the ghost follows the mix of three beats back", c3 > 0.35 && c3 > c0 + 0.25 && pr.h != off.h);
     }
     {   /* SUCK: what it adds just before each snare or clap (the swell's top, a quarter beat) against just after */
         double before = 0, after = 0;
