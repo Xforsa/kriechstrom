@@ -5,6 +5,17 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 
 ## [Unreleased]
 
+## [0.5] - 2026-11-18
+
+### Added
+- HAUNT (FX > HAUNT: MODE, AMT), one of three on the master: PRINT, a ghost of the mix three beats back (what a loop
+  plays a beat later) before it, dark and wobbling; SUCK, a reversed reverb rising into each snare and clap (the drum
+  tracks' steps say where); DRAG, the tape slowing over each bar's last beat, back on the one; stored in G_LOAD's word
+- sound demos for PRINT, SUCK and DRAG on the site and in the manual
+
+### Changed
+- the screen reader says the page and its knobs first, then the track and its sound; more of the screen in words
+
 ## [0.4] - 2026-11-18
 
 ### Added

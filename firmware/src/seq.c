@@ -914,6 +914,7 @@ static void seq_start(void)
     clk_pos = CLK_START;                           /* the metronome's first beat with step 0 */
     song.playing = 1;
     splice_start();                                /* KRIECHSTROM: SPLICE's grid and dice from PLAY */
+    haunt_start();                                 /* KRIECHSTROM: HAUNT's grid from PLAY, its tape wiped */
     slicer_start();                                /* slicer.c: its step 0 with the sequencer's */
     perf_start();                                  /* perform.c: its 1/16 grid too */
 }

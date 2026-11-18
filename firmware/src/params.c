@@ -64,6 +64,7 @@ static const char *const N_ITYPE[] = {"OFF", "SOFT", "HARD", "FOLD", "FUZZ", "CR
 /* CRUSH: BITS 1..16 and RATE (the held sample's rate, fx.c INS_HOLD) over the range in 16 even parts (0-terminated) */
 static const char *const N_RKEY[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};   /* RESONATE */
 static const char *const N_RCHD[] = {"OCT", "5TH", "MIN", "MAJ", "SUS", "MIN7", "DIM", "CLST"};
+static const char *const N_HAUNT[] = {"OFF", "PRINT", "SUCK", "DRAG"};   /* HAUNT (krst_haunt.c) */
 static const char *const N_ISRC[] = {"T1", "T2", "T3", "T4"};   /* KRIECHSTROM: INFCT's source, its MODE */
 static const char *const N_IMODE[] = {"GATE", "DUCK", "CRUSH", "FOLD", "RING", "VOX"};
 static const char *const N_IBITS[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
@@ -252,6 +253,8 @@ static const param_desc_t GP[G_ALL] = {
     [G_RKEY] = PE("KEY", N_RKEY, 9),             /* .. their key (A: the factory sounds' minor), */
     [G_RCHD] = PE("CHORD", N_RCHD, 2),           /* .. their chord */
     [G_SPLICE] = PD("AMT", F_PCT, 0, 127, 0),    /* KRIECHSTROM: SPLICE (krst_splice.c): how often the tape is cut */
+    [G_HAUNT] = PE("MODE", N_HAUNT, 0),          /* KRIECHSTROM: HAUNT (krst_haunt.c): PRINT, SUCK or DRAG, */
+    [G_HAMT] = PD("AMT", F_PCT, 0, 127, 80),     /* .. how much */
 };
 
 static const param_desc_t *track_desc(const track_t *t, uint32_t id)
@@ -358,7 +361,7 @@ static int off_at_zero(const param_desc_t *d)
 {
     return d == &TP[P_DIST] || d == &TP[P_CHOR] || d == &TP[P_DLY] || d == &TP[P_REV] || d == &TP[P_IMIX] ||
            d == &GP[G_DMIX] || d == &GP[G_DMG] || d == &GP[G_WALL] || d == &GP[G_HISS] ||
-           d == &GP[G_RES] || d == &GP[G_SPLICE] || d == &INS_DESC[6][0];
+           d == &GP[G_RES] || d == &GP[G_SPLICE] || d == &GP[G_HAMT] || d == &INS_DESC[6][0];
 }
 static void param_format(const param_desc_t *d, int32_t v, char *val, const char **unit)
 {
@@ -505,6 +508,7 @@ static const page_t PAGES[] = {
     {"DAMAGE", FAM_FX, SC_GLOBAL, GR_NONE, {G_DMG, G_DMGC, G_WALL, G_HISS}},   /* KRIECHSTROM: the master's wear, WALL */
     {"RESONATE", FAM_FX, SC_GLOBAL, GR_NONE, {G_RES, G_RKEY, G_RCHD, 0xFF}},   /* KRIECHSTROM: the mix rings strings */
     {"SPLICE", FAM_FX, SC_GLOBAL, GR_NONE, {G_SPLICE, 0xFF, 0xFF, 0xFF}},     /* KRIECHSTROM: the tape cut and glued */
+    {"HAUNT", FAM_FX, SC_GLOBAL, GR_NONE, {G_HAUNT, G_HAMT, 0xFF, 0xFF}},     /* KRIECHSTROM: the tape haunted */
     {"SCL", FAM_SCL, SC_TRACK, GR_SCALE, {P_ROOT, P_SCALE, P_QUANT, P_TRANS}},
     {"CHORD", FAM_SCL, SC_TRACK, GR_CHORD, {P_CHRD, P_VOIC, 0xFF, 0xFF}},   /* SCL again: the chord keys (chord.c) */
     {"EDIT 1", FAM_EDIT, SC_ENGINE, GR_NONE, {P_E0, P_E1, P_E2, P_E3}},
@@ -559,6 +563,7 @@ static const struct { const char *title, *name, *what; } PAGE_SAY[] = {
     {"DAMAGE", "DAMAGE", "THE WHOLE MIX WEARS OUT"},
     {"RESONATE", "RESONATE", "THE MIX RINGS IN A KEY"},
     {"SPLICE", "SPLICE", "THE TAPE CUT AND GLUED"},
+    {"HAUNT", "HAUNT", "PRINT, SUCK OR DRAG"},
     {"ENV DEST", "ENV DEST", "WHERE THE ENVELOPE GOES"},
     {"LFO DEST", "LFO DEST", "WHERE THE LFO GOES"},
     {"VOICE", "VOICE", "POLY, MONO, GLIDE"},

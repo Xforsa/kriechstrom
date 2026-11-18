@@ -399,6 +399,9 @@ if [ -f build/gen/felucca_tables.h ]; then
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_splice_test" tests/krst_splice_test.c -lm
     run "KRIECHSTROM SPLICE: off bit for bit, pieces by AMT (never on a bar's first), every kind, the same cut each time, stored, the page" \
         "$OUT/krst_splice_test"
+    $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_haunt_test" tests/krst_haunt_test.c -lm
+    run "KRIECHSTROM HAUNT: off bit for bit, PRINT the mix three beats back, SUCK before the hits, DRAG in the bars' last beats, stored, the page" \
+        "$OUT/krst_haunt_test"
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/krst_speak_test" tests/krst_speak_test.c -lm
     run "KRIECHSTROM screen reader (fm1-reader): silent until HELLO, where we are, a knob, a page, the menu, PLAY STOP, a message, WHERE, BYE" \
         "$OUT/krst_speak_test"

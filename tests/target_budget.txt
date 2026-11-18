@@ -75,3 +75,4 @@ hiss_master 23
 kv_run 1628
 kv_post 206
 kv_room 37
+haunt_master 988

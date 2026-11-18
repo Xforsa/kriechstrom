@@ -300,10 +300,16 @@ static void resonate_at(uint32_t b)
     if (b == 2u) { song.g[G_RES] = 127; song.g[G_RKEY] = 9; song.g[G_RCHD] = 2; }   /* A MIN, its longest ring */
 }
 
+/* ---- HAUNT: the damage piece, PRINT / SUCK / DRAG from bar 3 ---- */
+static void print_at(uint32_t b) { if (b == 2u) { song.g[G_HAUNT] = 1; song.g[G_HAMT] = 110; } }
+static void suck_at(uint32_t b) { if (b == 2u) { song.g[G_HAUNT] = 2; song.g[G_HAMT] = 110; } }
+static void drag_at(uint32_t b) { if (b == 2u) { song.g[G_HAUNT] = 3; song.g[G_HAMT] = 110; } }
+
 static const struct { const char *name; void (*song)(void); void (*at)(uint32_t); } DEMO[] = {
     {"dry", damage_song, dry_at}, {"damage", damage_song, damage_at}, {"wall", wall_song, wall_at},
     {"infect", infect_song, infect_at}, {"vox", vox_song, vox_at}, {"howl", howl_song, howl_at},
     {"resonate", resonate_song, resonate_at}, {"splice", splice_song, splice_at},
+    {"print", damage_song, print_at}, {"suck", damage_song, suck_at}, {"drag", damage_song, drag_at},
 };
 
 int main(int argc, char **argv)

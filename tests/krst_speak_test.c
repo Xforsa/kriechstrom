@@ -59,6 +59,7 @@ static void dump_last(const char *kind)
 static void dump_where(const char *kind)
 {
     uint32_t n = host_said_n;
+    sr_send(ANN_HELLO);                                  /* (a reader still there: it says HELLO every 2 s) */
     ui.force = 1;
     frame();
     sr_send(ANN_WHERE);

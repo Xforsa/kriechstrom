@@ -39,6 +39,7 @@ static struct {
     int16_t bpm;
 } spk __attribute__((section(".pool")));
 static char sp_buf[ANN_MAX + 1u] __attribute__((section(".pool")));
+static char spk_trk[48] __attribute__((section(".pool")));   /* "TRACK 1, ANALOG SAW LEAD." (sp_where) */
 
 static void spk_card(uint32_t c, const char *label, const char *val, const char *unit)
 {
@@ -147,7 +148,7 @@ static uint32_t sp_where(char *b)
         }
         sp_add(b, "MENU,");
         sp_add(b, MTAB_NAME[tab % MTAB_COUNT]);
-        sp_end(b, ".");
+        sp_add(b, "TAB.");
         (void)first;
         (void)n;
         return sp_hash(4u, MTAB_NAME[tab % MTAB_COUNT]);
@@ -192,13 +193,18 @@ static uint32_t sp_where(char *b)
         sound_name(TSEL, pn);
         sp_add(b, t);
         sp_end(b, ".");
+        spk_trk[0] = 0;                                  /* (the track and its sound: said after the knobs) */
         str_cpy(t, "TRACK 1,", sizeof t);
         t[6] = (char)('1' + song.sel % NTRK);
-        sp_add(b, t);
-        sp_add(b, e->name);
-        sp_add(b, pn);
-        sp_end(b, ".");
-        h = sp_hash(sp_hash(sp_hash(h, b), "|"), pn);
+        sp_add(spk_trk, t);
+        {   /* the engine, then the sound ("DRUM KIT" on DRUM: the sound alone says both) */
+            uint32_t el = str_len(e->name);
+            if (!(str_len(pn) >= el && !memcmp(pn, e->name, el) && (pn[el] == ' ' || !pn[el])))
+                sp_add(spk_trk, e->name);
+        }
+        sp_add(spk_trk, pn);
+        sp_end(spk_trk, ".");
+        h = sp_hash(sp_hash(sp_hash(h, b), "|"), spk_trk);
     }
     for (c = 0; c < 4u; c++)
         h = sp_hash(h + c, spc.frame[c] == ui.frame ? spc.l[c] : "");
@@ -226,6 +232,8 @@ static void speak(uint32_t now)
                 sp_add(sp_buf, hb);
                 sp_end(sp_buf, ".");
             }
+            if (!ui.layer)
+                sp_add(sp_buf, spk_trk);
         }
     } else if (ui.menu == 1u) {                          /* the menu: the row, its value, its place */
         uint32_t row = ui.menu_sel % MI_COUNT, tab = MI_TAB[row], first = mtab_first(tab), n = mtab_rows(tab);

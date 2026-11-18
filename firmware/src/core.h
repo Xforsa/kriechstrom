@@ -125,7 +125,11 @@ enum {                          /* global parameters */
 /* .. and SPLICE (krst_splice.c: the tape cut and glued), its amount; in the project in G_SAVE's word, which no load
  * reads (project.c PROJ_SPLICE: 0x4000 marks it, so a project before has it off) */
 #define G_SPLICE (G_COUNT + 4)
-#define G_ALL (G_COUNT + 5)
+/* .. and HAUNT (krst_haunt.c: PRINT, SUCK, DRAG on the master), its MODE and AMT; in the project in G_LOAD's word, which
+ * no load reads (project.c PROJ_HAUNT: 0x4000 marks it, so a project before has it off) */
+#define G_HAUNT (G_COUNT + 5)
+#define G_HAMT (G_COUNT + 6)
+#define G_ALL (G_COUNT + 7)
 
 /* stored parameters of an older layout -> today's P_* order. A store keeps np = the P_COUNT it was
  * written with; common parameters are only ever added just before P_E0, so the first np - 8 are

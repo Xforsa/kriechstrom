@@ -916,6 +916,17 @@ static __attribute__((noinline)) void ins_wreck(ins_t *s, const track_t *t, int3
 #include "krst_infect.c"                               /* KRIECHSTROM: INFECT (INSERT INFCT: a track driven by another) */
 #include "krst_resonate.c"                             /* KRIECHSTROM: RESONATE (the mix rings strings in a key) */
 #include "krst_splice.c"                               /* KRIECHSTROM: SPLICE (the tape cut and glued) */
+#include "krst_haunt.c"                                /* KRIECHSTROM: HAUNT (PRINT, SUCK, DRAG) */
+/* KRIECHSTROM: the buses into the mix before a whole-tape effect (SPLICE, HAUNT) */
+static __attribute__((noinline)) void bus_in(int32_t *l, int32_t *r, int32_t *wet, uint32_t n)
+{
+    uint32_t i;
+    for (i = 0; i < n; i++) {
+        l[i] += wet[i];
+        r[i] += wet[i];
+        wet[i] = 0;
+    }
+}
 
 /* the INSERT at rest at once (mix_part: TYPE turned OFF while the part was silent, its fade never ran) */
 static __attribute__((noinline)) void ins_rest(track_t *t)
@@ -1246,12 +1257,12 @@ static void mix_block(int32_t *out, uint32_t n)
             hiss_master(mix_l, mix_r, n);
     }
     if (splice_on()) {                                  /* KRIECHSTROM: SPLICE, the whole tape (the buses in first: */
-        for (i = 0; i < n; i++) {                       /* nothing left there if the master's chain above ran) */
-            mix_l[i] += wet[i];
-            mix_r[i] += wet[i];
-            wet[i] = 0;
-        }
+        bus_in(mix_l, mix_r, wet, n);                   /* nothing left there if the master's chain above ran) */
         splice_master(mix_l, mix_r, n);
+    }
+    if (haunt_on()) {                                   /* KRIECHSTROM: HAUNT, last on the master (the buses in first) */
+        bus_in(mix_l, mix_r, wet, n);
+        haunt_master(mix_l, mix_r, n);
     }
     if (scope_mix)
         scope_take_mix(n);
