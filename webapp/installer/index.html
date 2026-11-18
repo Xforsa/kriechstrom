@@ -832,7 +832,7 @@ function progressStep(img) {
   };
 }
 let image = null;
-const meta = {"version": "0.3.1", "product": "FM-1_57810002", "pkg": "../../firmware/kriechstrom-0.3.1.fwsc"};
+const meta = {"version": "0.4", "product": "FM-1_57810002", "pkg": "../../firmware/kriechstrom-0.4.fwsc"};
 
 let writing = false, stock = null, stockFileEpoch = 0;
 const lockInstaller = (on) => { writing = on; $("go").disabled = on || !image; $("stock-go").disabled = on || !stock; $("stock-file").disabled = on; $("stock-recovery").disabled = on; };

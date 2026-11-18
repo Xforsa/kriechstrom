@@ -23,7 +23,7 @@
   <a class="btn" href="webapp/installer/">Поставить на FM-1</a>
   <a class="btn ghost" href="manual/ru.html">Читать мануал</a>
   <a class="btn ghost" href="manual/ru.html#cheat">Шпаргалка</a>
-  <a class="btn ghost" href="firmware/kriechstrom-0.3.1.fwsc">Скачать kriechstrom-0.3.1.fwsc</a>
+  <a class="btn ghost" href="firmware/kriechstrom-0.4.fwsc">Скачать kriechstrom-0.4.fwsc</a>
 </p>
 
 <div class="shots">
@@ -41,7 +41,7 @@
 <h2>Что внутри</h2>
 <ul>
   <li><b>GLCH</b>, движок из Glitchbox: клиппинг, фолдер, резонансный фильтр, понижение разрядности и микрозаикание; 56 звуков, у большинства уже стоит педаль перегруза.</li>
-  <li><b>179 звуков</b> в 13 движках, готовых к игре: перегруженные басы, холодные лиды, расстроенные клавиши, пэды, шумы и текстуры, плюс 13 драм-китов. Список можно фильтровать по категориям.</li>
+  <li><b>185 звуков</b> в 13 движках, готовых к игре: перегруженные басы, холодные лиды, расстроенные клавиши, пэды, шумы и текстуры, плюс 19 драм-китов. Список можно фильтровать по категориям.</li>
   <li><b>DICE</b>: держи SEQ, жми F5, и у дорожки новая партия в одном из восьми настроений, от MACHINE до HUSH.</li>
   <li><b>HAPPY ACCIDENT</b>: держи EDIT, жми G5, и два-три параметра звука случайно меняются. Удержание SAVE отменяет.</li>
   <li><b>DAMAGE</b>, <b>WALL</b> и <b>HISS</b> на весь микс (FX &gt; DAMAGE): износ ленты или цифры с выпадениями;
@@ -71,8 +71,22 @@
     вклеивается кусок: последняя шестнадцатая ещё раз или задом наперёд, кусок из прошлой доли, плёнка, затянутая на
     октаву вниз, или просто обрыв. Одна ручка: как часто и как злобно.
     <audio controls preload="none" src="audio/splice.m4a"></audio><span class="demo">Два такта сухо, потом SPLICE, с 6-го такта злее.</span></li>
+  <li><b>Шесть своих драм-китов</b> на DRUM, у каждого свои голоса и своя комната или грязь, каждый удар короткий:
+    ROOM (живые барабаны в большой комнате, сплющенной компрессором), GATE (огромный гейтованный снейр, half time),
+    MARCH (только удары, ничего не звенит), ARC (искры электричества на бочке и снейре), ROT (частота дискретизации
+    падает в каждом ударе), SLAB (всё из шума). Каждый на бите, под который сделан: два такта сам, потом с басом и синтом:
+    <audio controls preload="none" src="audio/kit_room_track.m4a"></audio><span class="demo">ROOM.</span>
+    <audio controls preload="none" src="audio/kit_gate_track.m4a"></audio><span class="demo">GATE.</span>
+    <audio controls preload="none" src="audio/kit_march_track.m4a"></audio><span class="demo">MARCH.</span>
+    <audio controls preload="none" src="audio/kit_arc_track.m4a"></audio><span class="demo">ARC.</span>
+    <audio controls preload="none" src="audio/kit_rot_track.m4a"></audio><span class="demo">ROT.</span>
+    <audio controls preload="none" src="audio/kit_slab_track.m4a"></audio><span class="demo">SLAB.</span></li>
+  <li><b>Экранный чтец</b>: с <a href="https://charlesvestal.github.io/fm1-reader/">FM-1 Screen Reader</a> Чарльза
+    Вестала FM-1 проговаривает свой экран: страницу, дорожку и её звук, ручки, пока их крутишь, меню, диалоги и
+    сообщения, своим голосом или через VoiceOver, NVDA, JAWS или TalkBack. Подключи FM-1, открой чтеца в Chrome или
+    Edge, нажми Connect.</li>
   <li>Секвенсор на 64 шага на каждой дорожке: локи, условия, рэтчеты, автоматизация, песни.</li>
-  <li>Драмы: 13 китов, включая DESTROY, восемь линий, сетка на клавишах.</li>
+  <li>Драмы: 19 китов, включая DESTROY и шесть своих, восемь линий, сетка на клавишах.</li>
   <li>Живые эффекты на клавишах: повторы, остановка ленты, фриз, свипы фильтра, ROLL, GATE, броски в ревер и дилей.</li>
   <li>MIDI вход по USB и TRS, MIDI learn, USB-аудио. На компьютере видна как KRIECHSTROM.</li>
   <li>Чёрное с красным, крупные читаемые цифры, подсказки на экране.</li>
@@ -89,9 +103,9 @@
 <h2 id="source">На чём сделано</h2>
 <p>KRIECHSTROM сделан на основе <a href="https://github.com/hugelton/Felucca"><b>Felucca 1.8.2</b></a> (Leo Kuroshita, Hügelton Instruments), с частями <a href="https://github.com/erikdevos/glitchbox"><b>Glitchbox</b></a>
 (erikdevos) и идеями из <a href="https://github.com/sinscum/DIRGE"><b>DIRGE</b></a> (sinscum). Спасибо всем троим за вдохновение. Свободная программа под GNU GPL 3.0:
-<a href="src/kriechstrom-0.3.1-src.tar.gz">исходники этой сборки</a> (6.9 MB).</p>
+<a href="src/kriechstrom-0.4-src.tar.gz">исходники этой сборки</a> (6.9 MB).</p>
 <img class="band" src="art/band.jpg" alt="" width="1600" height="360">
 </main>
-<footer>KRIECHSTROM 0.3.1, Григорий Безбородов · на основе Felucca 1.8.2 · GPL-3.0</footer>
+<footer>KRIECHSTROM 0.4, Григорий Безбородов · на основе Felucca 1.8.2 · GPL-3.0</footer>
 </body>
 </html>
