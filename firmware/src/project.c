@@ -886,7 +886,7 @@ static void project_capture(project_t *p)
     for (i = 0; i < G_COUNT; i++)
         p->g[i] = song.g[i];
     p->g[G_SAVE] = (int16_t)(PROJ_SPLICE | clamp(song.g[G_SPLICE], 0, 127));   /* (KRIECHSTROM) */
-    p->g[G_LOAD] = (int16_t)(PROJ_HAUNT | clamp(song.g[G_HAUNT], 0, 3) | clamp(song.g[G_HAMT], 0, 127) << 2);
+    p->g[G_LOAD] = (int16_t)(PROJ_HAUNT | clamp(song.g[G_HAUNT], 0, 2) | clamp(song.g[G_HAMT], 0, 127) << 2);
     p->sel = song.sel;
     p->parts = NPART;
     p->phys = PROJ_PHYS;
@@ -1111,7 +1111,7 @@ static int project_restore_runtime(const project_t *input)
     song.g[G_RKEY] = (int16_t)((p->rkey & 15u) < 12u ? p->rkey & 15u : 0u);
     song.g[G_RCHD] = (int16_t)(p->rkey >> 4 & 7u);
     song.g[G_SPLICE] = (int16_t)(p->g[G_SAVE] & PROJ_SPLICE ? p->g[G_SAVE] & 127 : 0);
-    song.g[G_HAUNT] = (int16_t)(p->g[G_LOAD] & PROJ_HAUNT ? p->g[G_LOAD] & 3 : 0);   /* (a project before: off) */
+    song.g[G_HAUNT] = (int16_t)(p->g[G_LOAD] & PROJ_HAUNT ? clamp(p->g[G_LOAD] & 3, 0, 2) : 0);   /* (a project before: off) */
     song.g[G_HAMT] = (int16_t)(p->g[G_LOAD] & PROJ_HAUNT ? (p->g[G_LOAD] >> 2) & 127 : GP[G_HAMT].def);
     midi_route = MIDI_ROUTE_AGAIN;                      /* (events_block: what the channels no longer hear let go) */
     for (k = 0; k < NTRK; k++) {

@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* KRIECHSTROM: HAUNT (src/krst_haunt.c: PRINT, SUCK, DRAG), on the real sources:
+/* KRIECHSTROM: HAUNT (src/krst_haunt.c: SUCK, DRAG), on the real sources:
  *   build/host/krst_haunt_test
- * On the power-on project (its drums, 120 BPM), 8 bars after PLAY:
+ * On the power-on project (a kick on the beats, a snare on 2 and 4, 120 BPM), 8 bars after PLAY:
  * 1. MODE OFF or AMT 0: nothing runs, the mix bit for bit as without it.
  * 2. Each mode changes the mix, bounded; the same each time (the grid and the tape from PLAY).
- *    PRINT: the ghost is the mix three beats back (the change correlates with the mix delayed so, not with it now).
- *    SUCK: what it adds comes before the snares and claps (more in the beat before them than in the beat after).
- *    DRAG: the change lies in the bars' last beats and the first moment of the one.
+ *    SUCK: what it adds rises into the snares (more just before them than just after).
+ *    DRAG: the change lies in the bars' last beats and the first 3 ms of the one; turned on mid-song too (its
+ *    grid is the song's from PLAY).
  * 3. Stored: MODE and AMT back from a project (the high bits); a project before has HAUNT off.
  * 4. The page: FX > HAUNT: MODE, AMT. */
 #define KRST_DEMO_DEF 1
@@ -24,6 +24,7 @@ static void ck(const char *what, int ok)
 #define HMAXF (HB * 4u * 60u * FS / 120u + CTL)
 typedef struct { uint64_t h; int32_t peak; } hrun_t;
 static int32_t hm[HMAXF];                                /* the mix (left), in the child; the parent gets it by pipe */
+static int late;                                         /* run_in: HAUNT turned on at bar 2 and a half, not before PLAY */
 static hrun_t run_in(int mode, int amt)
 {
     static int32_t out[2 * CTL];
@@ -34,7 +35,7 @@ static hrun_t run_in(int mode, int amt)
     ui_power_on();
     song.master_q12 = 3200;
     song.g[G_BPM] = 120;
-    song.g[G_HAUNT] = (int16_t)mode;
+    song.g[G_HAUNT] = (int16_t)(late ? 0 : mode);
     song.g[G_HAMT] = (int16_t)amt;
     for (k = 0; k < 16u; k++) {                         /* the drums: a kick on the beats, a snare on 2 and 4 (no
                                                          * other hits: the swells stand apart) */
@@ -46,6 +47,8 @@ static hrun_t run_in(int mode, int amt)
     trk[3].p[P_SLEN] = 16;
     seq_start();
     for (k = 0; k < nb; k++) {
+        if (late && k == nb * 5u / 16u)
+            song.g[G_HAUNT] = (int16_t)mode;
         mix_block(out, CTL);
         for (i = 0; i < CTL; i++) {
             int32_t a = abs(out[2u * i]);
@@ -116,67 +119,51 @@ static double e_diff(const int32_t *a, const int32_t *b, uint32_t i0, uint32_t i
 
 int main(void)
 {
-    uint32_t beat = 60u * FS / 120u, bar = 4u * beat, n = HB * bar;
-    hrun_t off = run(0, 0, mixes[0]), off2 = run(0, 110, 0), none = run(1, 0, 0), pr, sk, dr, pr2;
+    uint32_t beat = 60u * FS / 120u, bar = 4u * beat;
+    hrun_t off = run(0, 0, mixes[0]), off2 = run(0, 110, 0), none = run(1, 0, 0), sk, dr, sk2, drl;
     ck("MODE OFF or AMT 0: nothing runs, the mix bit for bit as without it", off.h == off2.h && off.h == none.h);
-    pr = run(1, 110, mixes[1]);
-    sk = run(2, 110, mixes[2]);
-    dr = run(3, 110, mixes[3]);
-    pr2 = run(1, 110, 0);
-    printf("haunt:   peaks: off %d, PRINT %d, SUCK %d, DRAG %d\n", off.peak, pr.peak, sk.peak, dr.peak);
-    ck("every mode changes the mix, bounded", pr.h != off.h && sk.h != off.h && dr.h != off.h &&
-       pr.peak < 32768 && sk.peak < 32768 && dr.peak < 32768);
-    ck("  the same each time (PLAY wipes the tape, starts the grid)", pr.h == pr2.h);
-    {   /* PRINT: the change's loudness (10 ms) follows the mix's of three beats back more than the mix's now */
-        static double ed[4096], e3[4096], e0[4096];
-        uint32_t w = 441u, nw = 0, i, j;
-        double m_d = 0, m3 = 0, m0 = 0, c3 = 0, c0 = 0, v_d = 0, v3 = 0, v0 = 0;
-        for (i = 4u * bar; i + w <= n && nw < 4096u; i += w, nw++) {
-            double a = 0, b3 = 0, b0 = 0;
-            for (j = i; j < i + w; j++) {
-                double d = (double)mixes[1][j] - mixes[0][j];
-                a += d * d, b3 += (double)mixes[0][j - 3u * beat] * mixes[0][j - 3u * beat], b0 += (double)mixes[0][j] * mixes[0][j];
-            }
-            ed[nw] = sqrt(a), e3[nw] = sqrt(b3), e0[nw] = sqrt(b0);
-            m_d += ed[nw], m3 += e3[nw], m0 += e0[nw];
-        }
-        m_d /= nw, m3 /= nw, m0 /= nw;
-        for (i = 0; i < nw; i++) {
-            c3 += (ed[i] - m_d) * (e3[i] - m3), c0 += (ed[i] - m_d) * (e0[i] - m0);
-            v_d += (ed[i] - m_d) * (ed[i] - m_d), v3 += (e3[i] - m3) * (e3[i] - m3), v0 += (e0[i] - m0) * (e0[i] - m0);
-        }
-        c3 /= sqrt(v_d * v3 + 1e-9), c0 /= sqrt(v_d * v0 + 1e-9);
-        printf("haunt:   PRINT: the change's loudness against the mix 3 beats back %.2f, the mix now %.2f\n", c3, c0);
-        ck("PRINT: the ghost follows the mix of three beats back", c3 > 0.35 && c3 > c0 + 0.25 && pr.h != off.h);
-    }
-    {   /* SUCK: what it adds just before each snare or clap (the swell's top, a quarter beat) against just after */
+    sk = run(1, 110, mixes[1]);
+    dr = run(2, 127, mixes[2]);
+    sk2 = run(1, 110, 0);
+    late = 1;
+    drl = run(2, 127, mixes[3]);
+    late = 0;
+    printf("haunt:   peaks: off %d, SUCK %d, DRAG %d (on mid-song %d)\n", off.peak, sk.peak, dr.peak, drl.peak);
+    ck("every mode changes the mix, bounded", sk.h != off.h && dr.h != off.h && sk.peak < 32768 && dr.peak < 32768);
+    ck("  the same each time (PLAY starts the grid)", sk.h == sk2.h);
+    {   /* SUCK: what it adds just before each snare (the swell's top, a sixteenth) against just after */
         double before = 0, after = 0;
         uint32_t k, st = beat / 4u;
         for (k = 16u; k + 1u < HB * 16u; k++)
-            if (hn_hit_at(k)) {
+            if (k % 16u == 4u || k % 16u == 12u) {
                 uint32_t h = k * st;
-                before += e_diff(mixes[2], mixes[0], h - st, h - 64u, 0);
-                after += e_diff(mixes[2], mixes[0], h + 64u, h + st, 0);
+                before += e_diff(mixes[1], mixes[0], h - st, h - 64u, 0);
+                after += e_diff(mixes[1], mixes[0], h + 64u, h + st, 0);
             }
-        printf("haunt:   SUCK: added energy in the sixteenth before the hits %.3g, after %.3g\n", before, after);
-        ck("SUCK: the swell rises into the hits (more just before them than just after)", before > 2.0 * after);
+        printf("haunt:   SUCK: added energy in the sixteenth before the snares %.3g, after %.3g\n", before, after);
+        ck("SUCK: the swell rises into the snares (more just before them than just after)", before > 2.0 * after);
     }
-    {   /* DRAG: the change lies in each bar's last beat (and the one's first 1/80 of the bar) */
-        double in = 0, out = 0;
-        uint32_t b;
+    {   /* DRAG: the change lies in each bar's last eighth (and the one's first 3 ms); the same turned on mid-song */
+        double in = 0, out = 0, in_l = 0, out_l = 0;
+        uint32_t b, w = bar / 4u;
         for (b = 1; b + 1u < HB; b++) {
-            in += e_diff(mixes[3], mixes[0], b * bar + 3u * beat, b * bar + bar, 0) +
-                  e_diff(mixes[3], mixes[0], (b + 1u) * bar, (b + 1u) * bar + bar / 80u, 0);
-            out += e_diff(mixes[3], mixes[0], b * bar + bar / 80u + 64u, b * bar + 3u * beat - 64u, 0);
+            in += e_diff(mixes[2], mixes[0], b * bar + bar - w, b * bar + bar + 140u, 0);
+            out += e_diff(mixes[2], mixes[0], b * bar + 200u, b * bar + bar - w - 64u, 0);
+            if (b >= 3u) {
+                in_l += e_diff(mixes[3], mixes[0], b * bar + bar - w, b * bar + bar + 140u, 0);
+                out_l += e_diff(mixes[3], mixes[0], b * bar + 200u, b * bar + bar - w - 64u, 0);
+            }
         }
-        printf("haunt:   DRAG: the change in the last beats %.3g, elsewhere %.3g\n", in, out);
-        ck("DRAG: the mix drags in the bars' last beats only", in > 0 && out < in * 0.01);
+        printf("haunt:   DRAG: the change in the last beats %.3g, elsewhere %.3g; turned on mid-song %.3g, %.3g\n",
+               in, out, in_l, out_l);
+        ck("DRAG: the tape brakes in the bars' last beats only", in > 0 && out < in * 0.01);
+        ck("  turned on mid-song: on the song's grid all the same", in_l > 0 && out_l < in_l * 0.01);
     }
     {
         static project_store_t st;
         project_t q, r;
         int ok, m;
-        for (m = 1, ok = 1; m <= 3; m++) {
+        for (m = 1, ok = 1; m <= 2; m++) {
             ui_power_on();
             song.g[G_HAUNT] = (int16_t)m;
             song.g[G_HAMT] = 77;
@@ -202,8 +189,8 @@ int main(void)
         for (i = 0; i < NELEM(PAGES); i++)
             if (str_eq(PAGES[i].title, "HAUNT"))
                 ok = PAGES[i].fam == FAM_FX && PAGES[i].id[0] == G_HAUNT && PAGES[i].id[1] == G_HAMT;
-        ck("the page: FX > HAUNT: MODE (OFF PRINT SUCK DRAG), AMT", ok && str_eq(GP[G_HAUNT].label, "MODE") &&
-           str_eq(GP[G_HAUNT].names[3], "DRAG"));
+        ck("the page: FX > HAUNT: MODE (OFF SUCK DRAG), AMT", ok && str_eq(GP[G_HAUNT].label, "MODE") &&
+           str_eq(GP[G_HAUNT].names[1], "SUCK") && str_eq(GP[G_HAUNT].names[2], "DRAG") && GP[G_HAUNT].max == 2);
     }
     printf("%s\n", bad ? "HAUNT TEST FAILED" : "haunt: all ok");
     return bad != 0;

@@ -40,8 +40,8 @@ needed.
 - **INFECT**: a sidechain pedal; one track drives another (GATE, DUCK, CRUSH, FOLD, RING) or talks through it (VOX, an
   8-band vocoder); the source may sit at LEVEL 0
 - **RESONATE**: four strings on the master tuned to a chord, rung by everything that plays
-- **HAUNT**: one of three on the master: PRINT (a ghost of the next beat before it, as tape print-through), SUCK
-  (a reversed reverb rising into each snare), DRAG (the tape slows over each bar's last beat)
+- **HAUNT**: one of two on the master: SUCK (a reverse swell into each snare and clap), DRAG (a tape brake on each
+  bar's last beat, down to an octave)
 - **SPLICE**: the tape of the whole mix cut and glued back wrong on the sixteenths (repeats, reverses, misplaced pieces,
   half speed, dropouts), one knob
 - MUFF, BASS and SMASH pedals, ROLL and GATE live effects (from Glitchbox)

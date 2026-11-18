@@ -64,7 +64,7 @@ static const char *const N_ITYPE[] = {"OFF", "SOFT", "HARD", "FOLD", "FUZZ", "CR
 /* CRUSH: BITS 1..16 and RATE (the held sample's rate, fx.c INS_HOLD) over the range in 16 even parts (0-terminated) */
 static const char *const N_RKEY[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};   /* RESONATE */
 static const char *const N_RCHD[] = {"OCT", "5TH", "MIN", "MAJ", "SUS", "MIN7", "DIM", "CLST"};
-static const char *const N_HAUNT[] = {"OFF", "PRINT", "SUCK", "DRAG"};   /* HAUNT (krst_haunt.c) */
+static const char *const N_HAUNT[] = {"OFF", "SUCK", "DRAG"};   /* HAUNT (krst_haunt.c; 0.5's PRINT gone) */
 static const char *const N_ISRC[] = {"T1", "T2", "T3", "T4"};   /* KRIECHSTROM: INFCT's source, its MODE */
 static const char *const N_IMODE[] = {"GATE", "DUCK", "CRUSH", "FOLD", "RING", "VOX"};
 static const char *const N_IBITS[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
@@ -253,7 +253,7 @@ static const param_desc_t GP[G_ALL] = {
     [G_RKEY] = PE("KEY", N_RKEY, 9),             /* .. their key (A: the factory sounds' minor), */
     [G_RCHD] = PE("CHORD", N_RCHD, 2),           /* .. their chord */
     [G_SPLICE] = PD("AMT", F_PCT, 0, 127, 0),    /* KRIECHSTROM: SPLICE (krst_splice.c): how often the tape is cut */
-    [G_HAUNT] = PE("MODE", N_HAUNT, 0),          /* KRIECHSTROM: HAUNT (krst_haunt.c): PRINT, SUCK or DRAG, */
+    [G_HAUNT] = PE("MODE", N_HAUNT, 0),          /* KRIECHSTROM: HAUNT (krst_haunt.c): SUCK or DRAG, */
     [G_HAMT] = PD("AMT", F_PCT, 0, 127, 80),     /* .. how much */
 };
 
@@ -563,7 +563,7 @@ static const struct { const char *title, *name, *what; } PAGE_SAY[] = {
     {"DAMAGE", "DAMAGE", "THE WHOLE MIX WEARS OUT"},
     {"RESONATE", "RESONATE", "THE MIX RINGS IN A KEY"},
     {"SPLICE", "SPLICE", "THE TAPE CUT AND GLUED"},
-    {"HAUNT", "HAUNT", "PRINT, SUCK OR DRAG"},
+    {"HAUNT", "HAUNT", "SUCK OR DRAG"},
     {"ENV DEST", "ENV DEST", "WHERE THE ENVELOPE GOES"},
     {"LFO DEST", "LFO DEST", "WHERE THE LFO GOES"},
     {"VOICE", "VOICE", "POLY, MONO, GLIDE"},

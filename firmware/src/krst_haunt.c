@@ -1,38 +1,33 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* KRIECHSTROM: HAUNT, the tape haunted (FX > HAUNT: MODE, AMT). Included by fx.c after SPLICE; mix_block calls it last on
- * the master. One of three at a time (they share one buffer):
- *   PRINT  print-through: a dark, wobbling ghost of what plays a beat later, heard before it. A loop's next beat is what
- *          it played three beats ago, so the ghost is the mix of three beats back (8 bits at 2.75 kHz, dark, saturated)
- *   SUCK   a reversed reverb rising into each snare and clap: the drum tracks' steps say where the next one falls; a beat
- *          before it, the last beat of a small reverb of the mix's top (5.5 kHz) plays backwards, swelling into the hit
- *          (without a drum track: into beats 2 and 4)
- *   DRAG   the tape drags: over the last beat of every bar the mix slows (a delay that grows, up to 43 ms: about a
- *          semitone down at its end), and on the one it is back at once
- * AMT 0 or MODE OFF: nothing runs, the output as without it. The grid is BPM's from PLAY (as SPLICE's); PRINT runs
- * stopped too, SUCK and DRAG only while PLAY plays. The buffer is wiped at PLAY and when MODE changes. */
+ * the master. One of two at a time:
+ *   SUCK   a reverse swell into each snare and clap, as a reversed cymbal: noise whose band opens from 500 Hz to 7 kHz
+ *          as it rises over the beat before the hit, cut dead on it. The drum tracks' steps say where the next one falls
+ *          (without a drum track: beats 2 and 4)
+ *   DRAG   a tape brake on the last beat of every bar: the tape slows (to half speed at the top of AMT: an octave down
+ *          at the bar line) and its level sags; on the one it is back at once
+ * AMT 0 or MODE OFF: nothing runs, the output as without it. The grid is BPM's from PLAY (as SPLICE's); both run only
+ * while PLAY plays. DRAG's tape is wiped at PLAY and when MODE changes. */
 
 #define HN_BYTES 7600u                                   /* (the pool keeps its 8 KB spare: build.py) */
 static union {
-    int8_t b8[HN_BYTES];
     int16_t b16[HN_BYTES / 2u];
 } hn_buf __attribute__((section(".pool")));
-enum { HN_OFF, HN_PRINT, HN_SUCK, HN_DRAG };
-#define HN_PR_DEC 16u                                    /* PRINT: 44.1 kHz / 16 = 2756 Hz */
-#define HN_SK_DEC 8u                                     /* SUCK: 5512 Hz */
-static const uint16_t HN_SK_D[4] = {241, 309, 376, 449};   /* SUCK's reverb lines (5.5 kHz samples) */
-#define HN_SK_LINES (241u + 309u + 376u + 449u)
-#define HN_SK_RING (HN_BYTES - 2u * HN_SK_LINES)          /* its output, 8 bits: 4850 samples, 0.88 s */
-#define HN_DR_FRAMES (HN_BYTES / 4u)                      /* DRAG: 1900 stereo frames (16 bits), 43 ms */
+enum { HN_OFF, HN_SUCK, HN_DRAG };                     /* (G_HAUNT) */
+#define HN_DR_LEN (HN_BYTES / 2u)                         /* DRAG: 3800 mono samples at 22 kHz (16 bits), 172 ms */
 static struct {
     uint8_t mode, live;
-    uint32_t w, cnt, pos, next, step, ph;               /* (ph: DRAG's place in the bar) */                   /* the write position, the decimation's count; the grid */
-    int32_t acc, lp1, lp2, hz1, hp1;                    /* filters and the decimation's sum */
-    uint32_t lfo1, lfo2;                                /* PRINT's wobble */
-    uint16_t lw[4];                                     /* SUCK: the lines' positions */
-    int32_t lp[4];
-    int32_t sw_left, sw_len, sw_rp;                     /* SUCK: the swell: samples left, its length, read (Q8) */
+    uint32_t w, cnt;
+    uint32_t pos;                                       /* samples since PLAY (haunt_tick: kept while HAUNT is off too,
+                                                         * so a HAUNT turned on mid-song sits on the song's grid) */                   /* the write position, the decimation's count; the grid */
+    int32_t half, rp, last;                             /* DRAG: the pair being recorded, the reader (Q8), its last
+                                                         * sample */
+    int32_t sw_left, sw_len, sw_rp;                     /* SUCK: the swell: samples left, its length */
+    int32_t s1, s2, rng;                                /* .. its band-pass, its noise */
+    tsvf_t f;
 } hn;
 
+static inline void haunt_tick(uint32_t n) { if (song.playing) hn.pos += n; }   /* (mix_block, every block, after HAUNT) */
 static inline int haunt_on(void) { return (song.g[G_HAUNT] > 0 && song.g[G_HAMT] > 0) || hn.live; }
 static void haunt_clear(uint32_t mode)
 {
@@ -41,55 +36,14 @@ static void haunt_clear(uint32_t mode)
         hn_buf.b16[i] = 0;
     hn.mode = (uint8_t)mode;
     hn.w = hn.cnt = 0;
-    hn.acc = hn.lp1 = hn.lp2 = hn.hz1 = hn.hp1 = 0;
-    for (i = 0; i < 4u; i++)
-        hn.lw[i] = 0, hn.lp[i] = 0;
+    hn.half = hn.rp = hn.last = 0;
     hn.sw_left = 0;
+    hn.rng = 0x5EED4A17;
 }
 static void haunt_start(void)                           /* (seq.c seq_start: PLAY) */
 {
-    haunt_clear((uint32_t)clamp(song.g[G_HAUNT], 0, 3));
-    hn.pos = hn.next = hn.step = hn.ph = 0;
-}
-
-/* 8 bits: the sign and the square root of the size (so the quiet stays), from and to 16 */
-static int8_t hn_enc(int32_t x)
-{
-    uint32_t a = (uint32_t)(x < 0 ? -x : x), r = 0, b = 1u << 14;
-    if (a > 32767u)
-        a = 32767u;
-    while (b > a)
-        b >>= 2;
-    while (b) {                                         /* integer square root, 0..181 */
-        if (a >= r + b) {
-            a -= r + b;
-            r = (r >> 1) + b;
-        } else {
-            r >>= 1;
-        }
-        b >>= 2;
-    }
-    r = (r * 127u + 90u) / 181u;
-    return (int8_t)(x < 0 ? -(int32_t)r : (int32_t)r);
-}
-static inline int32_t hn_dec(int8_t q)
-{
-    int32_t m = ((q < 0 ? -q : q) * 1459) >> 10, v = m * m;   /* (x 181 / 127, squared) */
-    return q < 0 ? -v : v;
-}
-static inline int32_t hn_ring8(uint32_t base, uint32_t size, int32_t rp)   /* an 8-bit ring at rp (Q8, within one turn
-                                                                            * either side), between samples */
-{
-    int32_t k = rp >> 8;
-    uint32_t i, j;
-    if (k < 0)
-        k += (int32_t)size;
-    else if (k >= (int32_t)size)
-        k -= (int32_t)size;
-    i = (uint32_t)k;
-    j = i + 1u == size ? 0u : i + 1u;
-    int32_t a = hn_dec(hn_buf.b8[base + i]), b = hn_dec(hn_buf.b8[base + j]);
-    return a + (((b - a) * (rp & 255)) >> 8);
+    haunt_clear((uint32_t)clamp(song.g[G_HAUNT], 0, 2));
+    hn.pos = 0;
 }
 
 static const step_t *seq_steps(const track_t *t);      /* (song_chain.c: the steps the track plays, a song's too) */
@@ -120,7 +74,7 @@ static int hn_hit_at(uint32_t k)
 
 static __attribute__((noinline)) void haunt_master(int32_t *l, int32_t *r, uint32_t n)
 {
-    uint32_t mode = (uint32_t)clamp(song.g[G_HAUNT], 0, 3), i;
+    uint32_t mode = (uint32_t)clamp(song.g[G_HAUNT], 0, 2), i;
     int32_t amt = song.g[G_HAMT] > 0 ? clamp(song.g[G_HAMT], 0, 127) : 0;
     uint32_t bpm = (uint32_t)clamp(song.g[G_BPM], 40, 240), st = (uint32_t)(FS * 15u) / bpm, bar = 16u * st;
     if (mode != hn.mode)
@@ -130,93 +84,40 @@ static __attribute__((noinline)) void haunt_master(int32_t *l, int32_t *r, uint3
         return;
     }
     hn.live = 1;
-    if (mode == HN_PRINT) {                             /* the ghost: three beats back, dark, wobbling */
-        uint32_t size = HN_BYTES, d = 3u * 60u * (FS / HN_PR_DEC) / bpm;
-        int32_t g = amt * 240;                          /* (Q15 of x 0.93 at the top: as loud as the mix) */
-        if (d > size - 64u)
-            d = size - 64u;
-        for (i = 0; i < n; i++) {
-            int32_t m = (l[i] + r[i]) >> 2, y, wob;
-            hn.lp1 += ((m - hn.lp1) * 4600) >> 15;      /* (two poles at about 1.1 kHz) */
-            hn.lp2 += ((hn.lp1 - hn.lp2) * 4600) >> 15;
-            hn.acc += hn.lp2;
-            if (++hn.cnt >= HN_PR_DEC) {
-                hn_buf.b8[hn.w] = hn_enc(hn.acc / (int32_t)HN_PR_DEC);
-                hn.w = hn.w + 1u == size ? 0u : hn.w + 1u;
-                hn.acc = 0;
-                hn.cnt = 0;
-            }
-            hn.lfo1 += 68168u;                          /* 0.7 Hz */
-            hn.lfo2 += 516150u;                         /* 5.3 Hz */
-            wob = sine_i(hn.lfo1) * 7 + sine_i(hn.lfo2) * 3;   /* (Q15 x 2.75 kHz samples) */
-            {
-                uint32_t k = hn.w >= d ? hn.w - d : hn.w + size - d;
-                y = hn_ring8(0, size, (int32_t)k * 256 + (int32_t)hn.cnt * 16 - (wob >> 7));   /* (cnt x 256 / 16) */
-            }
-            hn.hz1 += ((y - hn.hz1) * 700) >> 15;       /* (a high-pass at about 150 Hz) */
-            y = softclip((y - hn.hz1) * 4);              /* (x 4, saturated: the grit brings back a top) */
-            y = (y * g) >> 14;                          /* (x 2: the mix's level) */
-            l[i] += y;
-            r[i] += y;
-        }
-        return;
-    }
-    if (mode == HN_SUCK) {                              /* a reversed reverb rising into the next snare */
-        int16_t *line = hn_buf.b16;
-        uint32_t base = 2u * HN_SK_LINES, ring = HN_SK_RING, ahead = 4u;
-        int32_t g = amt * 1400;                         /* (Q12: x 43 at the top) */
-        if (ahead * st / HN_SK_DEC + 8u > ring)          /* (slow: half a beat, the ring holds 0.88 s) */
+    if (mode == HN_SUCK) {                              /* a reverse swell into the next snare: noise, its band opening */
+        uint32_t ahead = 4u;
+        int32_t g = amt * 280;                          /* (Q15 of x 1.1 at the top) */
+        if (ahead * st > FS)                            /* (slow: half a beat, a swell up to a second) */
             ahead = 2u;
-        for (i = 0; i < n; i++) {
-            int32_t m = (l[i] + r[i]) >> 2, hp = m - hn.hp1;
-            hn.hp1 += ((m - hn.hp1) * 1400) >> 15;       /* (from about 300 Hz) */
-            hn.acc += hp;
-            if (++hn.cnt >= HN_SK_DEC) {                /* the reverb, at 8.8 kHz */
-                int32_t in = hn.acc / (int32_t)HN_SK_DEC, o[4], y = 0, h0, h1, h2, h3, mm[4];
-                int16_t *ln = line;
-                uint32_t j;
-                hn.acc = 0;
-                hn.cnt = 0;
-                for (j = 0; j < 4u; j++) {
-                    o[j] = ln[hn.lw[j]];
-                    hn.lp[j] += ((o[j] - hn.lp[j]) * 30800) >> 15;   /* (0.94) */
-                    o[j] = hn.lp[j];
-                    y += o[j];
-                    ln += HN_SK_D[j];
+        uint32_t step = hn.pos / st, rem = hn.pos % st;  /* (the sixteenth we are in, and how far into it) */
+        for (i = 0; i < n; i++, rem++) {
+            if (rem >= st)
+                rem = 0, step++;
+            if (song.playing && rem == 0) {             /* a sixteenth: a beat ahead, is there a hit? */
+                if (!hn.sw_left && hn_hit_at(step + ahead)) {
+                    hn.sw_len = hn.sw_left = (int32_t)(ahead * st);
+                    hn.s1 = hn.s2 = 0;
                 }
-                h0 = o[0] + o[1], h1 = o[0] - o[1], h2 = o[2] + o[3], h3 = o[2] - o[3];
-                mm[0] = h0 + h2, mm[1] = h1 + h3, mm[2] = h0 - h2, mm[3] = h1 - h3;
-                for (j = 0, ln = line; j < 4u; j++) {   /* (Hadamard x 1/2 x 0.93) */
-                    ln[hn.lw[j]] = (int16_t)clamp((in >> 1) + ((mm[j] * 15237) >> 15), -32767, 32767);
-                    if (++hn.lw[j] >= HN_SK_D[j])
-                        hn.lw[j] = 0;
-                    ln += HN_SK_D[j];
-                }
-                hn_buf.b8[base + hn.w] = hn_enc(clamp(y >> 1, -32767, 32767));
-                hn.w = hn.w + 1u == ring ? 0u : hn.w + 1u;
-            }
-            if (song.playing) {                         /* the grid: a beat ahead, is there a hit? */
-                if (hn.pos >= hn.next) {
-                    if (!hn.sw_left && hn_hit_at(hn.step + ahead)) {
-                        hn.sw_len = hn.sw_left = (int32_t)(ahead * st);
-                        hn.sw_rp = (int32_t)hn.w * 256;  /* (from now, backwards) */
-                    }
-                    hn.next += st;
-                    hn.step++;
-                }
-                hn.pos++;
             }
             if (hn.sw_left > 0) {
-                int32_t u = hn.sw_len - hn.sw_left, e, y;   /* rising: (u / len)^3, cut 40 samples before the hit */
-                uint32_t q = ((uint32_t)u << 13) / ((uint32_t)hn.sw_len >> 2 | 1u);   /* Q15 */
-                e = (int32_t)((q * q) >> 15);            /* (u^2: it is heard sooner) */
-                if (hn.sw_left < 40)
-                    e = (e * hn.sw_left) / 40;
-                hn.sw_rp -= 256 / (int32_t)HN_SK_DEC;
-                if (hn.sw_rp < 0)
-                    hn.sw_rp += (int32_t)ring * 256;
-                y = hn_ring8(base, ring, hn.sw_rp);
-                y = (((y * e) >> 15) * g) >> 11;
+                int32_t u = hn.sw_len - hn.sw_left, e, y, cut;
+                uint32_t q = ((uint32_t)u << 13) / ((uint32_t)hn.sw_len >> 2 | 1u);   /* Q15, 0 .. 1 */
+                e = (int32_t)((((q * q) >> 15) * q) >> 15);   /* (u^3: rising, the most at the end) */
+                if (hn.sw_left < 32)                    /* (cut at the hit: 32 samples) */
+                    e = (e * hn.sw_left) >> 5;
+                if (!(hn.sw_left & 31) || u == 0) {     /* the band, once in 32: 500 Hz .. 7 kHz as it rises */
+                    cut = kv_cut(500u + ((q * 6500u) >> 15));   /* (krst_kits.c: Hz to dsp.c's index) */
+                    tsvf_coef_k(&hn.f, cut, 2900);       /* (Q ~1.4) */
+                }
+                {
+                    int32_t x = (int32_t)noise32(&hn.rng) >> 16, v3 = x - hn.s2;
+                    int32_t v1 = (hn.f.a1 * hn.s1 + hn.f.a2 * v3) >> 13;
+                    int32_t v2 = hn.s2 + ((hn.f.a2 * hn.s1 + hn.f.a3 * v3) >> 13);
+                    hn.s1 = clamp(2 * v1 - hn.s1, -150000, 150000);
+                    hn.s2 = clamp(2 * v2 - hn.s2, -150000, 150000);
+                    y = clamp((v1 * 2900) >> 12, -65535, 65535);
+                }
+                y = (((y * e) >> 15) * g) >> 14;        /* (x 2: the mix's level) */
                 l[i] += y;
                 r[i] += (y * 29) >> 5;
                 hn.sw_left--;
@@ -224,38 +125,51 @@ static __attribute__((noinline)) void haunt_master(int32_t *l, int32_t *r, uint3
         }
         return;
     }
-    /* DRAG: the bar's last beat drags, the one catches up */
+    /* DRAG: a tape brake on the bar's last beat: the reader slows (to half speed at the top: an octave down at the bar
+     * line), the mix recorded mono at half rate meanwhile; on the one, back to the live mix in 3 ms */
     {
         int16_t *b = hn_buf.b16;
-        uint32_t size = HN_DR_FRAMES, maxd = (uint32_t)amt * 1880u / 127u;   /* (43 ms at the top) */
-        for (i = 0; i < n; i++) {
-            uint32_t ph = song.playing ? hn.ph : 0u, dl = 0;
-            int32_t xl = l[i], xr = r[i];
-            b[2u * hn.w] = (int16_t)clamp(xl >> 2, -32767, 32767);
-            b[2u * hn.w + 1u] = (int16_t)clamp(xr >> 2, -32767, 32767);
-            if (ph > bar - bar / 4u) {                  /* the last beat: the delay grows (u^2) */
-                uint32_t u = ((ph - (bar - bar / 4u)) << 12) / (bar / 4u);   /* Q12 */
-                dl = (maxd * ((u * u) >> 12)) >> 4;      /* Q8 samples */
+        uint32_t size = HN_DR_LEN, win = bar / 4u, start = bar - win;   /* (the last beat) */
+        int32_t depth = amt * 129;                      /* (Q15: how far the speed falls, 0.5 at the top) */
+        {   /* (a slow tempo: no deeper than the ring holds; the lag is depth x window / 2, in half-rate samples) */
+            uint32_t lag = ((uint32_t)depth * win) >> 17;   /* (32 bits: depth < 2^14, win < 2^16) */
+            if (lag + 64u > size)
+                depth = (int32_t)(((size - 64u) << 17) / win);
+        }
+        uint32_t ph = hn.pos % bar;                     /* (where in the bar, since PLAY) */
+        for (i = 0; i < n; i++, ph = ph + 1u == bar ? 0u : ph + 1u) {
+            int32_t m = (l[i] + r[i]) >> 2;              /* (as SPLICE's tape: (l + r) / 4) */
+            if (hn.half & 1) {                          /* record: the pair's mean, at half the rate */
+                b[hn.w] = (int16_t)clamp((m + (hn.half >> 1)) >> 1, -32767, 32767);
+                hn.w = hn.w + 1u == size ? 0u : hn.w + 1u;
+                hn.half = 0;
+            } else {
+                hn.half = (m << 1) | 1;
             }
-            if (dl) {
-                uint32_t rp = (hn.w + size) * 256u - dl, k0 = rp >> 8, k1;
-                k0 = k0 >= size ? k0 - size : k0;
-                k1 = k0 + 1u == size ? 0u : k0 + 1u;
-                int32_t f = (int32_t)(rp & 255u);
-                l[i] = (b[2u * k0] + (((b[2u * k1] - b[2u * k0]) * f) >> 8)) << 2;
-                r[i] = (b[2u * k0 + 1u] + (((b[2u * k1 + 1u] - b[2u * k0 + 1u]) * f) >> 8)) << 2;
-            } else if (song.playing && hn.pos >= bar && ph < bar / 80u) {   /* the one: from where it was, at once */
-                uint32_t k0 = hn.w >= maxd ? hn.w - maxd : hn.w + size - maxd;
-                int32_t u = (int32_t)((ph << 12) / (bar / 80u));
-                l[i] = (xl * u + ((b[2u * k0] << 2) * (4096 - u))) >> 12;
-                r[i] = (xr * u + ((b[2u * k0 + 1u] << 2) * (4096 - u))) >> 12;
+            if (song.playing && hn.pos + i >= bar && ph >= start) {   /* the brake */
+                int32_t u = (int32_t)(((ph - start) << 12) / win), rate, y, k0, k1, f;
+                if (ph == start || !hn.last)            /* (from the newest sample: the one just written; also
+                                                         * when turned on mid-window) */
+                    hn.rp = (int32_t)(hn.w ? hn.w - 1u : size - 1u) * 256;
+                rate = 32768 - ((depth * u) >> 12);     /* Q15 of the speed */
+                hn.rp += rate >> 8;                     /* (half-rate samples, Q8: x 1/2 a sample) */
+                if (hn.rp >= (int32_t)size * 256)
+                    hn.rp -= (int32_t)size * 256;
+                k0 = hn.rp >> 8;
+                k1 = k0 + 1 == (int32_t)size ? 0 : k0 + 1;
+                f = hn.rp & 255;
+                y = (b[k0] + (((b[k1] - b[k0]) * f) >> 8)) << 1;
+                y = (y * (4096 - (u >> 2))) >> 12;      /* (and the level sags a quarter) */
+                hn.last = y;
+                l[i] = y;
+                r[i] = y;
+            } else if (song.playing && hn.last && ph < 132u) {   /* the one: back in 3 ms */
+                int32_t u = (int32_t)ph * 31;
+                l[i] = (l[i] * u + hn.last * (4096 - u)) >> 12;
+                r[i] = (r[i] * u + hn.last * (4096 - u)) >> 12;
             }
-            hn.w = hn.w + 1u == size ? 0u : hn.w + 1u;
-            if (song.playing) {
-                hn.pos++;
-                if (++hn.ph >= bar)
-                    hn.ph = 0;
-            }
+            if (ph == 131u)
+                hn.last = 0;
         }
     }
 }

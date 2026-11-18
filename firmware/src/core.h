@@ -125,7 +125,7 @@ enum {                          /* global parameters */
 /* .. and SPLICE (krst_splice.c: the tape cut and glued), its amount; in the project in G_SAVE's word, which no load
  * reads (project.c PROJ_SPLICE: 0x4000 marks it, so a project before has it off) */
 #define G_SPLICE (G_COUNT + 4)
-/* .. and HAUNT (krst_haunt.c: PRINT, SUCK, DRAG on the master), its MODE and AMT; in the project in G_LOAD's word, which
+/* .. and HAUNT (krst_haunt.c: SUCK, DRAG on the master), its MODE and AMT; in the project in G_LOAD's word, which
  * no load reads (project.c PROJ_HAUNT: 0x4000 marks it, so a project before has it off) */
 #define G_HAUNT (G_COUNT + 5)
 #define G_HAMT (G_COUNT + 6)

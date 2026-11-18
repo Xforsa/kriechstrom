@@ -5,6 +5,18 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-18
+
+### Changed
+- HAUNT: PRINT is gone (its ghost did not come through and its 8-bit tape crackled); SUCK is a reverse swell now, noise
+  whose band opens into each snare and clap, cut dead on it, with nothing recorded (no crackle); DRAG is a tape brake
+  on each bar's last beat, down to an octave at the top of AMT
+- MODE is OFF, SUCK, DRAG
+
+### Fixed
+- DRAG read the tape's oldest sample instead of its newest, so it smeared instead of slowing
+- HAUNT turned on in the middle of a song kept its own grid from that moment: it sits on the song's grid from PLAY now
+
 ## [0.5] - 2026-11-18
 
 ### Added

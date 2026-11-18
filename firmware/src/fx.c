@@ -916,7 +916,7 @@ static __attribute__((noinline)) void ins_wreck(ins_t *s, const track_t *t, int3
 #include "krst_infect.c"                               /* KRIECHSTROM: INFECT (INSERT INFCT: a track driven by another) */
 #include "krst_resonate.c"                             /* KRIECHSTROM: RESONATE (the mix rings strings in a key) */
 #include "krst_splice.c"                               /* KRIECHSTROM: SPLICE (the tape cut and glued) */
-#include "krst_haunt.c"                                /* KRIECHSTROM: HAUNT (PRINT, SUCK, DRAG) */
+#include "krst_haunt.c"                                /* KRIECHSTROM: HAUNT (SUCK, DRAG) */
 /* KRIECHSTROM: the buses into the mix before a whole-tape effect (SPLICE, HAUNT) */
 static __attribute__((noinline)) void bus_in(int32_t *l, int32_t *r, int32_t *wet, uint32_t n)
 {
@@ -1264,6 +1264,7 @@ static void mix_block(int32_t *out, uint32_t n)
         bus_in(mix_l, mix_r, wet, n);
         haunt_master(mix_l, mix_r, n);
     }
+    haunt_tick(n);                                      /* (its place since PLAY, on or off) */
     if (scope_mix)
         scope_take_mix(n);
     if (perf) {
