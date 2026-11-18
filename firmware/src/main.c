@@ -226,6 +226,12 @@ static void fm1_main(void)
             }
         }
 #if FELUCCA_OTA
+        {   /* a screen reader's SysEx (announce.c), before the editor and the updater look */
+            const uint8_t *sp_p;
+            uint32_t sp_n;
+            if (ota_frame_get(&sp_p, &sp_n) && ann_frame(sp_p, sp_n, fm1_ms))
+                ota_frame_done();
+        }
         ed_service();                                   /* web editor SysEx */
         ota_service();                                  /* M-UPGRADE handshake */
         if (usb.ota_req) {                              /* M-UPGRADE upgrade command */
@@ -262,6 +268,10 @@ static void fm1_main(void)
         felucca_dbg.stage = 2;
         ui_leds();
         ui_draw();
+#if FELUCCA_OTA
+        speak(fm1_ms);                                  /* the screen reader: what changed on the screen */
+        ann_tick(fm1_ms);
+#endif
         felucca_dbg.stage = 9;
         while (fm1_ms - m < 15u) {                               /* ~60 UI frames/s at most */
             ui_input();

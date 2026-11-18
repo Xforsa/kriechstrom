@@ -13,7 +13,7 @@ glitch_render 1897
 grain_render 1723
 grain_block 137
 phys_render 61
-drum_render 170
+drum_render 229
 noise_render 259
 fm6_render 364
 fm6_op_run 72
@@ -72,3 +72,6 @@ wall_layers 214
 splice_master 236
 krst_level 33
 hiss_master 23
+kv_run 1628
+kv_post 206
+kv_room 37

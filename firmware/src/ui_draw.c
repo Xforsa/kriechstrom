@@ -11,6 +11,7 @@
  * free text (names) is ellipsised at its size. */
 static void draw_menu(void);
 static int name_on(void);                              /* NAME (ui_name.c) */
+static void spk_card(uint32_t c, const char *label, const char *val, const char *unit);   /* the screen reader (krst_speak.c) */
 static uint64_t lock_held(void);                       /* parameter locks: the steps held on STEP (ui_input.c) */
 static void name_draw(void);
 #include "ui_help.c"                                   /* 1.5: HELP's hints (draw_foot, ui_layer.c draw_layer) */
@@ -665,6 +666,7 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
     card_mot = (uint8_t)((card_mot & ~(1u << c)) | (uint32_t)mot << c);
     if (str_eq(unit, label))
         unit = "";                                      /* "BPM 124 BPM", "USB OFF USB": the label says it */
+    spk_card(c, label, val, unit);                      /* (what the card says, for a screen reader) */
     if (icon == ICON_AUTO)
         icon = icon_for_label(label);
     str_cpy(key, label, 12);                            /* cache key: texts + colour + gauge */

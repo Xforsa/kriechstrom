@@ -188,6 +188,12 @@ cpu/DRUM/kit_77 2131
 cpu/DRUM/kit_DEEP 2086
 cpu/DRUM/kit_TIGHT 2093
 cpu/DRUM/kit_PERC 2160
+cpu/DRUM/13_ROOM_KIT 2894
+cpu/DRUM/14_GATE_KIT 2851
+cpu/DRUM/15_MARCH_KIT 2646
+cpu/DRUM/16_ARC_KIT 2584
+cpu/DRUM/17_ROT_KIT 2614
+cpu/DRUM/18_SLAB_KIT 2561
 cpu/mix/idle 1225
 cpu/mix/idle_drums 1471
 cpu/mix/3parts_full_drums 2483

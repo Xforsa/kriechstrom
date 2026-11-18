@@ -38,6 +38,7 @@
 <tr><td>STEP: держать шаг + ручка</td><td>лок: значение только на этом шаге</td></tr>
 <tr><td>STEP: держать шаг + <kbd>EDIT</kbd></td><td>снять локи шага</td></tr>
 <tr><td>Драм-сетка</td><td>чёрные выбирают линию, белые это шаги 1-16</td></tr>
+<tr><td>Экранный чтец</td><td>USB, потом charlesvestal.github.io/fm1-reader в Chrome или Edge, Connect</td></tr>
 <tr><td><kbd>SEQ</kbd> держать + F5 / G5</td><td>DICE (новая партия) / MOOD (следующее настроение)</td></tr>
 <tr><td><kbd>SEQ</kbd> держать + K1-K4</td><td>LEN, DIV, SWING, GATE</td></tr>
 <tr><td><kbd>SEQ</kbd> держать + <kbd>OCT−</kbd></td><td>дорожка как была до слоя</td></tr>
@@ -248,6 +249,29 @@ K1 идёт по шагам (страницы по 16), K2 линия, K3 уда
 <p>Локи тоже работают: держи клавишу шага и крути ручку. Держи <kbd>EDIT</kbd> на драм-дорожке: чёрные клавиши мьютят
 линии. Киты: DRUM KIT, DEEP KIT, TIGHT KIT, PERC KIT, DESTROY (из Glitchbox, с педалью SMASH) и киты KRIECHSTROM:
 FACTORY, STOMP, GATED, BUNKER, TOMB, RIOT, METAL SHOP, DRY BONES. Кит меняется ручкой PRESETS, как любой звук.</p>
+<h3 id="kits">Свои киты KRIECHSTROM</h3>
+<p>В KIT шесть китов, сделанных для KRIECHSTROM: у каждого свои голоса и своя комната или грязь, это не киты Felucca
+с другими настройками. Каждый удар короткий, не нота. Загружаются звуками ROOM KIT, GATE KIT, MARCH KIT, ARC KIT,
+ROT KIT и SLAB KIT, или ручкой KIT на странице EDIT.</p>
+<ul>
+<li><b>ROOM</b>: живые барабаны в большой комнате, сплющенной компрессором; весь кит параллельно перегружен и
+раскрошен. На BELL тарелка.</li>
+<li><b>GATE</b>: огромный гейтованный снейр: комната, обрубленная через четверть секунды, бочка тоже под гейтом, весь кит
+через 12-битный сэмплер. Лучше всего в half time.</li>
+<li><b>MARCH</b>: только удары, ничего не звенит: перегруженная бочка со щелчком колотушки, сухой треск, сапоги на CLAP,
+военные барабаны на TOM и BELL, дробь на RIM для сбивок.</li>
+<li><b>ARC</b>: электричество: бочка сыплет искрами, дуга проходит через снейр, хэты шипят током.</li>
+<li><b>ROT</b>: цифровой распад: частота дискретизации падает в каждом ударе, на BELL обратный свип.</li>
+<li><b>SLAB</b>: power electronics: все барабаны из шума, под бочкой настоящий удар, на BELL шумовая тарелка.</li>
+</ul>
+<p>TUNE двигает высоту всех линий, TONE их фильтры на октаву вверх или вниз, DECY длину (от половины до двух раз). DRV
+добавляет киту грязи.</p>
+<audio controls preload="none" src="../audio/kit_room_track.m4a"></audio><span class="demo">ROOM на своём бите, два такта сам, потом с басом и синтом.</span>
+<audio controls preload="none" src="../audio/kit_gate_track.m4a"></audio><span class="demo">GATE.</span>
+<audio controls preload="none" src="../audio/kit_march_track.m4a"></audio><span class="demo">MARCH.</span>
+<audio controls preload="none" src="../audio/kit_arc_track.m4a"></audio><span class="demo">ARC.</span>
+<audio controls preload="none" src="../audio/kit_rot_track.m4a"></audio><span class="demo">ROT.</span>
+<audio controls preload="none" src="../audio/kit_slab_track.m4a"></audio><span class="demo">SLAB.</span>
 
 <h2 id="tools">SEQ TOOLS</h2>
 <p>Держи <kbd>SEQ</kbd> на любой странице. Белые клавиши превращаются в инструменты для выбранной дорожки. Каждый
@@ -420,6 +444,14 @@ K3 <b>CHORD</b> (OCT, 5TH, MIN, MAJ, SUS, MIN7, DIM, CLST). Всё, что иг�
   В KRIECHSTROM служебная USB-консоль выключена по умолчанию, поэтому macOS 13-15 сразу видит аудиовход.</li>
 </ul>
 
+<h2 id="reader">Экранный чтец</h2>
+<p>KRIECHSTROM работает с <a href="https://charlesvestal.github.io/fm1-reader/">FM-1 Screen Reader</a> Чарльза
+Вестала, для незрячих и слабовидящих музыкантов. Подключи FM-1 к компьютеру или телефону по USB, открой страницу
+чтеца в Chrome или Edge и нажми Connect. FM-1 говорит, где ты (страница, дорожка и её звук, четыре ручки и их
+значения), каждую ручку, пока её крутишь, строки меню с их местом, диалоги и как на них ответить, сообщения, PLAY и
+STOP. Страница говорит своим голосом или отдаёт слова VoiceOver, NVDA, JAWS или TalkBack. Пока чтец не спросит, FM-1
+ничего не шлёт, так что DAW на том же порту лишнего MIDI не видит.</p>
+
 <h2 id="menu">Меню и экран</h2>
 <p>Держи <kbd>HOME</kbd>: меню. ALGORITHM переключает вкладки, PRESETS строки, любая ручка меняет значение, HOME
 закрывает. KRIECHSTROM стартует с темой STROM (чёрное с красным), с крупными цифрами (LARGE) и с подсказками (HELP).
@@ -432,7 +464,8 @@ K3 <b>CHORD</b> (OCT, 5TH, MIN, MAJ, SUS, MIN7, DIM, CLST). Всё, что иг�
 <h2 id="credits">Авторы и исходники</h2>
 <p>KRIECHSTROM это свободная программа под GNU GPL 3.0. Форк <b>Felucca</b> (Leo Kuroshita, Hügelton Instruments,
 GPL-3.0, движки под MIT). Из <b>Glitchbox</b> (erikdevos): движок GLCH, кит DESTROY, педали MUFF / BASS / SMASH,
-ROLL и GATE. Идеи из <b>DIRGE</b> (sinscum). Исходники именно этой сборки лежат на
+ROLL и GATE. Идеи из <b>DIRGE</b> (sinscum). Часть экранного чтеца в прошивке из
+<b>fm1-base</b> (Charles Vestal, MPL-2.0), для его FM-1 Screen Reader. Исходники именно этой сборки лежат на
 <a href="../ru.html#source">главной</a>.</p>
 </main>
 <footer>KRIECHSTROM @VERSION@ · на основе Felucca 1.8.2 · GPL-3.0</footer>

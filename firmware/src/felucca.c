@@ -48,7 +48,7 @@
 #define FM1_CRASH_CTX_N 1u         /* chip/fm1_irq.h: the registers of the last crash only (80 B of .noinit; four would
                                     * not fit beside the project slots) */
 #ifndef FELUCCA_VERSION
-#define FELUCCA_VERSION "v0.3.1"   /* KRIECHSTROM 0.3.1, on Felucca 1.8.2 */ /* shown in the menu, the console and the editor; build.py --release X.Y */
+#define FELUCCA_VERSION "v0.4"   /* KRIECHSTROM 0.4, on Felucca 1.8.2 */ /* shown in the menu, the console and the editor; build.py --release X.Y */
 #endif
 #if FELUCCA_OTA && !FELUCCA_FLASH
 #error "FELUCCA_OTA needs FELUCCA_FLASH"
@@ -91,6 +91,7 @@ static __attribute__((noinline)) int c1_wait(void) { return fm1_cpu1_wait(); }  
 #include "fx.c"
 
 /* ------------------------------------------------- MIDI, sequencer --- */
+#define SXQ 128u                 /* KRIECHSTROM: the SysEx send queue holds a whole screen-reader SAY (announce.c) */
 #include "../bsp/chip/usb.c"
 #if FELUCCA_UART
 #include "midi_uart.c"
@@ -122,6 +123,13 @@ static __attribute__((noinline)) int c1_wait(void) { return fm1_cpu1_wait(); }  
 #include "../bsp/chip/ota.c"
 #include "ota_hw.c"
 #include "editor.c"              /* web editor SysEx (needs the OTA SysEx plumbing) */
+/* KRIECHSTROM: the screen reader (fm1-reader): announce.c from fm1-base (MPL-2.0, its one copy there; synced by
+ * fm1-reader's tools/sync_announce.sh), the link to the words file (tools/gen_words.py), what the screen says */
+#define ANN_NAME "KRIECHSTROM " FELUCCA_VERSION
+#define ANN_DATA __attribute__((section(".pool")))
+#include "ann_words.h"
+#include "announce.c"
+#include "krst_speak.c"
 #endif
 #if FELUCCA_CDC
 #include "console.c"

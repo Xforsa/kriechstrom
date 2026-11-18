@@ -26,7 +26,9 @@ needed.
   most with a distortion pedal set
 - **HOWL** and **MIC** in GLCH: no oscillator, a loop that feeds itself; HOWL a string in overdrive that sustains and
   screams in tune, MIC a microphone in front of a speaker that howls at the note
-- **179 sounds** in 13 engines, 13 drum kits including DESTROY
+- **185 sounds** in 13 engines, 19 drum kits including DESTROY
+- **six drum kits of its own** (KIT ROOM, GATE, MARCH, ARC, ROT, SLAB): its own voices, each kit with its own room or
+  grit (a squashed room, a gated snare, only impacts, sparks, a falling sample rate, noise); every hit a short impact
 - **DICE**: hold SEQ, press F5, the track gets a new part in one of eight moods (MACHINE, GRIND, MARCH 7/8, GLITCH,
   SPIRAL, GHOST, SURGE, HUSH); G5 picks the mood
 - **HAPPY ACCIDENT**: hold EDIT, press G5, two or three parameters of the sound change at random; hold SAVE to undo
@@ -43,6 +45,8 @@ needed.
 - MUFF, BASS and SMASH pedals, ROLL and GATE live effects (from Glitchbox)
 - power-on sounds and patterns that play when PLAY is pressed
 - the STROM theme (black and red), large values and hints on screen, effects that toggle with a tap
+- **screen reader** support: the screen said aloud with Charles Vestal's
+  [FM-1 Screen Reader](https://charlesvestal.github.io/fm1-reader/), for blind and low-vision musicians
 - its own USB name and identity `FM-1_57810002`; works with the newer FM-1 flash (`0xB36014`)
 
 **Projects and sounds:** KRIECHSTROM reads Felucca's projects, user presets and samples as they are. Projects of
@@ -78,7 +82,9 @@ Bugs to [Issues](https://github.com/Xforsa/kriechstrom/issues), ideas and music 
 
 KRIECHSTROM is a fork of **Felucca** by Leo Kuroshita, Hügelton Instruments (GPL-3.0-only), with the GLCH engine, the
 DESTROY kit, the MUFF / BASS / SMASH pedals and ROLL / GATE from **Glitchbox** by erikdevos (GPL-3.0-only) and ideas
-from **DIRGE** by sinscum. Everything Felucca credits is in [CREDITS.md](CREDITS.md); the licences in
+from **DIRGE** by sinscum. The screen reader's device side (`firmware/src/announce.c`, `tools/gen_words.py`) is from
+**fm1-base** by Charles Vestal (MPL-2.0), for his [FM-1 Screen Reader](https://charlesvestal.github.io/fm1-reader/).
+Everything Felucca credits is in [CREDITS.md](CREDITS.md); the licences in
 [LICENSING.md](LICENSING.md) and [LICENSES/](LICENSES/).
 
 Free software under the [GPL-3.0-only](LICENSE): if you share builds, share the source. Not affiliated with M-VAVE or

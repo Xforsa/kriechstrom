@@ -7,6 +7,8 @@
   shots/*.png                        the screens the pages use, from tests/ui_render (build/ui_new/LARGE_STROM)
   audio/*.m4a                        the sound demos the pages use, from tools/krst_demos.sh (build/demos)
   webapp/installer, webapp/editor    web/make_site.py
+  words/*.json                       the screen reader's words files (web/words: every one ever linked; a device
+                                     points at the one its build was made with, build/gen/ann_words.h)
   firmware/kriechstrom-VER.fwsc      the package
   src/kriechstrom-VER-src.tar.gz     the source of this build (GPL-3.0): the files git tracks
 
@@ -148,7 +150,17 @@ def main(pkg, version, out):
         if not (DEMOS / n).exists():
             raise SystemExit(f"audio/{n}: not rendered (run tools/krst_demos.sh first)")
         shutil.copy(DEMOS / n, out / "audio" / n)
-    print(f"site: {out} ({fwsc}, {len(used)} screens, {len(sounds)} demos, {total} sounds, source {size})")
+    words = sorted((ROOT / "web" / "words").glob("*.json"))
+    (out / "words").mkdir()
+    for w in words:
+        shutil.copy(w, out / "words" / w.name)
+    link = (ROOT / "build" / "gen" / "ann_words.h")
+    if link.exists():
+        m = re.search(r'words/([0-9a-f]+\.json)', link.read_text())
+        if m and not (out / "words" / m.group(1)).exists():
+            raise SystemExit(f"words/{m.group(1)}: the build links to it, web/words has not got it")
+    print(f"site: {out} ({fwsc}, {len(used)} screens, {len(sounds)} demos, {total} sounds, {len(words)} words files, "
+          f"source {size})")
 
 
 if __name__ == "__main__":

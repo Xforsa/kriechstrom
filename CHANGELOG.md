@@ -5,6 +5,20 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 
 ## [Unreleased]
 
+## [0.4] - 2026-11-18
+
+### Added
+- six drum kits of its own on DRUM (KIT 13..18: ROOM GATE MARCH ARC ROT SLAB): each lane its own voice (swept impacts,
+  modes, noise, sparks, a falling sample rate, metal), and the part's own bus: a room squashed by a compressor, a
+  parallel drive and crush, GATE's comb rooms cut dead and 12-bit sampler; six sounds ROOM KIT .. SLAB KIT
+- screen reader support (fm1-reader, Charles Vestal's): the screen said in words over USB-MIDI SysEx, silent until a
+  reader says HELLO; the words file is published with the site (web/words/)
+- tests: the kits' hits against their designs, levels, knobs, the engine and the bus (tests/krst_kits_test.c); the
+  screen reader's paths (tests/krst_speak_test.c) and its words audited (tools/krst_speak_audit.sh)
+
+### Changed
+- the USB SysEx send queue holds 128 packets (a whole screen-reader message)
+
 ## [0.3.1] - 2026-11-17
 
 ### Changed

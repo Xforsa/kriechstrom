@@ -1,0 +1,206 @@
+# url: https://xforsa.github.io/kriechstrom/words/
+# KRIECHSTROM's screen, in words, for the screen reader (fm1-reader). Screen text <TAB> what to say. tools/gen_words.py
+# builds web/words/<id>.json from it (published with the site) and the link the device sends.
+ACC	accent
+ACCEL	acceleration
+AAH	ah
+ALG	algorithm
+ALLOC	voice allocation
+ANIM	animation
+ANLG	analog
+ATAMT	aftertouch amount
+ATDST	aftertouch destination
+POL BI	polarity bipolar
+POL UNI	polarity unipolar
+VCE UNI	voice unison
+BI	bipolar
+UNI	unipolar
+BITROT	bit rot
+BRTH	breath
+CDP	chorus depth
+CRT	chorus rate
+CH#-#	channels # to #
+CH#	channel #
+CH	channel
+CHOR	chorus
+CHR	chromatic
+CHRD	chord
+CLK	clock
+COLR	color
+CONV	converge
+CRSH	crush
+ct	cents
+DAMG	damage
+DCAY	decay
+DCW	shape
+DEC	decay
+DECY	decay
+DEST	destination
+DIA3	diatonic triad
+DIA7	diatonic seventh
+DIMHW	diminished half whole
+DIMWH	diminished whole half
+DIVG	diverge
+DMG	damage
+DN	down
+DNUP	down up
+UPDN	up down
+DRFT	drift
+DRV	drive
+DSIN	double sine
+DST	destination
+DSTR	destroy
+DTN	detune
+DTUN	detune
+DTUNE	detune
+EP	electric piano
+EQ	equalizer
+ESYNC	envelope sync
+EXC	excitation
+EXPR	expression
+EXT	external
+FB	feedback
+FDBK	feedback
+FLANG	flanger
+FLT	filter
+FM	F M
+FMX	cross F M
+GLCH	glitch
+GLD	glide
+GLMOD	glide mode
+HATCL	closed hat
+HATOP	open hat
+INFCT	infect
+INSRT	insert
+INIT	initial
+INT#	interval #
+INT	internal
+INV#	inversion #
+INV	inverted
+KTR	key tracking
+LFSR	shift register
+LOC	locrian
+LOWCUT	low cut
+MAJ7	major seventh
+MIN7	minor seventh
+DOM7	dominant seventh
+SUS4	suspended fourth
+MAJ	major
+MEMB	membrane
+MIC	microphone
+MLVL	modulator level
+MODW	mod wheel
+MPEN	minor pentatonic
+MRAT	modulator ratio
+NOIS	noise
+NOIZ	noise
+OCTA	octave
+OMNI	all channels
+PERC	percussion
+PHASR	phaser
+PHRY	phrygian
+PHS	phase
+PJMP	pitch jump
+PLS3	three pulses
+PLS	pulse
+PPT	two pulses and a triangle
+PRIO	priority
+PTCH	pitch
+PWM STR	pulse width strings
+PWM	pulse width modulation
+PW	pulse width
+QNT	quantize
+RSAW	resonant saw
+RTRI	resonant triangle
+RTRP	resonant trapezoid
+SCL	scale
+MIDI IN SEL	MIDI in, selected track
+SEL	selected
+SHP	shape
+SLCR	slicer
+SPLS	saw pulse
+SPRD	spread
+SQR	square
+SRC	source
+SST	two saws and a triangle
+SAW3	three saws
+TRI3	three triangles
+SYNC3	three synced
+RING3	three ring
+STRC	stretch
+STRNG	string
+SUPR	super saw
+SWG	swing
+SWP	sweep
+SYMP	sympathetic strings
+SYNCP	sync pulse
+TRK	track
+TRN	transpose
+TRS	T R S jack
+TV	T V
+USR#	user #
+USR	user
+VCE	voice
+VEL	velocity
+VIB	vibrato
+VMOD	velocity modulation
+VOIC	voicing
+VOWL2	vowel 2
+VOWL	vowel
+WAVE2	wave 2
+VOX	vocoder
+WRAM	table
+2BAR	2 bars
+4BAR	4 bars
+1BIT	1 bit
+4BIT	4 bit
+8BIT	8 bit
+4B/2	4 bit, half rate
+KRIECHSTROM	kriechstrom
+1/16D	dotted sixteenth
+1/8D	dotted eighth
+1/4D	dotted quarter
+1/2D	dotted half
+# /#	# of #
+S&H	sample and hold
+S&T	saw and triangle
+P&S	pulse and saw
+P+N	pulse and noise
+R+S	ring and sync
+R+SP	ring and sync pulse
+UNDO/REDO	undo or redo
+32T	thirty second triplet
+16T	sixteenth triplet
+8T	eighth triplet
+4T	quarter triplet
+16D	dotted sixteenth
+8D	dotted eighth
+4D	dotted quarter
+PIT	pitch
+CHO	chorus
+PAT	pattern
+TRIG	trigger
+CHAR	character
+AMP	amplitude
+SIN	sine
+INS	insert
+CUT	cutoff
+DAMP	damping
+STUT	stutter
+RATCH	ratchet
+PROB	probability
+POS	position
+RAND	random
+LD	lead
+SRC AT	source aftertouch
+SCL MIX	scale mixolydian
+SCL PEN	scale pentatonic
+SCL MEL	scale melodic minor
+SCL LYD	scale lydian
+SCL HARM	scale harmonic minor
+SCL DOR	scale dorian
+SCL MIN	scale minor
+SCL MAJ	scale major
+SCL PHRY	scale phrygian
+SCL WHOLE	scale whole tone
+MOD	modulation

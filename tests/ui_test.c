@@ -157,6 +157,39 @@ static struct { uint32_t stage; } felucca_dbg;
 #include "../firmware/src/ui_layer.c"
 #include "../firmware/src/upreset.c"
 #include "../firmware/src/project.c"
+/* KRIECHSTROM: the screen reader on the host (src/krst_speak.c, announce.c): each SAY into host_said (the tests read
+ * them) and, with KRST_SAID_LOG=FILE, appended to that file as MSG / WARN <TAB> text (the audit's; fm1-reader) */
+#define ANN_NAME "KRIECHSTROM " FELUCCA_VERSION
+#include "ann_words.h"
+#include "../firmware/src/announce.c"
+#define KRST_SPEAK_HOST 1
+#include "../firmware/src/krst_speak.c"
+static char host_said[64][ANN_MAX + 1u];
+static uint8_t host_said_flags[64];
+static uint32_t host_said_n;
+static int ann_wire_send(const uint8_t *p, uint32_t n)
+{
+    static FILE *log;
+    static int opened;
+    uint32_t i, k;
+    if (n < 7u || p[0] != 0xF0u || p[4] != ANN_SAY)
+        return 0;
+    k = host_said_n++ % 64u;
+    for (i = 6u; i < n && p[i] != 0xF7u && i - 6u < ANN_MAX; i++)
+        host_said[k][i - 6u] = (char)p[i];
+    host_said[k][i - 6u] = 0;
+    host_said_flags[k] = p[5];
+    if (!opened) {
+        const char *f = getenv("KRST_SAID_LOG");
+        opened = 1;
+        log = f ? fopen(f, "a") : 0;
+    }
+    if (log) {
+        fprintf(log, "%s\t%s\n", (p[5] & ANN_KEEP) ? "WARN" : "MSG", host_said[k]);
+        fflush(log);
+    }
+    return 0;
+}
 
 static int check(const char *what, int ok)
 {
@@ -254,6 +287,8 @@ static void frame(void)
     fm1_ms += 16u;
     ui_input();
     ui_draw();
+    speak(fm1_ms);                                /* (the screen reader: main.c, after the drawing) */
+    ann_tick(fm1_ms);
 }
 static void press(uint32_t label)                 /* a tap: down, a frame, up, a frame */
 {

@@ -38,6 +38,7 @@ units. Everything Felucca does still works: this manual covers what you need to 
 <tr><td>STEP: hold a step + knob</td><td>a lock: that value on that step only</td></tr>
 <tr><td>STEP: hold a step + <kbd>EDIT</kbd></td><td>clear the step's locks</td></tr>
 <tr><td>Drum grid</td><td>black keys pick the lane, white keys are steps 1-16</td></tr>
+<tr><td>Screen reader</td><td>USB, then charlesvestal.github.io/fm1-reader in Chrome or Edge, Connect</td></tr>
 <tr><td><kbd>SEQ</kbd> hold + F5 / G5</td><td>DICE (a new part) / MOOD (the next mood)</td></tr>
 <tr><td><kbd>SEQ</kbd> hold + K1-K4</td><td>LEN, DIV, SWING, GATE</td></tr>
 <tr><td><kbd>SEQ</kbd> hold + <kbd>OCT−</kbd></td><td>the track back as before the layer</td></tr>
@@ -249,6 +250,29 @@ K1 moves along the steps (pages of 16), K2 picks the lane, K3 the hit, K4 the ac
 <p>Locks work here too: hold a step key and turn a knob. Hold <kbd>EDIT</kbd> on a drum track: the black keys mute lanes.
 The kits: DRUM KIT, DEEP KIT, TIGHT KIT, PERC KIT, DESTROY (from Glitchbox, with the SMASH pedal), and the KRIECHSTROM kits
 FACTORY, STOMP, GATED, BUNKER, TOMB, RIOT, METAL SHOP, DRY BONES. Change the kit with PRESETS like any sound.</p>
+<h3 id="kits">KRIECHSTROM's own kits</h3>
+<p>KIT has six kits made for KRIECHSTROM, each with its own voices and its own room or grit, not Felucca's kits
+re-tuned. Every hit is a short impact, not a note. They load with ROOM KIT, GATE KIT, MARCH KIT, ARC KIT, ROT KIT and
+SLAB KIT, or turn KIT on the EDIT page.</p>
+<ul>
+<li><b>ROOM</b>: live drums in a big room squashed by a compressor; the whole kit driven and crushed alongside. A crash
+on BELL.</li>
+<li><b>GATE</b>: the huge gated snare: a room cut dead after a quarter of a second, the kick gated too, the kit through a
+12-bit sampler. Plays best in half time.</li>
+<li><b>MARCH</b>: only impacts, nothing rings: a driven kick with a beater click, a dry crack, boots on CLAP, war drums
+on TOM and BELL, a drag on RIM for fills.</li>
+<li><b>ARC</b>: electricity: the kick throws sparks, the arc runs through the snare, the hats are a hiss of current.</li>
+<li><b>ROT</b>: digital decay: the sample rate falls through every hit, a reverse swell on BELL.</li>
+<li><b>SLAB</b>: power electronics: every drum made of noise, a punch under the kick, a noise crash on BELL.</li>
+</ul>
+<p>TUNE moves the pitch of every lane, TONE its filters up or down an octave, DECY its length (half to double). DRV
+pushes the kit's grit.</p>
+<audio controls preload="none" src="../audio/kit_room_track.m4a"></audio><span class="demo">ROOM on its beat, two bars alone, then with a bass and a synth.</span>
+<audio controls preload="none" src="../audio/kit_gate_track.m4a"></audio><span class="demo">GATE.</span>
+<audio controls preload="none" src="../audio/kit_march_track.m4a"></audio><span class="demo">MARCH.</span>
+<audio controls preload="none" src="../audio/kit_arc_track.m4a"></audio><span class="demo">ARC.</span>
+<audio controls preload="none" src="../audio/kit_rot_track.m4a"></audio><span class="demo">ROT.</span>
+<audio controls preload="none" src="../audio/kit_slab_track.m4a"></audio><span class="demo">SLAB.</span>
 
 <h2 id="tools">SEQ TOOLS</h2>
 <p>Hold <kbd>SEQ</kbd> on any page. The white keys become tools for the selected track. Each tool is one undo
@@ -417,6 +441,14 @@ you press PLAY.</p>
   KRIECHSTROM ships with the USB serial console off, so macOS 13-15 sees the audio input right away.</li>
 </ul>
 
+<h2 id="reader">Screen reader</h2>
+<p>KRIECHSTROM works with Charles Vestal's <a href="https://charlesvestal.github.io/fm1-reader/">FM-1 Screen Reader</a>,
+for blind and low-vision musicians. Plug the FM-1 into the computer or phone with USB, open the reader page in Chrome or
+Edge and click Connect. The FM-1 says where you are (the page, the track and its sound, the four knobs and their
+values), each knob as you turn it, the menu's rows with their place, dialogs and how to answer them, messages, PLAY
+and STOP. The page speaks in its own voice or hands the words to VoiceOver, NVDA, JAWS or TalkBack. The FM-1 sends
+nothing until a reader asks, so a DAW on the same port sees no extra MIDI.</p>
+
 <h2 id="menu">Menu and screen</h2>
 <p>Hold <kbd>HOME</kbd> for the menu. ALGORITHM moves between the tabs, PRESETS through the rows, any knob changes the
 value, HOME closes it. KRIECHSTROM starts with the STROM palette (black and red), LARGE on (big values) and HELP on.
@@ -429,7 +461,8 @@ For other colours: DISPLAY &gt; COLOR.</p>
 <h2 id="credits">Credits and source</h2>
 <p>KRIECHSTROM is free software under the GNU GPL 3.0. It is a fork of <b>Felucca</b> by Leo Kuroshita, Hügelton
 Instruments (GPL-3.0, its engines MIT). Parts of <b>Glitchbox</b> by erikdevos: the GLCH engine, the DESTROY kit, the
-MUFF / BASS / SMASH inserts, ROLL and GATE. Ideas from <b>DIRGE</b> by sinscum. The source of this exact build is on
+MUFF / BASS / SMASH inserts, ROLL and GATE. Ideas from <b>DIRGE</b> by sinscum. The screen reader's device side is from
+<b>fm1-base</b> by Charles Vestal (MPL-2.0), for his FM-1 Screen Reader. The source of this exact build is on
 the <a href="../index.html#source">home page</a>.</p>
 </main>
 <footer>KRIECHSTROM @VERSION@ · on Felucca 1.8.2 · GPL-3.0</footer>

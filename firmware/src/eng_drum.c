@@ -35,19 +35,26 @@
  * State: 8 lanes per part in the part's engine memory (engines.c eng_mem; drum_kit_of: the parameters, coefficients, voice and metal
  * source of each lane). */
 #include "drum_voice.c"
+#include "krst_kits.c"   /* KRIECHSTROM: its own kits (ROOM GATE MARCH ARC ROT SLAB) */
 
 /* 1.5.6 (Discussion #216): DEEP TIGHT PERC (9..11), kits put together from the five's pieces (drum_voice.c DV_KIT),
  * appended. Firmware before 1.5.6 clamps 9..11 to 8 (77) when it loads them (param_fit) */
-enum { DK_STD, DK_HAND, DK_CYM, DK_HCYM, DK_80, DK_10, DK_66, DK_55, DK_77, DK_DEEP, DK_TIGHT, DK_PERC, DK_DSTR, DK_COUNT };   /* (KRIECHSTROM: DSTR appended, after Glitchbox) */   /* (stored values) */
+enum { DK_STD, DK_HAND, DK_CYM, DK_HCYM, DK_80, DK_10, DK_66, DK_55, DK_77, DK_DEEP, DK_TIGHT, DK_PERC, DK_DSTR,
+       DK_ROOM, DK_GATE, DK_MARCH, DK_ARC, DK_ROT, DK_SLAB, DK_COUNT };   /* (KRIECHSTROM 0.4: its own kits, appended) */   /* (KRIECHSTROM: DSTR appended, after Glitchbox) */   /* (stored values) */
 /* the kit a stored KIT value plays: HAND CYM H+CYM (retired after 1.0.4) -> 66 (a conga on TOM), 10 (a cymbal on
  * BELL), 77 (claves on RIM, a cymbal on BELL) */
 static const uint8_t DK_PLAYS[DK_COUNT] = {DK_STD, DK_66, DK_10, DK_77, DK_80, DK_10, DK_66, DK_55, DK_77, DK_DEEP,
-                                           DK_TIGHT, DK_PERC, DK_DSTR};
+                                           DK_TIGHT, DK_PERC, DK_DSTR, DK_ROOM, DK_GATE, DK_MARCH, DK_ARC, DK_ROT, DK_SLAB};
 static uint32_t drum_kit_plays(int32_t v) { return DK_PLAYS[clamp(v, 0, DK_COUNT - 1)]; }
 /* the model kits' pieces where a lane plays another than its own (the lane's name): 1 TOM -> CONGA, 2 RIM -> CLAVE,
  * 4 BELL -> CYM */
 /* a model kit (80 10 66 55 77 DEEP TIGHT PERC: drum_voice.c DV_KIT), not STD or DSTR (Glitchbox: STD's pieces, destroyed) */
 static int drum_model_kit(uint32_t kit) { return kit >= DK_80 && kit <= DK_PERC; }
+/* KRIECHSTROM's kits (krst_kits.c): its own voices and the part's bus; -> KK_*, or -1 */
+static int drum_krst(uint32_t kit) { return kit >= DK_ROOM && kit < DK_COUNT ? (int)(kit - DK_ROOM) : -1; }
+/* a lane those play: its role 0xF0 | KK_* (Felucca's roles, DV_KTYPE included, stay below 0x90) */
+#define KV_ROLE(kk) ((uint8_t)(0xF0u | (uint32_t)(kk)))
+#define KV_IS(role) (((role) & 0xF0u) == 0xF0u)
 static const uint8_t DK_SWAP[DV_NKIT] = {0, 4, 1, 0, 2 | 4, 4, 0, 1 | 2};
 static const uint8_t DV_TYPE_LANE[DVT_COUNT] = {
     DV_KICK, DV_KICK, DV_SNARE, DV_CLAP, DV_HATC, DV_HATO, DV_TOM, DV_TOM, DV_RIM, DV_RIM, DV_BELL, DV_BELL,
@@ -55,9 +62,17 @@ static const uint8_t DV_TYPE_LANE[DVT_COUNT] = {
 
 typedef struct {
     dv_param_t key;              /* the parameters the coefficients were set up with */
-    dv_coef_t c;
-    dv_voice_t v;
-    dv_metal_t mb;
+    union {
+        struct {                 /* Felucca's kits */
+            dv_coef_t c;
+            dv_voice_t v;
+            dv_metal_t mb;
+        };
+        struct {                 /* KRIECHSTROM's (krst_kits.c) */
+            kv_coef_t kc;
+            kv_voice_t kv;
+        };
+    };
     uint8_t owner;               /* the voice playing the lane: index + 1, 0 = none */
     uint8_t role;                /* the drum struck (DVT_*) */
     int8_t st;                   /* its semitones from the designed pitch (the GM map) */
@@ -65,7 +80,9 @@ typedef struct {
     int32_t held;                /* KIT DSTR: the crusher's held sample */
 } drum_lane_t;
 
-ENG_MEM_FITS("DRUM", sizeof(drum_lane_t) * DV_NLANE);
+ENG_MEM_FITS("DRUM", sizeof(drum_lane_t) * DV_NLANE + sizeof(kv_bus_t));
+/* the part's bus for KRIECHSTROM's kits (krst_kits.c): after the lanes */
+static kv_bus_t *drum_bus_of(drum_lane_t *K) { return (kv_bus_t *)(void *)(K + DV_NLANE); }
 /* 1.4.1: each part's lanes muted (bit l: lane l), the EDIT layer's black keys 1..8 (ui_layer.c EQA_DRUM): a channel
  * mute. The lane plays on as always (hits, keys, MIDI: its voice, the CPU, the choke) and drum_render drops its output,
  * so unmuted it sounds as if it never was. Performance state: not saved, not recorded, no undo; a sound load into the
@@ -73,7 +90,8 @@ ENG_MEM_FITS("DRUM", sizeof(drum_lane_t) * DV_NLANE);
 static uint8_t drum_mute[NPART];
 
 /* 1..3 named as the kit they play: aliases, never shown or offered (EDITOR_PROTOCOL.md: retired values) */
-static const char *const N_DRUM_KIT[] = {"STD", "66", "10", "77", "80", "10", "66", "55", "77", "DEEP", "TIGHT", "PERC", "DSTR"};
+static const char *const N_DRUM_KIT[] = {"STD", "66", "10", "77", "80", "10", "66", "55", "77", "DEEP", "TIGHT", "PERC", "DSTR",
+                                             "ROOM", "GATE", "MARCH", "ARC", "ROT", "SLAB"};
 static const char *const N_DRUM_KICK[] = {"PUNCH", "ROUND"};
 
 /* General MIDI notes 35..81 -> the drum (DVT_*; DVT_PUNCH: the kick KICK picks) and semitones from its
@@ -217,6 +235,7 @@ static void drum_note_on(track_t *t, voice_t *v)
     drum_lane_t *K = drum_kit_of(t), *L;
     uint32_t i = (uint32_t)(v - t->v), role, lane;
     int32_t st;
+    int kk;
     if (!K || i >= NVOICE)
         return;
     role = drum_gm(t->p, v->note, &st);
@@ -225,6 +244,29 @@ static void drum_note_on(track_t *t, voice_t *v)
     if (L->owner == i + 1u)                              /* this voice played another lane: it stops there */
         L->owner = 0;
     L = &K[lane];
+    kk = drum_krst(drum_kit_plays(t->p[P_E0]));
+    if (kk >= 0) {                                       /* KRIECHSTROM's kits: the lane's own voice */
+        if (L->role != KV_ROLE(kk)) {   /* (another kit played it: from rest) */
+            uint8_t *z = (uint8_t *)&L->kv;
+            for (uint32_t q = 0; q < sizeof L->kv; q++)
+                z[q] = 0;
+            L->key.type = 0xFF;
+            L->role = KV_ROLE(kk);
+        }
+        L->st = (int8_t)st;
+        L->owner = (uint8_t)(i + 1u);
+        v->s[0] = (int32_t)lane;
+        v->env_out = v->vel * 258;
+        v->env = 1 << 24;
+        L->kv.trig = 1;
+        if (lane == DV_HATC && K[DV_HATO].kv.live && K[DV_HATO].role == L->role) {   /* the closed hat chokes the open */
+            drum_lane_t *O = &K[DV_HATO];
+            uint32_t f = FS * 4u / 1000u;
+            if (O->kc.len > f && O->kv.n + f < O->kc.len)
+                O->kv.n = O->kc.len - f;
+        }
+        return;
+    }
     if (L->role != role || L->v.type != dv_run_type(role)) {   /* another drum on this lane: from rest */
         dv_init(&L->v, role);
         L->key.type = 0xFF;
@@ -250,7 +292,7 @@ static int32_t drum_amp(track_t *t, voice_t *v, int32_t adsr)
     (void)adsr;
     if (!v->active)                                      /* (taken for another part: env_tick ended it) */
         return 0;
-    if (!L || (!L->v.live && !L->v.trig)) {
+    if (L && KV_IS(L->role) ? !L->kv.live && !L->kv.trig : !L || (!L->v.live && !L->v.trig)) {
         v->active = v->gate = 0;
         v->stage = 0;
         v->env = 0;
@@ -281,6 +323,46 @@ static void drum_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
     }
     if (n > CTL)
         n = CTL;
+    if (KV_IS(L->role)) {                                /* KRIECHSTROM's kits (a hit rings out on its own kit) */
+        uint32_t kk = L->role & 0x0Fu, lane = (uint32_t)v->s[0] & (DV_NLANE - 1u);
+        const kv_lane_def_t *d = &KV_KIT[kk][lane];
+        kv_bus_t *b = drum_bus_of(drum_kit_of(t));
+        int16_t *comb = 0;
+        int32_t snd = d->send * 164;                     /* % -> Q14 */
+        int live_bus = drum_krst(drum_kit_plays(p[P_E0])) == (int)kk;   /* (the part's bus runs this kit) */
+        k.type = (uint8_t)L->role;
+        k.decay = (uint8_t)clamp(p[P_E3], 0, 127);
+        k.tone = (uint8_t)clamp(p[P_E2], 0, 127);
+        k.extra = (uint8_t)lane;
+        k.level = 0;
+        k.accent = 0;
+        k.tune = (int16_t)(L->st * 16 + (p[P_E1] - 64) * 3);
+        if (((const uint32_t *)&k)[0] != ((const uint32_t *)&L->key)[0] ||
+            ((const uint32_t *)&k)[1] != ((const uint32_t *)&L->key)[1]) {
+            kv_setup(&L->kc, d, k.tune, k.decay, k.tone);
+            L->key = k;
+        }
+        if (live_bus && b->kit != kk)
+            kv_bus_clear(b, kk);
+        if (live_bus && KV_BUS[kk].room == 2u && d->comb) {          /* GATE: the kick's and the snare's comb rooms */
+            comb = d->comb == 1u ? b->buf : b->buf + KB_GKN;
+            if (L->kv.trig) {                            /* (each hit rings from silence) */
+                uint32_t q, nq = d->comb == 1u ? KB_GKN : KB_GATE - KB_GKN;
+                for (q = 0; q < nq; q++)
+                    comb[q] = 0;
+            }
+        }
+        kv_run(&L->kc, &L->kv, y, n, comb);
+        if ((drum_mute[(uint32_t)(t - trk) % NPART] >> lane) & 1u)
+            return;
+        for (i = 0; i < n; i++) {
+            int32_t o = voice_amp(soft_knee(y[i] + (y[i] >> 2), 24000), m, i) << 1;
+            out[i] += o;
+            if (live_bus)
+                b->send[i] += ((o >> 2) * snd) >> 12;
+        }
+        return;
+    }
     r = L->role;
     dv_default(&k, r);                                   /* the knobs move every lane from its design (64) */
     k.decay = (uint8_t)clamp(k.decay + p[P_E3] - 64, 0, 127);
@@ -343,6 +425,16 @@ static void drum_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
     }
 }
 
+/* KRIECHSTROM's kits: the part's bus after the voices (krst_kits.c kv_post); Felucca's: nothing */
+static uint32_t drum_post(track_t *t, int32_t *out, uint32_t n)
+{
+    drum_lane_t *K = drum_kit_of(t);
+    int kk = drum_krst(drum_kit_plays(t->p[P_E0]));
+    if (!K || kk < 0 || n != CTL)
+        return 0;
+    return kv_post(drum_bus_of(K), (uint32_t)kk, out, n, clamp(t->p[P_E7], 0, 127));
+}
+
 /* the GM drum map, the first C (key 7) is the kick (C2, 36) */
 static int32_t drum_keys(const track_t *t, uint32_t k)
 {
@@ -370,6 +462,13 @@ static const preset_t DRUM_PRESETS[] = {
     {"RIOT", {DK_DSTR, 60, 100, 60, 100, 120, 0, 100}, {0, 100, 127, 100}, 0, 0, FX(40, 0, 0, 30), PAT(14)},
     {"METAL SHOP", {DK_PERC, 70, 100, 60, 90, 110, 0, 40}, {0, 100, 127, 100}, 0, 0, FX(15, 0, 10, 30), PAT(12)},
     {"DRY BONES", {DK_TIGHT, 64, 50, 40, 60, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 4), PAT(12)},
+    /* KRIECHSTROM 0.4: its own kits (krst_kits.c), each at its design; their rooms are their own (no REV) */
+    {"ROOM KIT", {DK_ROOM, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 0), PAT(12)},
+    {"GATE KIT", {DK_GATE, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 0), PAT(12)},
+    {"MARCH KIT", {DK_MARCH, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 0), PAT(12)},
+    {"ARC KIT", {DK_ARC, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 0), PAT(12)},
+    {"ROT KIT", {DK_ROT, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 0), PAT(12)},
+    {"SLAB KIT", {DK_SLAB, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 0), PAT(12)},
 };
 
 static const engine_t ENG_DRUM = {
@@ -390,9 +489,10 @@ static const engine_t ENG_DRUM = {
     .note_on = drum_note_on,
     .render = drum_render,
     .amp = drum_amp,
+    .post = drum_post,
     .knob = {P_E1, P_E2, P_E3, P_E4},
     .poly = DV_NLANE,
     .oneshot = 1,
     .keys = drum_keys,
-    .mem = sizeof(drum_lane_t) * DV_NLANE,
+    .mem = sizeof(drum_lane_t) * DV_NLANE + sizeof(kv_bus_t),
 };

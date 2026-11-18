@@ -1,6 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
-# KRIECHSTROM: the site's sound demos. Renders them with the real sources (tests/krst_demos.c) into build/demos/*.wav and
+# KRIECHSTROM: the site's sound demos. Renders them with the real sources (tests/krst_demos.c: a piece per feature;
+# tests/krst_kits_demo.c: each of its drum kits on its own beat) into build/demos/*.wav and
 # encodes them as AAC (build/demos/*.m4a, which site/build.py copies to audio/). Needs a C compiler and, for the .m4a,
 # afconvert (macOS) or ffmpeg.
 #   tools/krst_demos.sh
@@ -12,6 +13,10 @@ cc -O2 -w -DKRST_PALETTE=0 -DKRST_LARGE_DEF=0 -DKRST_PANEL_DEF=0 \
     -Ifirmware/hal -Ifirmware/bsp/chip -Ifirmware/bsp/boards/fm1 -Ifirmware/src -Ibuild/gen \
     -o build/host/krst_demos tests/krst_demos.c -lm
 build/host/krst_demos build/demos
+cc -O2 -w -DKRST_PALETTE=0 -DKRST_LARGE_DEF=0 -DKRST_PANEL_DEF=0 \
+    -Ifirmware/hal -Ifirmware/bsp/chip -Ifirmware/bsp/boards/fm1 -Ifirmware/src -Ibuild/gen \
+    -o build/host/krst_kits_demo tests/krst_kits_demo.c -lm
+build/host/krst_kits_demo build/demos all "${KRST_KITS_DEMO:-track}"
 for w in build/demos/*.wav; do
     m="${w%.wav}.m4a"
     if command -v afconvert >/dev/null 2>&1; then
