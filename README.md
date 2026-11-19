@@ -14,6 +14,9 @@ of [Glitchbox](https://github.com/erikdevos/glitchbox): thanks to both for the i
 Kriechstrom is German for creepage current, the leakage across worn insulation that leaves a branching mark like the
 one above.
 
+Also on VIBE FM: [KRIECHSTROM for VIBE FM](https://github.com/Xforsa/kriechstrom-vibe), the same sound as a native Vibe
+([site](https://xforsa.github.io/kriechstrom-vibe/)).
+
 ## Why
 
 Glitchbox is built on Felucca 1.5.1 for the older FM-1 flash chip and does not run on the newer units (UC25HQ80,
