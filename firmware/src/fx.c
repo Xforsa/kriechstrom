@@ -1230,6 +1230,11 @@ static void mix_block(int32_t *out, uint32_t n)
     for (i = 0; i < NPART; i++)                         /* (one core: as 1.6) */
         mix_part(&trk[i], n);
 #endif
+#ifdef KRST_EXT_MIX
+    KRST_EXT_MIX(n);                                    /* a host's own sources (KRIECHSTROM for VIBE FM: the audio
+                                                         * input) into the mix and the sends, before the buses; on the
+                                                         * FM-1 nothing */
+#endif
     if (perf)
         perf_pre(mix_l, mix_r, send_d, send_r, n);
     fx_buses(send_c, send_d, send_r, wet, n);
