@@ -1020,6 +1020,9 @@ static __attribute__((noinline)) void mix_spread(track_t *t, int32_t *b, uint32_
         SM(r)[i] += ((x * grm) >> 12) + ((y * grd) >> 12);
     }
     t->peak = pk;
+#ifdef KRST_EXT_TRACK
+    KRST_EXT_TRACK(t, b, d, n, lvl, glm, grm, gld, grd);   /* a host's track outputs (VIBE FM); none on the FM-1 */
+#endif
 }
 
 /* a part's cost for the second core's split (mix_split, after Jangada's): its voices x its engine's cost per
@@ -1104,6 +1107,9 @@ static void mix_part(track_t *t, uint32_t n SM_DECL)
             SM(r)[i] += (x * gr) >> 12;
         }
         t->peak = pk;
+#ifdef KRST_EXT_TRACK
+        KRST_EXT_TRACK(t, b, (const int32_t *)0, n, lvl, gl, gr, 0, 0);   /* a host's track outputs (VIBE FM); none on the FM-1 */
+#endif
     }
     if (pf.thr)
         perf_throw(t, b, SM(d), SM(v), n);              /* perform.c: REV / ECHO THROW (1.5.1), the sends towards full */
@@ -1247,8 +1253,14 @@ static void mix_block(int32_t *out, uint32_t n)
     if (perf)
         perf_pre(mix_l, mix_r, send_d, send_r, n);
     fx_buses(send_c, send_d, send_r, wet, n);
+#ifdef KRST_EXT_BUSES
+    KRST_EXT_BUSES(n);                                  /* a host's effects output (VIBE FM): the mix before HALL's side */
+#endif
     if (hl.side)
         rev_side_mix(mix_l, mix_r, n);                  /* HALL: stereo */
+#ifdef KRST_EXT_WET
+    KRST_EXT_WET(wet, n);                               /* .. and the buses' return with it; none on the FM-1 */
+#endif
     if (res_on() || dmg_master_on() || wall_master_on() || krst_level_on() || hiss_on()) {   /* KRIECHSTROM: RESONATE, DAMAGE, WALL,
                                                          * HISS on the master */
         uint32_t ein;
