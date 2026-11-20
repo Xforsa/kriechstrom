@@ -999,6 +999,9 @@ static __attribute__((noinline)) void mix_spread(track_t *t, int32_t *b, uint32_
     track_dist(t, b, n);
     if (t->p[P_ITYPE] | t->ins_run)
         track_insert(t, b, n);                          /* (the mono sum, as DIST) */
+#ifdef KRST_EXT_PEDALS
+    KRST_EXT_PEDALS(t, b, n);                           /* a host's more pedals after it (VIBE FM); none on the FM-1 */
+#endif
     slicer_track_sd(t, b, d, n);
     if ((pf.mute >> (t - trk)) & 1u)
         perf_mute_sd((uint32_t)(t - trk), b, d, n);
@@ -1071,6 +1074,9 @@ static void mix_part(track_t *t, uint32_t n SM_DECL)
         track_dist(t, b, n);
         if (t->p[P_ITYPE] | t->ins_run)
             track_insert(t, b, n);                      /* the INSERT (1.5): off, nothing */
+#ifdef KRST_EXT_PEDALS
+        KRST_EXT_PEDALS(t, b, n);                       /* a host's more pedals after it (VIBE FM); none on the FM-1 */
+#endif
         slicer_track(t, b, n);                          /* slicer.c: before the level, pan and sends */
         if ((pf.mute >> (t - trk)) & 1u)
             perf_mute((uint32_t)(t - trk), b, n);       /* perform.c: a black key in the FX layer */
@@ -1203,6 +1209,9 @@ static void mix_block(int32_t *out, uint32_t n)
         send_c[i] = send_d[i] = send_r[i] = mix_l[i] = mix_r[i] = 0;
     events_block(n);
     ifx_begin();                                        /* KRIECHSTROM: INFECT's sources, a new half */
+#ifdef KRST_EXT_BEGIN
+    KRST_EXT_BEGIN();                                   /* a host's own (VIBE FM: its pedals' INFECT sources); none on the FM-1 */
+#endif
     perf = perf_begin(n);                               /* the FX hold layer at work (perform.c) */
 #if FELUCCA_CPU2
     uint32_t m = C1_ON() ? C1_SPLIT() & ((1u << NPART) - 1u) : 0u;
