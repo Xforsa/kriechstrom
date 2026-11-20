@@ -5,6 +5,11 @@ versions are `X.Y`; the package identity is `FM-1_57810002` for every release si
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-20
+
+### Fixed
+- the screen reader said nothing on OCT- and OCT+: it says the keys' octave now ("OCTAVE PLUS 1", "OCTAVE 0")
+
 ## [0.5.1] - 2026-11-18
 
 ### Changed

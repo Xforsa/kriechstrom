@@ -8,7 +8,7 @@
  *   everything (a WHERE, a reader that starts listening): where we are, then the four cards
  *   the context changed (page, track, engine, sound, layer, menu tab, a dialog): the same, once it settles (200 ms)
  *   a card's value changed: its label and value (120 ms: the knob settled)
- *   a message in the header: at once; PLAY and STOP; the tempo; the step under the cursor in SEQ
+ *   a message in the header: at once; PLAY and STOP; the tempo; the octave; the step under the cursor in SEQ
  * Text is built in the pool (sp_buf), never on the system stack, and only while a reader listens. */
 
 /* the screen's own text, a card at a time, as ui_draw.c draws it (the frame it was drawn in) */
@@ -37,6 +37,7 @@ static struct {
     char nm[NM_LEN + 1u];
     uint8_t started, playing, menu_sel, cursor, step_on;
     int16_t bpm;
+    int8_t octave;
 } spk __attribute__((section(".pool")));
 static char sp_buf[ANN_MAX + 1u] __attribute__((section(".pool")));
 static char spk_trk[48] __attribute__((section(".pool")));   /* "TRACK 1, ANALOG SAW LEAD." (sp_where) */
@@ -295,6 +296,12 @@ static void speak(uint32_t now)
         ann_later(t, ANN_NOW, 120, now);
     }
     spk.bpm = song.g[G_BPM];
+    if (spk.started && song.octave != spk.octave) {       /* OCT- and OCT+: the keys' octave (the header's) */
+        str_cpy(t, song.octave > 0 ? "OCTAVE PLUS " : song.octave < 0 ? "OCTAVE MINUS " : "OCTAVE ", sizeof t);
+        fmt_int(t + str_len(t), song.octave < 0 ? -song.octave : song.octave);
+        ann_later(t, ANN_NOW, 120, now);
+    }
+    spk.octave = (int8_t)song.octave;
     if (song.seq_mode && !ui.menu && !ui.confirm) {      /* SEQ: the step under the cursor */
         const step_t *st = &seq_steps(TSEL)[ui.cursor % 64u];
         uint8_t on = (uint8_t)step_on(st);

@@ -211,6 +211,23 @@ static void paths(void)
     ck("STOP said", said("STOP"));
 
     said_mark();
+    press(B_OCTUP);
+    frames(250);
+    ck("OCT+: the octave (OCTAVE PLUS 1)", said("OCTAVE PLUS 1"));
+    said_mark();
+    press(B_OCTDN);
+    frames(250);
+    press(B_OCTDN);
+    frames(250);
+    ck("OCT- twice: OCTAVE MINUS 1", said("OCTAVE MINUS 1"));
+    said_mark();
+    press(B_OCTUP);
+    frames(250);
+    ck("back to the middle: OCTAVE 0", said("OCTAVE 0"));
+    if (song.octave)
+        show_said();
+
+    said_mark();
     ui_say("SAVED ", "A");
     frames(50);
     ck("a message in the header: at once", said("SAVED A"));
